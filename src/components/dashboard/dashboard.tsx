@@ -24,7 +24,7 @@ export function Dashboard() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch('http://201.23.64.234:8000/api/products/', { referrerPolicy: 'no-referrer' });
+        const response = await fetch('/api/price-data');
         if (!response.ok) {
           throw new Error(`Erro ao conectar com a API. Status: ${response.status}`);
         }

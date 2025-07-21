@@ -18,6 +18,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/price-data',
+        destination: 'http://201.23.64.234:8000/api/products/',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
