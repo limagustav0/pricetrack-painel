@@ -40,10 +40,7 @@ export function Dashboard() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch('/api/price-data', {
-          // This header can help with some CORS configurations
-          referrerPolicy: "no-referrer" 
-        });
+        const response = await fetch('/api/price-data');
         if (!response.ok) {
           throw new Error(`Erro ao conectar com a API. Status: ${response.status} ${response.statusText}`);
         }
@@ -99,7 +96,7 @@ export function Dashboard() {
             <Package2 className="h-8 w-8" />
         </div>
         <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground font-headline tracking-tight">PriceWise Dashboard</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground font-headline tracking-tight">PriceTrack</h1>
             <p className="text-muted-foreground">Seu comparador de preços inteligente.</p>
         </div>
       </header>

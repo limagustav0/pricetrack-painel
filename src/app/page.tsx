@@ -2,7 +2,7 @@ import { Dashboard } from '@/components/dashboard/dashboard';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'PriceWise Dashboard',
+  title: 'PriceTrack Dashboard',
   description: 'Compare prices from multiple marketplaces efficiently.',
 };
 
