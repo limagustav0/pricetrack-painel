@@ -29,7 +29,7 @@ export function Dashboard() {
           throw new Error(`Erro ao conectar com a API. Status: ${response.status}`);
         }
         const data = await response.json();
-        setProducts(data.results || data);
+        setProducts(data.results || data || []);
       } catch (e) {
         if (e instanceof Error) {
           setError(`Falha ao buscar os dados: ${e.message}. Verifique sua conexão ou a URL da API.`);
@@ -43,15 +43,15 @@ export function Dashboard() {
     fetchProducts();
   }, []);
 
-  const uniqueBrands = useMemo(() => ['all', ...Array.from(new Set(products.map(p => p.brand).sort()))], [products]);
-  const uniqueMarketplaces = useMemo(() => ['all', ...Array.from(new Set(products.map(p => p.marketplace).sort()))], [products]);
+  const uniqueBrands = useMemo(() => ['all', ...Array.from(new Set(products.map(p => p.brand).filter(Boolean).sort()))], [products]);
+  const uniqueMarketplaces = useMemo(() => ['all', ...Array.from(new Set(products.map(p => p.marketplace).filter(Boolean).sort()))], [products]);
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
-        const brandMatch = filters.brand === 'all' || p.brand.toLowerCase() === filters.brand.toLowerCase();
-        const marketplaceMatch = filters.marketplace === 'all' || p.marketplace.toLowerCase() === filters.marketplace.toLowerCase();
-        const eanMatch = p.ean.includes(filters.ean.trim());
-        const sellerMatch = p.seller.toLowerCase().includes(filters.seller.trim().toLowerCase());
+        const brandMatch = filters.brand === 'all' || (p.brand && p.brand.toLowerCase() === filters.brand.toLowerCase());
+        const marketplaceMatch = filters.marketplace === 'all' || (p.marketplace && p.marketplace.toLowerCase() === filters.marketplace.toLowerCase());
+        const eanMatch = p.ean && p.ean.includes(filters.ean.trim());
+        const sellerMatch = p.seller && p.seller.toLowerCase().includes(filters.seller.trim().toLowerCase());
         return brandMatch && marketplaceMatch && eanMatch && sellerMatch;
     });
   }, [products, filters]);
