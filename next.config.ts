@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'epocacosmeticos.vteximg.com.br',
+      }
     ],
   },
   async rewrites() {

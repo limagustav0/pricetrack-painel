@@ -93,7 +93,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                             data-ai-hint="cosmetics bottle"
                         />
                         <div className="flex-1">
-                            <p className="text-sm text-muted-foreground font-medium">{firstProduct.brand}</p>
+                            <p className="text-sm text-muted-foreground font-medium">{firstProduct.marketplace}</p>
                             <h3 className="font-semibold text-lg text-foreground">{firstProduct.name}</h3>
                             <p className="text-xs text-muted-foreground mt-1">EAN: {ean}</p>
                         </div>
@@ -113,7 +113,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Marketplace</TableHead>
-                                    <TableHead>Seller</TableHead>
+                                    <TableHead>Loja (Seller)</TableHead>
                                     <TableHead className="text-right">Preço</TableHead>
                                     <TableHead>Última Atualização</TableHead>
                                     <TableHead></TableHead>

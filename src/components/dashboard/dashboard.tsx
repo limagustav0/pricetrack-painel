@@ -8,15 +8,31 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { FiltersCard } from './filters-card';
 import { ProductAccordion } from './product-accordion';
 
+// Helper to adapt the new API response to the existing Product type
+function adaptApiData(apiProduct: any): Product {
+  return {
+    id: apiProduct.sku,
+    ean: apiProduct.ean,
+    name: apiProduct.descricao,
+    brand: null, // Brand is not in the new API structure
+    marketplace: apiProduct.marketplace,
+    seller: apiProduct.loja,
+    price: parseFloat(apiProduct.preco_final),
+    url: apiProduct.url,
+    image: apiProduct.imagem,
+    updated_at: apiProduct.data_hora,
+  };
+}
+
+
 export function Dashboard() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({
-    brand: 'all',
     ean: '',
     marketplace: 'all',
-    seller: '',
+    seller: 'all', // 'loja' from API
   });
 
   useEffect(() => {
@@ -24,12 +40,21 @@ export function Dashboard() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch('/api/price-data');
+        const response = await fetch('/api/price-data', {
+          // This header can help with some CORS configurations
+          referrerPolicy: "no-referrer" 
+        });
         if (!response.ok) {
-          throw new Error(`Erro ao conectar com a API. Status: ${response.status}`);
+          throw new Error(`Erro ao conectar com a API. Status: ${response.status} ${response.statusText}`);
         }
         const data = await response.json();
-        setProducts(data.results || data || []);
+        // The API returns an object with a 'results' key which is an array
+        const results = data.results || data; 
+        if (Array.isArray(results)) {
+            setProducts(results.map(adaptApiData));
+        } else {
+            throw new Error("O formato dos dados recebidos da API não é o esperado.");
+        }
       } catch (e) {
         if (e instanceof Error) {
           setError(`Falha ao buscar os dados: ${e.message}. Verifique sua conexão ou a URL da API.`);
@@ -43,16 +68,15 @@ export function Dashboard() {
     fetchProducts();
   }, []);
 
-  const uniqueBrands = useMemo(() => ['all', ...Array.from(new Set(products.map(p => p.brand).filter(Boolean).sort()))], [products]);
   const uniqueMarketplaces = useMemo(() => ['all', ...Array.from(new Set(products.map(p => p.marketplace).filter(Boolean).sort()))], [products]);
+  const uniqueSellers = useMemo(() => ['all', ...Array.from(new Set(products.map(p => p.seller).filter(Boolean).sort()))], [products]);
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
-        const brandMatch = filters.brand === 'all' || (p.brand && p.brand.toLowerCase() === filters.brand.toLowerCase());
         const marketplaceMatch = filters.marketplace === 'all' || (p.marketplace && p.marketplace.toLowerCase() === filters.marketplace.toLowerCase());
-        const eanMatch = p.ean && p.ean.includes(filters.ean.trim());
-        const sellerMatch = p.seller && p.seller.toLowerCase().includes(filters.seller.trim().toLowerCase());
-        return brandMatch && marketplaceMatch && eanMatch && sellerMatch;
+        const eanMatch = !filters.ean || (p.ean && p.ean.includes(filters.ean.trim()));
+        const sellerMatch = filters.seller === 'all' || (p.seller && p.seller.toLowerCase() === filters.seller.toLowerCase());
+        return marketplaceMatch && eanMatch && sellerMatch;
     });
   }, [products, filters]);
 
@@ -62,10 +86,9 @@ export function Dashboard() {
 
   const clearFilters = () => {
     setFilters({
-        brand: 'all',
         ean: '',
         marketplace: 'all',
-        seller: '',
+        seller: 'all',
     });
   };
 
@@ -82,8 +105,8 @@ export function Dashboard() {
       </header>
 
       <FiltersCard
-        brands={uniqueBrands}
         marketplaces={uniqueMarketplaces}
+        sellers={uniqueSellers}
         filters={filters}
         onFilterChange={handleFilterChange}
         onClearFilters={clearFilters}

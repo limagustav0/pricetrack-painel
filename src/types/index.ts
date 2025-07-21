@@ -1,12 +1,13 @@
 export interface Product {
-  id: number;
+  // Keeping some of the old fields for compatibility, but adapting to the new structure
+  id: string; // Using sku as id
   ean: string;
-  name: string;
-  brand: string;
+  name: string; // from 'descricao'
+  brand: string | null; // Brand is not available in the new structure
   marketplace: string;
-  seller: string;
-  price: number;
+  seller: string; // from 'loja'
+  price: number; // from 'preco_final'
   url: string;
-  image: string;
-  updated_at: string; // ISO date string
+  image: string; // from 'imagem'
+  updated_at: string; // from 'data_hora'
 }

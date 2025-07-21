@@ -19,22 +19,21 @@ import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Filters {
-  brand: string;
   ean: string;
   marketplace: string;
   seller: string;
 }
 
 interface FiltersCardProps {
-  brands: string[];
   marketplaces: string[];
+  sellers: string[];
   filters: Filters;
   onFilterChange: (filterName: keyof Filters, value: string) => void;
   onClearFilters: () => void;
   loading: boolean;
 }
 
-export function FiltersCard({ brands, marketplaces, filters, onFilterChange, onClearFilters, loading }: FiltersCardProps) {
+export function FiltersCard({ marketplaces, sellers, filters, onFilterChange, onClearFilters, loading }: FiltersCardProps) {
   if (loading) {
     return (
       <Card>
@@ -42,8 +41,8 @@ export function FiltersCard({ brands, marketplaces, filters, onFilterChange, onC
           <Skeleton className="h-7 w-32" />
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
           </div>
         </CardContent>
       </Card>
@@ -56,19 +55,10 @@ export function FiltersCard({ brands, marketplaces, filters, onFilterChange, onC
         <CardTitle>Filtros</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 items-end">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
           <div className="grid w-full items-center gap-1.5">
-            <Label htmlFor="brand-filter">Marca</Label>
-            <Select value={filters.brand} onValueChange={(value) => onFilterChange('brand', value)}>
-              <SelectTrigger id="brand-filter" className="w-full">
-                <SelectValue placeholder="Selecione a marca" />
-              </SelectTrigger>
-              <SelectContent>
-                {brands.map(brand => (
-                  <SelectItem key={brand} value={brand}>{brand === 'all' ? 'Todas as Marcas' : brand}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="ean-filter">EAN</Label>
+            <Input id="ean-filter" placeholder="Filtrar por EAN..." value={filters.ean} onChange={(e) => onFilterChange('ean', e.target.value)} />
           </div>
           <div className="grid w-full items-center gap-1.5">
             <Label htmlFor="marketplace-filter">Marketplace</Label>
@@ -84,12 +74,17 @@ export function FiltersCard({ brands, marketplaces, filters, onFilterChange, onC
             </Select>
           </div>
           <div className="grid w-full items-center gap-1.5">
-            <Label htmlFor="ean-filter">EAN</Label>
-            <Input id="ean-filter" placeholder="Filtrar por EAN..." value={filters.ean} onChange={(e) => onFilterChange('ean', e.target.value)} />
-          </div>
-          <div className="grid w-full items-center gap-1.5">
-            <Label htmlFor="seller-filter">Seller</Label>
-            <Input id="seller-filter" placeholder="Filtrar por Seller..." value={filters.seller} onChange={(e) => onFilterChange('seller', e.target.value)} />
+            <Label htmlFor="seller-filter">Loja (Seller)</Label>
+            <Select value={filters.seller} onValueChange={(value) => onFilterChange('seller', value)}>
+              <SelectTrigger id="seller-filter" className="w-full">
+                <SelectValue placeholder="Selecione a loja" />
+              </SelectTrigger>
+              <SelectContent>
+                {sellers.map(seller => (
+                  <SelectItem key={seller} value={seller}>{seller === 'all' ? 'Todas as Lojas' : seller}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <Button onClick={onClearFilters} variant="outline" className="w-full lg:w-auto">
             Limpar Filtros
