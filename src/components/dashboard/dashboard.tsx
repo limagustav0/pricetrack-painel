@@ -8,17 +8,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { FiltersCard } from './filters-card';
 import { ProductAccordion } from './product-accordion';
 
-const mockProducts: Product[] = [
-    { id: 1, ean: '7891000123456', name: 'Shampoo Hidratante Intenso', brand: 'Marca A', marketplace: 'Epoca Cosmeticos', seller: 'Epoca Oficial', price: 45.90, url: '#', image: 'https://placehold.co/100x100.png', updated_at: '2023-10-27T10:00:00Z' },
-    { id: 2, ean: '7891000123456', name: 'Shampoo Hidratante Intenso', brand: 'Marca A', marketplace: 'Amazon', seller: 'Beleza Pura', price: 42.50, url: '#', image: 'https://placehold.co/100x100.png', updated_at: '2023-10-27T10:05:00Z' },
-    { id: 3, ean: '7891000123456', name: 'Shampoo Hidratante Intenso', brand: 'Marca A', marketplace: 'Beleza na Web', seller: 'Beleza na Web', price: 47.00, url: '#', image: 'https://placehold.co/100x100.png', updated_at: '2023-10-27T09:55:00Z' },
-    { id: 4, ean: '7891000654321', name: 'Condicionador Nutritivo', brand: 'Marca B', marketplace: 'Magazine Luiza', seller: 'Magalu', price: 35.00, url: '#', image: 'https://placehold.co/100x100.png', updated_at: '2023-10-27T11:00:00Z' },
-    { id: 5, ean: '7891000654321', name: 'Condicionador Nutritivo', brand: 'Marca B', marketplace: 'Amazon', seller: 'Super Vendas', price: 33.99, url: '#', image: 'https://placehold.co/100x100.png', updated_at: '2023-10-27T11:10:00Z' },
-    { id: 6, ean: '7891000987654', name: 'Máscara Capilar Reparadora', brand: 'Marca C', marketplace: 'Beleza na Web', seller: 'Beleza na Web', price: 89.90, url: '#', image: 'https://placehold.co/100x100.png', updated_at: '2023-10-26T15:30:00Z' },
-    { id: 7, ean: '7891000987654', name: 'Máscara Capilar Reparadora', brand: 'Marca C', marketplace: 'Epoca Cosmeticos', seller: 'Epoca Oficial', price: 92.50, url: '#', image: 'https://placehold.co/100x100.png', updated_at: '2023-10-26T15:35:00Z' },
-    { id: 8, ean: '7891000112233', name: 'Protetor Solar Facial FPS 50', brand: 'Marca A', marketplace: 'Amazon', seller: 'Amazon', price: 65.00, url: '#', image: 'https://placehold.co/100x100.png', updated_at: '2023-10-27T12:00:00Z' },
-];
-
 export function Dashboard() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,26 +22,21 @@ export function Dashboard() {
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
+      setError(null);
       try {
-        // NOTE: Using mock data for demonstration and stability.
-        // To use the real API, uncomment the fetch call and handle potential CORS/HTTP issues.
-        // const response = await fetch('http://201.23.64.234:8000/api/products/');
-        // if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        // const data = await response.json();
-        // setProducts(data.results || data);
-        
-        // Simulate network delay
-        setTimeout(() => {
-            setProducts(mockProducts);
-            setLoading(false);
-        }, 1000);
-
+        const response = await fetch('http://201.23.64.234:8000/api/products/');
+        if (!response.ok) {
+          throw new Error(`Erro HTTP! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setProducts(data.results || data);
       } catch (e) {
         if (e instanceof Error) {
           setError(e.message);
         } else {
-          setError('An unknown error occurred.');
+          setError('Ocorreu um erro desconhecido.');
         }
+      } finally {
         setLoading(false);
       }
     };
@@ -110,9 +94,9 @@ export function Dashboard() {
         {error && (
             <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
+                <AlertTitle>Erro</AlertTitle>
                 <AlertDescription>
-                    Failed to fetch product data: {error}
+                    Falha ao buscar os dados dos produtos: {error}
                 </AlertDescription>
             </Alert>
         )}
