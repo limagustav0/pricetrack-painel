@@ -1,0 +1,149 @@
+"use client";
+
+import { useMemo } from 'react';
+import type { Product } from '@/types';
+import Image from 'next/image';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Card } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ArrowUpRight, SearchX } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
+interface ProductAccordionProps {
+  products: Product[];
+  loading: boolean;
+}
+
+export function ProductAccordion({ products, loading }: ProductAccordionProps) {
+  const groupedProducts = useMemo(() => {
+    return products.reduce((acc, product) => {
+      const key = product.ean;
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(product);
+      return acc;
+    }, {} as Record<string, Product[]>);
+  }, [products]);
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[...Array(3)].map((_, i) => (
+          <Card key={i} className="p-4">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-24 w-24 rounded-md" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-4 w-1/4" />
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (Object.keys(groupedProducts).length === 0) {
+    return (
+      <Card className="text-center py-16 px-4 shadow-none border-dashed">
+        <div className="flex justify-center mb-4">
+            <div className="bg-secondary p-4 rounded-full">
+                <SearchX className="h-12 w-12 text-muted-foreground" />
+            </div>
+        </div>
+        <h3 className="text-xl font-semibold">Nenhum produto encontrado</h3>
+        <p className="text-muted-foreground mt-2">Tente ajustar ou limpar seus filtros para ver mais resultados.</p>
+      </Card>
+    );
+  }
+
+  return (
+    <Accordion type="single" collapsible className="w-full space-y-4">
+      {Object.entries(groupedProducts).map(([ean, productGroup]) => (
+        <ProductAccordionItem key={ean} ean={ean} productGroup={productGroup} />
+      ))}
+    </Accordion>
+  );
+}
+
+function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup: Product[] }) {
+    const firstProduct = productGroup[0];
+    const prices = productGroup.map(p => p.price);
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+
+    return (
+        <AccordionItem value={ean} className="border-none">
+            <Card className="overflow-hidden transition-all hover:shadow-lg">
+                <AccordionTrigger className="p-4 text-left hover:no-underline [&[data-state=open]>div>svg]:rotate-180">
+                    <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full">
+                        <Image
+                            src={firstProduct.image}
+                            alt={firstProduct.name}
+                            width={100}
+                            height={100}
+                            className="rounded-md object-cover border"
+                            data-ai-hint="cosmetics bottle"
+                        />
+                        <div className="flex-1">
+                            <p className="text-sm text-muted-foreground font-medium">{firstProduct.brand}</p>
+                            <h3 className="font-semibold text-lg text-foreground">{firstProduct.name}</h3>
+                            <p className="text-xs text-muted-foreground mt-1">EAN: {ean}</p>
+                        </div>
+                        <div className="flex flex-col items-start md:items-end gap-1 w-full md:w-auto">
+                            <p className="text-sm text-muted-foreground">Preços a partir de</p>
+                            <p className="text-2xl font-bold text-primary">{formatCurrency(minPrice)}</p>
+                            {productGroup.length > 1 && (
+                                <Badge variant="secondary">Variação: {formatCurrency(minPrice)} - {formatCurrency(maxPrice)}</Badge>
+                            )}
+                        </div>
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 pb-4">
+                    <h4 className="font-semibold mb-2 text-foreground">Ofertas disponíveis ({productGroup.length})</h4>
+                    <div className="border rounded-lg">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Marketplace</TableHead>
+                                    <TableHead>Seller</TableHead>
+                                    <TableHead className="text-right">Preço</TableHead>
+                                    <TableHead>Última Atualização</TableHead>
+                                    <TableHead></TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {productGroup.sort((a,b) => a.price - b.price).map((product) => (
+                                <TableRow key={product.id}>
+                                    <TableCell className="font-medium">{product.marketplace}</TableCell>
+                                    <TableCell>{product.seller}</TableCell>
+                                    <TableCell className={`font-bold text-right ${product.price === minPrice ? 'text-primary' : 'text-foreground'}`}>
+                                        {formatCurrency(product.price)}
+                                    </TableCell>
+                                    <TableCell className="text-muted-foreground text-sm">
+                                        {formatDistanceToNow(new Date(product.updated_at), { addSuffix: true, locale: ptBR })}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Button asChild variant="ghost" size="icon">
+                                            <a href={product.url} target="_blank" rel="noopener noreferrer" aria-label="Ver produto">
+                                                <ArrowUpRight className="h-4 w-4"/>
+                                            </a>
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </AccordionContent>
+            </Card>
+        </AccordionItem>
+    );
+}
