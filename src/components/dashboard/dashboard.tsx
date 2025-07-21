@@ -26,15 +26,15 @@ export function Dashboard() {
       try {
         const response = await fetch('http://201.23.64.234:8000/api/products/');
         if (!response.ok) {
-          throw new Error(`Erro HTTP! status: ${response.status}`);
+          throw new Error(`Erro ao conectar com a API. Status: ${response.status}`);
         }
         const data = await response.json();
         setProducts(data.results || data);
       } catch (e) {
         if (e instanceof Error) {
-          setError(e.message);
+          setError(`Falha ao buscar os dados: ${e.message}. Verifique sua conexão ou a URL da API.`);
         } else {
-          setError('Ocorreu um erro desconhecido.');
+          setError('Ocorreu um erro desconhecido ao processar os dados.');
         }
       } finally {
         setLoading(false);
@@ -94,9 +94,9 @@ export function Dashboard() {
         {error && (
             <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Erro</AlertTitle>
+                <AlertTitle>Erro de Comunicação</AlertTitle>
                 <AlertDescription>
-                    Falha ao buscar os dados dos produtos: {error}
+                    {error}
                 </AlertDescription>
             </Alert>
         )}
