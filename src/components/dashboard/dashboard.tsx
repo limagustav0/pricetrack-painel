@@ -74,12 +74,17 @@ export function Dashboard() {
   const uniqueSellers = useMemo(() => ['all', ...Array.from(new Set(products.map(p => p.seller).filter(Boolean).sort()))], [products]);
 
   const filteredProducts = useMemo(() => {
+    // Se um EAN específico for selecionado, mostre todos os produtos desse EAN, ignorando outros filtros.
+    if (filters.ean !== 'all') {
+      return products.filter(p => p.ean === filters.ean);
+    }
+
+    // Se EAN for 'all', aplique os outros filtros.
     return products.filter(p => {
         const marketplaceMatch = filters.marketplace === 'all' || (p.marketplace && p.marketplace.toLowerCase() === filters.marketplace.toLowerCase());
-        const eanMatch = filters.ean === 'all' || (p.ean && p.ean.includes(filters.ean.trim()));
         const sellerMatch = filters.seller === 'all' || (p.seller && p.seller.toLowerCase() === filters.seller.toLowerCase());
         const descriptionMatch = filters.description === '' || (p.name && p.name.toLowerCase().includes(filters.description.toLowerCase()));
-        return marketplaceMatch && eanMatch && sellerMatch && descriptionMatch;
+        return marketplaceMatch && sellerMatch && descriptionMatch;
     });
   }, [products, filters]);
 
