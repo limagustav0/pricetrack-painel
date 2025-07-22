@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Product } from '@/types';
@@ -166,7 +167,9 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
                   {filteredSellers.map((seller) => (
                       <AccordionItem value={seller.key_loja} key={seller.key_loja} className="border rounded-lg">
                           <AccordionTrigger className="px-4 py-3 text-left hover:no-underline bg-muted/50">
-                              <h3 className="text-lg font-bold">{seller.sellerName}</h3>
+                              <div className="flex-1 text-left">
+                                <h3 className="text-lg font-bold">{seller.sellerName}</h3>
+                              </div>
                           </AccordionTrigger>
                           <AccordionContent className="p-0">
                               <div className="border-t overflow-auto max-h-[600px]">
