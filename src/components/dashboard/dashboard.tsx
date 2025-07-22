@@ -92,7 +92,7 @@ function DashboardContent() {
         
         const mergedProducts = adaptedProducts.map(product => {
             if (!product.url && product.ean && product.marketplace) {
-                const key = `${product.ean}-${product.marketplace}`;
+                const key = `${product.ean}-${item.marketplace}`;
                 if (urlMap.has(key)) {
                     return { ...product, url: urlMap.get(key)! };
                 }
@@ -175,21 +175,23 @@ function DashboardContent() {
                   loading={loading}
               />
         </div>
-        <div className="flex-1 overflow-auto p-4 md:p-6">
-            <header className="mb-4 flex flex-wrap gap-4">
+        <div className="flex-1 flex flex-col overflow-auto">
+             <header className="px-4 pt-4 md:px-6 md:pt-6">
                 <div className="flex-1 min-w-[200px]">
                     <h1 className="text-2xl font-bold text-foreground font-headline tracking-tight">PriceTrack</h1>
                     <p className="text-sm text-muted-foreground">Compare preços de diferentes marketplaces de forma eficiente.</p>
                 </div>
             </header>
-            <Tabs defaultValue="overview" className="w-full flex flex-col h-full">
-                <TabsList className="grid grid-cols-3 max-w-md mb-4">
-                    <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-                    <TabsTrigger value="granular">Análise por Marketplace</TabsTrigger>
-                    <TabsTrigger value="seller">Análise por Vendedor</TabsTrigger>
-                </TabsList>
+            <Tabs defaultValue="overview" className="w-full flex flex-col flex-1 min-h-0">
+                <div className="px-4 md:px-6 pt-4">
+                     <TabsList>
+                        <TabsTrigger value="overview" className="flex-1">Visão Geral</TabsTrigger>
+                        <TabsTrigger value="granular" className="flex-1">Análise por Marketplace</TabsTrigger>
+                        <TabsTrigger value="seller" className="flex-1">Análise por Vendedor</TabsTrigger>
+                    </TabsList>
+                </div>
               
-                <div className="flex-1 min-h-0">
+                <div className="flex-1 min-h-0 p-4 md:p-6">
                     <TabsContent value="overview" className="mt-0 h-full">
                         <div className="space-y-6 h-full overflow-y-auto">
                             <EpocaAnalysis allProducts={products} loading={loading} />
