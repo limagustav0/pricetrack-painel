@@ -3,12 +3,13 @@
 
 import type { Product } from '@/types';
 import Image from 'next/image';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { SearchableSelect } from './searchable-select';
 
 interface PriceComparisonTableProps {
   allProducts: Product[];
@@ -25,6 +26,9 @@ interface GroupedProduct {
 
 
 export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTableProps) {
+  const [selectedEans, setSelectedEans] = useState<string[]>([]);
+  const [selectedMarketplaces, setSelectedMarketplaces] = useState<string[]>([]);
+
   const { groupedProducts, uniqueMarketplaces } = useMemo(() => {
     const marketplaces = [...new Set(allProducts.map(p => p.marketplace).filter(Boolean))].sort();
 
@@ -58,6 +62,20 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
         uniqueMarketplaces: marketplaces 
     };
   }, [allProducts]);
+  
+  const productOptions = useMemo(() => {
+    return groupedProducts.map(p => ({ value: p.ean, label: `${p.name} (${p.ean})` })).sort((a,b) => a.label.localeCompare(b.label));
+  }, [groupedProducts]);
+
+  const filteredProducts = useMemo(() => {
+    if (selectedEans.length === 0) return groupedProducts;
+    return groupedProducts.filter(p => selectedEans.includes(p.ean));
+  }, [groupedProducts, selectedEans]);
+
+  const visibleMarketplaces = useMemo(() => {
+    if (selectedMarketplaces.length === 0) return uniqueMarketplaces;
+    return uniqueMarketplaces.filter(m => selectedMarketplaces.includes(m));
+  }, [uniqueMarketplaces, selectedMarketplaces]);
 
   if (loading) {
     return (
@@ -98,16 +116,35 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="relative overflow-auto max-h-[calc(100vh-250px)]">
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="flex-1 min-w-0">
+                <SearchableSelect
+                    placeholder="Filtrar por Produto..."
+                    options={productOptions}
+                    selectedValues={selectedEans}
+                    onChange={(value) => setSelectedEans(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value])}
+                />
+            </div>
+            <div className="flex-1 min-w-0">
+                <SearchableSelect
+                    placeholder="Filtrar por Marketplace..."
+                    options={uniqueMarketplaces.map(m => ({ value: m, label: m }))}
+                    selectedValues={selectedMarketplaces}
+                    onChange={(value) => setSelectedMarketplaces(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value])}
+                />
+            </div>
+        </div>
+
+        <div className="relative overflow-auto max-h-[calc(100vh-350px)]">
             <Table>
             <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
                 <TableHead className="min-w-[300px] whitespace-nowrap">Produto (EAN/Marca)</TableHead>
-                {uniqueMarketplaces.map(mp => <TableHead key={mp} className="text-right whitespace-nowrap">{mp}</TableHead>)}
+                {visibleMarketplaces.map(mp => <TableHead key={mp} className="text-right whitespace-nowrap">{mp}</TableHead>)}
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {groupedProducts.map((product) => {
+                {filteredProducts.map((product) => {
                     const imageSrc = product.image && product.image.startsWith('http') ? product.image : 'https://placehold.co/100x100.png';
                     const prices = Object.values(product.offers).map(o => o.price);
                     const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
@@ -136,7 +173,7 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
                                     </div>
                                 </div>
                             </TableCell>
-                            {uniqueMarketplaces.map(mp => {
+                            {visibleMarketplaces.map(mp => {
                                 const offer = product.offers[mp];
                                 const isMinPrice = offer && offer.price === minPrice;
                                 return (
@@ -160,9 +197,9 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
                 })}
             </TableBody>
             </Table>
-            {groupedProducts.length === 0 && !loading && (
+            {filteredProducts.length === 0 && !loading && (
                 <div className="text-center py-16 text-muted-foreground absolute inset-0 flex items-center justify-center">
-                    Nenhum produto encontrado para comparar.
+                    Nenhum produto encontrado para comparar com os filtros aplicados.
                 </div>
             )}
         </div>
