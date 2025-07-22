@@ -129,9 +129,12 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                         <div className="flex flex-col items-start md:items-end gap-1 w-full md:w-auto">
                             <p className="text-sm text-muted-foreground">Preços a partir de</p>
                             <p className="text-2xl font-bold text-primary">{formatCurrency(minPrice)}</p>
-                            {productGroup.length > 1 && (
-                                <Badge variant="secondary">Variação: {formatCurrency(minPrice)} - {formatCurrency(maxPrice)}</Badge>
-                            )}
+                            <div className="flex items-center gap-2">
+                                {productGroup.length > 1 && (
+                                    <Badge variant="secondary">Variação: {formatCurrency(minPrice)} - {formatCurrency(maxPrice)}</Badge>
+                                )}
+                                <Badge variant="outline">{productGroup.length} oferta{productGroup.length > 1 ? 's' : ''}</Badge>
+                            </div>
                         </div>
                     </div>
                 </AccordionTrigger>
