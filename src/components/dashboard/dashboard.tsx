@@ -176,7 +176,7 @@ function DashboardContent() {
               />
         </div>
         <div className="flex-1 overflow-auto p-4 md:p-6">
-            <header className="mb-4 flex-wrap gap-4">
+            <header className="mb-4 flex flex-wrap gap-4">
                 <div className="flex-1 min-w-[200px]">
                     <h1 className="text-2xl font-bold text-foreground font-headline tracking-tight">PriceTrack</h1>
                     <p className="text-sm text-muted-foreground">Compare preços de diferentes marketplaces de forma eficiente.</p>
