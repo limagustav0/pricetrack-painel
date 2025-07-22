@@ -162,7 +162,7 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
         </div>
 
         {filteredSellers.length > 0 ? (
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto min-h-0">
               <Accordion type="multiple" className="space-y-4">
                   {filteredSellers.map((seller) => (
                       <AccordionItem value={seller.key_loja} key={seller.key_loja} className="border rounded-lg">
