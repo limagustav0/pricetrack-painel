@@ -25,9 +25,10 @@ interface SearchableSelectProps {
     onChange: (value: string) => void;
     placeholder?: string;
     noResultsText?: string;
+    disabled?: boolean;
 }
 
-export function SearchableSelect({ options, value, onChange, placeholder, noResultsText }: SearchableSelectProps) {
+export function SearchableSelect({ options, value, onChange, placeholder, noResultsText, disabled }: SearchableSelectProps) {
   const [open, setOpen] = React.useState(false)
 
   const selectedOption = options.find((option) => option.value.toLowerCase() === value.toLowerCase())
@@ -40,12 +41,13 @@ export function SearchableSelect({ options, value, onChange, placeholder, noResu
           role="combobox"
           aria-expanded={open}
           className="w-full justify-between"
+          disabled={disabled}
         >
           {selectedOption ? selectedOption.label : placeholder || "Selecione..."}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
         <Command>
           <CommandInput placeholder={placeholder || "Pesquisar..."} />
           <CommandList>

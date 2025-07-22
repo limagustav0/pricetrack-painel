@@ -1,5 +1,6 @@
 import { Dashboard } from '@/components/dashboard/dashboard';
 import type { Metadata } from 'next';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
 export const metadata: Metadata = {
   title: 'PriceTrack Dashboard',
@@ -8,8 +9,10 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-background">
-      <Dashboard />
-    </main>
+    <SidebarProvider>
+      <main className="min-h-screen bg-background">
+        <Dashboard />
+      </main>
+    </SidebarProvider>
   );
 }

@@ -22,7 +22,7 @@ interface ProductAccordionProps {
 export function ProductAccordion({ products, loading }: ProductAccordionProps) {
   const groupedProducts = useMemo(() => {
     return products.reduce((acc, product) => {
-      const key = product.ean;
+      const key = product.ean || product.id; // Fallback to id if ean is not present
       if (!acc[key]) {
         acc[key] = [];
       }
