@@ -23,6 +23,10 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'a-static.mlcdn.com.br',
+      },
+      {
+        protocol: 'https',
+        hostname: 'm.media-amazon.com',
       }
     ],
   },
