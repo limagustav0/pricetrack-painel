@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowUpRight, SearchX } from 'lucide-react';
+import { ExternalLink, SearchX } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -129,12 +129,12 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                                         {formatCurrency(product.price)}
                                     </TableCell>
                                     <TableCell className="text-muted-foreground text-sm">
-                                        {formatDistanceToNow(new Date(product.updated_at), { addSuffix: true, locale: ptBR })}
+                                        {product.updated_at ? formatDistanceToNow(new Date(product.updated_at), { addSuffix: true, locale: ptBR }) : '-'}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <Button asChild variant="ghost" size="icon">
                                             <a href={product.url} target="_blank" rel="noopener noreferrer" aria-label="Ver produto">
-                                                <ArrowUpRight className="h-4 w-4"/>
+                                                <ExternalLink className="h-4 w-4"/>
                                             </a>
                                         </Button>
                                     </TableCell>
