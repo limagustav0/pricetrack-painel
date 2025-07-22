@@ -13,19 +13,11 @@ import { Button } from '@/components/ui/button';
 
 // Helper to adapt the new API response to the existing Product type
 function adaptApiData(apiProduct: any): Product {
-  let brand = null;
-  if (apiProduct.descricao) {
-    const parts = apiProduct.descricao.split(' - ');
-    if (parts.length > 1) {
-      brand = parts[parts.length - 1];
-    }
-  }
-
   return {
     id: apiProduct.sku,
     ean: apiProduct.ean,
     name: apiProduct.descricao,
-    brand: brand,
+    brand: apiProduct.marca,
     marketplace: apiProduct.marketplace,
     seller: apiProduct.loja,
     price: parseFloat(apiProduct.preco_final),
