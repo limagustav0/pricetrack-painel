@@ -2,17 +2,18 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import type { Product } from '@/types';
-import { AlertCircle, Package2 } from 'lucide-react';
+import { AlertCircle, Package2, X } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { FiltersGroup } from './filters-group';
 import { ProductAccordion } from './product-accordion';
 import { Card, CardContent } from '@/components/ui/card';
 import { EpocaAnalysis } from './epoca-analysis';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 // Helper to adapt the new API response to the existing Product type
 function adaptApiData(apiProduct: any): Product {
-  // Basic heuristic to extract brand from description
   let brand = null;
   if (apiProduct.descricao) {
     const parts = apiProduct.descricao.split(' - ');
@@ -35,16 +36,24 @@ function adaptApiData(apiProduct: any): Product {
   };
 }
 
+type Filters = {
+  ean: string[];
+  marketplace: string[];
+  seller: string[];
+  description: string[];
+  brand: string[];
+};
+
 export function Dashboard() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState({
-    ean: '',
-    marketplace: '',
-    seller: '', // 'loja' from API
-    description: '',
-    brand: '',
+  const [filters, setFilters] = useState<Filters>({
+    ean: [],
+    marketplace: [],
+    seller: [],
+    description: [],
+    brand: [],
   });
 
   useEffect(() => {
@@ -83,43 +92,46 @@ export function Dashboard() {
   const uniqueBrands = useMemo(() => [...Array.from(new Set(products.map(p => p.brand).filter(Boolean).sort()))], [products]);
 
   const filteredProducts = useMemo(() => {
-    let baseProducts = products;
-    if (filters.ean) {
-        return products.filter(p => p.ean === filters.ean);
-    }
-    
-    return baseProducts.filter(p => {
-        const marketplaceMatch = filters.marketplace === '' || (p.marketplace && p.marketplace.toLowerCase().includes(filters.marketplace.toLowerCase()));
-        const sellerMatch = filters.seller === '' || (p.seller && p.seller.toLowerCase().includes(filters.seller.toLowerCase()));
-        const descriptionMatch = filters.description === '' || (p.name && p.name.toLowerCase().includes(filters.description.toLowerCase()));
-        const brandMatch = filters.brand === '' || (p.brand && p.brand.toLowerCase().includes(filters.brand.toLowerCase()));
-        return marketplaceMatch && sellerMatch && descriptionMatch && brandMatch;
+    return products.filter(p => {
+      const eanMatch = filters.ean.length === 0 || filters.ean.includes(p.ean);
+      const marketplaceMatch = filters.marketplace.length === 0 || (p.marketplace && filters.marketplace.includes(p.marketplace));
+      const sellerMatch = filters.seller.length === 0 || (p.seller && filters.seller.includes(p.seller));
+      const descriptionMatch = filters.description.length === 0 || (p.name && filters.description.includes(p.name));
+      const brandMatch = filters.brand.length === 0 || (p.brand && filters.brand.includes(p.brand));
+      return eanMatch && marketplaceMatch && sellerMatch && descriptionMatch && brandMatch;
     });
   }, [products, filters]);
 
-  const handleFilterChange = (filterName: keyof typeof filters, value: string) => {
-    setFilters(prev => ({ ...prev, ean: '', [filterName]: value }));
+  const handleFilterChange = (filterName: keyof Filters, value: string[]) => {
+    setFilters(prev => ({ ...prev, [filterName]: value }));
   };
-  
-  const handleEanChange = (value: string) => {
-    setFilters({
-      ean: value,
-      marketplace: '',
-      seller: '',
-      description: '',
-      brand: '',
-    });
+
+  const removeFilter = (filterName: keyof Filters, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterName]: prev[filterName].filter(item => item !== value),
+    }));
   };
 
   const clearFilters = () => {
     setFilters({
-        ean: '',
-        marketplace: '',
-        seller: '',
-        description: '',
-        brand: '',
+        ean: [],
+        marketplace: [],
+        seller: [],
+        description: [],
+        brand: [],
     });
   };
+
+  const activeFilters = useMemo(() => {
+    return Object.entries(filters).flatMap(([key, values]) => 
+      (values as string[]).map(value => ({
+        category: key as keyof Filters,
+        label: key.charAt(0).toUpperCase() + key.slice(1),
+        value: value
+      }))
+    );
+  }, [filters]);
 
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
@@ -138,37 +150,47 @@ export function Dashboard() {
       <div className="space-y-8">
         <EpocaAnalysis allProducts={products} loading={loading} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <aside className="lg:col-span-1">
-              <Card>
-                  <CardContent className="p-4">
-                      <FiltersGroup
-                        eans={uniqueEans}
-                        marketplaces={uniqueMarketplaces}
-                        sellers={uniqueSellers}
-                        descriptions={uniqueDescriptions}
-                        brands={uniqueBrands}
-                        filters={filters}
-                        onFilterChange={handleFilterChange}
-                        onEanChange={handleEanChange}
-                        onClearFilters={clearFilters}
-                        loading={loading}
-                      />
-                  </CardContent>
-              </Card>
-          </aside>
+        <Card>
+          <CardContent className="p-4">
+            <FiltersGroup
+              eans={uniqueEans}
+              marketplaces={uniqueMarketplaces}
+              sellers={uniqueSellers}
+              descriptions={uniqueDescriptions}
+              brands={uniqueBrands}
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onClearFilters={clearFilters}
+              loading={loading}
+            />
+          </CardContent>
+        </Card>
 
-          <main className="lg:col-span-3">
-              {error ? (
-                  <Alert variant="destructive">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertTitle>Erro de Comunicação</AlertTitle>
-                      <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-              ) : (
-                <ProductAccordion products={filteredProducts} loading={loading} />
-              )}
-          </main>
+        <div>
+          {activeFilters.length > 0 && (
+            <div className="mb-4 space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-sm font-medium text-muted-foreground">Filtros Ativos:</h3>
+                  {activeFilters.map(({ category, value, label }) => (
+                    <Badge key={`${category}-${value}`} variant="secondary" className="pl-2 pr-1">
+                      <span className="mr-1">{value}</span>
+                      <button onClick={() => removeFilter(category, value)} className="rounded-full hover:bg-muted-foreground/20 p-0.5">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+            </div>
+          )}
+          {error ? (
+              <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Erro de Comunicação</AlertTitle>
+                  <AlertDescription>{error}</AlertDescription>
+              </Alert>
+          ) : (
+            <ProductAccordion products={filteredProducts} loading={loading} />
+          )}
         </div>
       </div>
     </div>
