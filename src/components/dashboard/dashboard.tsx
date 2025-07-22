@@ -206,7 +206,7 @@ function DashboardContent() {
                     </div>
                 </TabsContent>
                 <TabsContent value="granular" className="mt-6">
-                    <PriceComparisonTable allProducts={filteredProducts} loading={loading} />
+                    <PriceComparisonTable allProducts={products} loading={loading} />
                 </TabsContent>
             </Tabs>
         </div>
