@@ -117,7 +117,7 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
           Visualize os preços de cada produto lado a lado nos diferentes marketplaces.
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col min-h-0 flex-1">
+      <CardContent>
         <div className="flex flex-col md:flex-row gap-4 mb-4">
             <div className="flex-1 min-w-0">
                 <SearchableSelect
@@ -137,7 +137,7 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
             </div>
         </div>
 
-        <div className="relative overflow-auto flex-1">
+        <div className="relative overflow-auto border rounded-lg">
             <Table>
             <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
@@ -203,13 +203,17 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
                         </TableRow>
                     )
                 })}
+                 {filteredProducts.length === 0 && !loading && (
+                    <TableRow>
+                        <TableCell colSpan={visibleMarketplaces.length + 1}>
+                             <div className="text-center py-16 text-muted-foreground">
+                                Nenhum produto encontrado para comparar com os filtros aplicados.
+                            </div>
+                        </TableCell>
+                    </TableRow>
+                )}
             </TableBody>
             </Table>
-            {filteredProducts.length === 0 && !loading && (
-                <div className="text-center py-16 text-muted-foreground absolute inset-0 flex items-center justify-center">
-                    Nenhum produto encontrado para comparar com os filtros aplicados.
-                </div>
-            )}
         </div>
       </CardContent>
     </Card>

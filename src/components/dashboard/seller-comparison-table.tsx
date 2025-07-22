@@ -142,7 +142,7 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
           Visualize e compare os preços de cada produto por vendedor nos diferentes marketplaces.
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col min-h-0">
+      <CardContent>
         <div className="flex flex-col md:flex-row gap-4 mb-4">
             <div className="flex-1 min-w-0">
                 <SearchableSelect
@@ -163,10 +163,10 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
         </div>
 
         {filteredSellers.length > 0 ? (
-            <div className="flex-1 overflow-y-auto min-h-0">
-              <Accordion type="multiple" className="space-y-4">
+            <div className="border rounded-lg overflow-hidden">
+              <Accordion type="multiple" className="space-y-0">
                   {filteredSellers.map((seller) => (
-                      <AccordionItem value={seller.key_loja} key={seller.key_loja} className="border rounded-lg">
+                      <AccordionItem value={seller.key_loja} key={seller.key_loja} className="border-b last:border-b-0">
                           <AccordionTrigger className="px-4 py-3 text-left hover:no-underline bg-muted/50">
                               <div className="flex-1 text-left">
                                 <h3 className="text-lg font-bold">{seller.sellerName}</h3>
@@ -247,7 +247,7 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
               </Accordion>
             </div>
         ) : (
-            <div className="text-center py-16 text-muted-foreground border border-dashed rounded-lg flex-1 flex flex-col justify-center">
+            <div className="text-center py-16 text-muted-foreground border border-dashed rounded-lg flex flex-col justify-center">
                 <SearchX className="h-10 w-10 mx-auto mb-4" />
                 <p className="font-semibold">Nenhum vendedor encontrado</p>
                 <p className="text-sm">Tente limpar o filtro ou aguarde a carga dos dados.</p>
