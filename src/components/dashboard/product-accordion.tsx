@@ -80,6 +80,17 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
     const maxPrice = Math.max(...prices);
     const imageSrc = firstProduct.image || `https://placehold.co/100x100.png`;
 
+    const offersByMarketplace = useMemo(() => {
+        return productGroup.reduce((acc, product) => {
+            const marketplace = product.marketplace || 'Outros';
+            if (!acc[marketplace]) {
+                acc[marketplace] = [];
+            }
+            acc[marketplace].push(product);
+            return acc;
+        }, {} as Record<string, Product[]>);
+    }, [productGroup]);
+
     return (
         <AccordionItem value={ean} className="border-none">
             <Card className="overflow-hidden transition-all hover:shadow-lg">
@@ -94,7 +105,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                             data-ai-hint="cosmetics bottle"
                         />
                         <div className="flex-1">
-                            <p className="text-sm text-muted-foreground font-medium">{firstProduct.marketplace}</p>
+                            <p className="text-sm text-muted-foreground font-medium">{firstProduct.brand}</p>
                             <h3 className="font-semibold text-lg text-foreground">{firstProduct.name}</h3>
                             <p className="text-xs text-muted-foreground mt-1">EAN: {ean}</p>
                         </div>
@@ -109,40 +120,52 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                 </AccordionTrigger>
                 <AccordionContent className="px-6 pb-4">
                     <h4 className="font-semibold mb-2 text-foreground">Ofertas disponíveis ({productGroup.length})</h4>
-                    <div className="border rounded-lg">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Marketplace</TableHead>
-                                    <TableHead>Loja (Seller)</TableHead>
-                                    <TableHead className="text-right">Preço</TableHead>
-                                    <TableHead>Última Atualização</TableHead>
-                                    <TableHead></TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {productGroup.sort((a,b) => a.price - b.price).map((product) => (
-                                <TableRow key={product.id}>
-                                    <TableCell className="font-medium">{product.marketplace}</TableCell>
-                                    <TableCell>{product.seller}</TableCell>
-                                    <TableCell className={`font-bold text-right ${product.price === minPrice ? 'text-primary' : 'text-foreground'}`}>
-                                        {formatCurrency(product.price)}
-                                    </TableCell>
-                                    <TableCell className="text-muted-foreground text-sm">
-                                        {product.updated_at ? formatDistanceToNow(new Date(product.updated_at), { addSuffix: true, locale: ptBR }) : '-'}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <Button asChild variant="ghost" size="icon">
-                                            <a href={product.url} target="_blank" rel="noopener noreferrer" aria-label="Ver produto">
-                                                <ExternalLink className="h-4 w-4"/>
-                                            </a>
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
+                    <Accordion type="multiple" className="w-full space-y-2">
+                         {Object.entries(offersByMarketplace).map(([marketplace, offers]) => (
+                             <AccordionItem key={marketplace} value={marketplace} className="border rounded-lg">
+                                 <AccordionTrigger className="px-4 py-2 text-left hover:no-underline bg-muted/50">
+                                    <div className="flex justify-between w-full items-center">
+                                         <h5 className="font-semibold">{marketplace} <span className="font-normal text-muted-foreground">({offers.length} ofertas)</span></h5>
+                                         <Badge variant="outline">A partir de {formatCurrency(Math.min(...offers.map(o => o.price)))}</Badge>
+                                    </div>
+                                 </AccordionTrigger>
+                                 <AccordionContent className="p-0">
+                                    <div className="border-t">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Loja (Seller)</TableHead>
+                                                    <TableHead className="text-right">Preço</TableHead>
+                                                    <TableHead>Última Atualização</TableHead>
+                                                    <TableHead></TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {offers.sort((a,b) => a.price - b.price).map((product) => (
+                                                <TableRow key={product.id}>
+                                                    <TableCell>{product.seller}</TableCell>
+                                                    <TableCell className={`font-bold text-right ${product.price === minPrice ? 'text-primary' : 'text-foreground'}`}>
+                                                        {formatCurrency(product.price)}
+                                                    </TableCell>
+                                                    <TableCell className="text-muted-foreground text-sm">
+                                                        {product.updated_at ? formatDistanceToNow(new Date(product.updated_at), { addSuffix: true, locale: ptBR }) : '-'}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Button asChild variant="ghost" size="icon">
+                                                            <a href={product.url} target="_blank" rel="noopener noreferrer" aria-label="Ver produto">
+                                                                <ExternalLink className="h-4 w-4"/>
+                                                            </a>
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                 </AccordionContent>
+                             </AccordionItem>
+                         ))}
+                     </Accordion>
                 </AccordionContent>
             </Card>
         </AccordionItem>
