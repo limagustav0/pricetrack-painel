@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -10,7 +11,6 @@ import { ProductAccordion } from './product-accordion';
 import { EpocaAnalysis } from './epoca-analysis';
 import { Sidebar, SidebarProvider, SidebarTrigger, SidebarInset, SidebarHeader, SidebarContent, SidebarRail } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
 // Helper to adapt the new API response to the existing Product type
 function adaptApiData(apiProduct: any): Product {
@@ -165,9 +165,16 @@ export function Dashboard() {
       <SidebarInset>
         <div className="container mx-auto p-4 sm:p-6 lg:p-8">
           <header className="mb-8 flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground font-headline tracking-tight">PriceTrack</h1>
-              <p className="text-muted-foreground mt-2">Compare preços de diferentes marketplaces de forma eficiente.</p>
+            <div className="flex items-center gap-4">
+              <SidebarTrigger asChild className="md:hidden">
+                <Button variant="ghost" size="icon">
+                  <PanelLeft />
+                </Button>
+              </SidebarTrigger>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold text-foreground font-headline tracking-tight">PriceTrack</h1>
+                <p className="text-muted-foreground mt-2">Compare preços de diferentes marketplaces de forma eficiente.</p>
+              </div>
             </div>
           </header>
           
