@@ -6,17 +6,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "../ui/input";
+import { SearchableSelect } from "./searchable-select";
 
 interface Filters {
   ean: string;
@@ -68,43 +62,34 @@ export function FiltersCard({ eans, marketplaces, sellers, filters, onFilterChan
             />
           </div>
           <div className="grid w-full items-center gap-1.5">
-            <Label htmlFor="ean-filter">EAN</Label>
-            <Select value={filters.ean} onValueChange={(value) => onFilterChange('ean', value)}>
-              <SelectTrigger id="ean-filter" className="w-full">
-                <SelectValue placeholder="Selecione o EAN" />
-              </SelectTrigger>
-              <SelectContent>
-                {eans.map(ean => (
-                  <SelectItem key={ean} value={ean}>{ean === 'all' ? 'Todos os EANs' : ean}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>EAN</Label>
+             <SearchableSelect
+              placeholder="Digite ou selecione o EAN"
+              noResultsText="Nenhum EAN encontrado."
+              value={filters.ean}
+              onChange={(value) => onFilterChange('ean', value)}
+              options={eans.map(ean => ({ value: ean, label: ean }))}
+            />
           </div>
           <div className="grid w-full items-center gap-1.5">
-            <Label htmlFor="marketplace-filter">Marketplace</Label>
-            <Select value={filters.marketplace} onValueChange={(value) => onFilterChange('marketplace', value)}>
-              <SelectTrigger id="marketplace-filter" className="w-full">
-                <SelectValue placeholder="Selecione o marketplace" />
-              </SelectTrigger>
-              <SelectContent>
-                {marketplaces.map(mp => (
-                  <SelectItem key={mp} value={mp}>{mp === 'all' ? 'Todos os Marketplaces' : mp}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>Marketplace</Label>
+            <SearchableSelect
+              placeholder="Digite ou selecione o marketplace"
+              noResultsText="Nenhum marketplace encontrado."
+              value={filters.marketplace}
+              onChange={(value) => onFilterChange('marketplace', value)}
+              options={marketplaces.map(mp => ({ value: mp, label: mp }))}
+            />
           </div>
           <div className="grid w-full items-center gap-1.5">
-            <Label htmlFor="seller-filter">Loja (Seller)</Label>
-            <Select value={filters.seller} onValueChange={(value) => onFilterChange('seller', value)}>
-              <SelectTrigger id="seller-filter" className="w-full">
-                <SelectValue placeholder="Selecione a loja" />
-              </SelectTrigger>
-              <SelectContent>
-                {sellers.map(seller => (
-                  <SelectItem key={seller} value={seller}>{seller === 'all' ? 'Todas as Lojas' : seller}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>Loja (Seller)</Label>
+            <SearchableSelect
+              placeholder="Digite ou selecione a loja"
+              noResultsText="Nenhuma loja encontrada."
+              value={filters.seller}
+              onChange={(value) => onFilterChange('seller', value)}
+              options={sellers.map(seller => ({ value: seller, label: seller }))}
+            />
           </div>
           <Button onClick={onClearFilters} variant="outline" className="w-full lg:w-auto">
             Limpar Filtros

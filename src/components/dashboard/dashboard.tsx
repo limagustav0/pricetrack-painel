@@ -33,9 +33,9 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({
-    ean: 'all',
-    marketplace: 'all',
-    seller: 'all', // 'loja' from API
+    ean: '',
+    marketplace: '',
+    seller: '', // 'loja' from API
     description: '',
   });
 
@@ -69,22 +69,17 @@ export function Dashboard() {
     fetchProducts();
   }, []);
 
-  const uniqueEans = useMemo(() => ['all', ...Array.from(new Set(products.map(p => p.ean).filter(Boolean).sort()))], [products]);
-  const uniqueMarketplaces = useMemo(() => ['all', ...Array.from(new Set(products.map(p => p.marketplace).filter(Boolean).sort()))], [products]);
-  const uniqueSellers = useMemo(() => ['all', ...Array.from(new Set(products.map(p => p.seller).filter(Boolean).sort()))], [products]);
+  const uniqueEans = useMemo(() => [...Array.from(new Set(products.map(p => p.ean).filter(Boolean).sort()))], [products]);
+  const uniqueMarketplaces = useMemo(() => [...Array.from(new Set(products.map(p => p.marketplace).filter(Boolean).sort()))], [products]);
+  const uniqueSellers = useMemo(() => [...Array.from(new Set(products.map(p => p.seller).filter(Boolean).sort()))], [products]);
 
   const filteredProducts = useMemo(() => {
-    // Se um EAN específico for selecionado, mostre todos os produtos desse EAN, ignorando outros filtros.
-    if (filters.ean !== 'all') {
-      return products.filter(p => p.ean === filters.ean);
-    }
-
-    // Se EAN for 'all', aplique os outros filtros.
     return products.filter(p => {
-        const marketplaceMatch = filters.marketplace === 'all' || (p.marketplace && p.marketplace.toLowerCase() === filters.marketplace.toLowerCase());
-        const sellerMatch = filters.seller === 'all' || (p.seller && p.seller.toLowerCase() === filters.seller.toLowerCase());
+        const eanMatch = filters.ean === '' || (p.ean && p.ean.toLowerCase().includes(filters.ean.toLowerCase()));
+        const marketplaceMatch = filters.marketplace === '' || (p.marketplace && p.marketplace.toLowerCase().includes(filters.marketplace.toLowerCase()));
+        const sellerMatch = filters.seller === '' || (p.seller && p.seller.toLowerCase().includes(filters.seller.toLowerCase()));
         const descriptionMatch = filters.description === '' || (p.name && p.name.toLowerCase().includes(filters.description.toLowerCase()));
-        return marketplaceMatch && sellerMatch && descriptionMatch;
+        return eanMatch && marketplaceMatch && sellerMatch && descriptionMatch;
     });
   }, [products, filters]);
 
@@ -94,9 +89,9 @@ export function Dashboard() {
 
   const clearFilters = () => {
     setFilters({
-        ean: 'all',
-        marketplace: 'all',
-        seller: 'all',
+        ean: '',
+        marketplace: '',
+        seller: '',
         description: '',
     });
   };
