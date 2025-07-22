@@ -2,14 +2,13 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import type { Product } from '@/types';
-import { AlertCircle, Package2, BarChart } from 'lucide-react';
+import { AlertCircle, Package2 } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { FiltersGroup } from './filters-group';
 import { ProductAccordion } from './product-accordion';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { AnalyticsTab } from './analytics-tab';
 import { Card, CardContent } from '@/components/ui/card';
+import { EpocaAnalysis } from './epoca-analysis';
 
 // Helper to adapt the new API response to the existing Product type
 function adaptApiData(apiProduct: any): Product {
@@ -135,55 +134,42 @@ export function Dashboard() {
               </div>
           </div>
       </header>
+      
+      <div className="space-y-8">
+        <EpocaAnalysis allProducts={products} loading={loading} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <aside className="lg:col-span-1">
-            <Card>
-                <CardContent className="p-4">
-                    <FiltersGroup
-                      eans={uniqueEans}
-                      marketplaces={uniqueMarketplaces}
-                      sellers={uniqueSellers}
-                      descriptions={uniqueDescriptions}
-                      brands={uniqueBrands}
-                      filters={filters}
-                      onFilterChange={handleFilterChange}
-                      onEanChange={handleEanChange}
-                      onClearFilters={clearFilters}
-                      loading={loading}
-                    />
-                </CardContent>
-            </Card>
-        </aside>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <aside className="lg:col-span-1">
+              <Card>
+                  <CardContent className="p-4">
+                      <FiltersGroup
+                        eans={uniqueEans}
+                        marketplaces={uniqueMarketplaces}
+                        sellers={uniqueSellers}
+                        descriptions={uniqueDescriptions}
+                        brands={uniqueBrands}
+                        filters={filters}
+                        onFilterChange={handleFilterChange}
+                        onEanChange={handleEanChange}
+                        onClearFilters={clearFilters}
+                        loading={loading}
+                      />
+                  </CardContent>
+              </Card>
+          </aside>
 
-        <main className="lg:col-span-3">
-            {error ? (
-                <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Erro de Comunicação</AlertTitle>
-                    <AlertDescription>{error}</AlertDescription>
-                </Alert>
-            ) : (
-            <Tabs defaultValue="products">
-                <TabsList className="grid w-full grid-cols-2 md:w-auto md:grid-cols-2">
-                  <TabsTrigger value="products">
-                    <Package2 className="mr-2 h-4 w-4" />
-                    Produtos
-                  </TabsTrigger>
-                  <TabsTrigger value="analytics">
-                    <BarChart className="mr-2 h-4 w-4" />
-                    Análise de Marketplace
-                  </TabsTrigger>
-                </TabsList>
-                <TabsContent value="products" className="mt-6">
-                  <ProductAccordion products={filteredProducts} loading={loading} />
-                </TabsContent>
-                <TabsContent value="analytics" className="mt-6">
-                  <AnalyticsTab products={filteredProducts} loading={loading} />
-                </TabsContent>
-            </Tabs>
-            )}
-        </main>
+          <main className="lg:col-span-3">
+              {error ? (
+                  <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle>Erro de Comunicação</AlertTitle>
+                      <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+              ) : (
+                <ProductAccordion products={filteredProducts} loading={loading} />
+              )}
+          </main>
+        </div>
       </div>
     </div>
   );
