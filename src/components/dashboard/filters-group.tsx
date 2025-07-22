@@ -2,15 +2,14 @@
 
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton";
-import { MultiSelect } from "./multi-select";
-import { Search } from "lucide-react";
+import { SearchableSelect } from "./searchable-select";
 
 interface Filters {
-  ean: string[];
-  marketplace: string[];
-  seller: string[];
-  description: string[];
-  brand: string[];
+  ean: string | null;
+  marketplace: string | null;
+  seller: string | null;
+  description: string | null;
+  brand: string | null;
 }
 
 interface FiltersGroupProps {
@@ -20,7 +19,7 @@ interface FiltersGroupProps {
   descriptions: string[];
   brands: string[];
   filters: Filters;
-  onFilterChange: (filterName: keyof Filters, value: string[]) => void;
+  onFilterChange: (filterName: keyof Filters, value: string | null) => void;
   onClearFilters: () => void;
   loading: boolean;
 }
@@ -29,8 +28,8 @@ export function FiltersGroup({
     eans, 
     marketplaces, 
     sellers, 
-    descriptions, 
-    brands, 
+    descriptions,
+    brands,
     filters, 
     onFilterChange,
     onClearFilters, 
@@ -52,44 +51,39 @@ export function FiltersGroup({
   return (
     <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-            <MultiSelect
-              placeholder="EAN"
-              selected={filters.ean}
+            <SearchableSelect
+              placeholder="Filtrar por EAN..."
               options={eans.map(ean => ({ value: ean, label: ean }))}
+              value={filters.ean}
               onChange={(value) => onFilterChange('ean', value)}
-              className="w-full"
             />
-            <MultiSelect
-              placeholder="Descrição"
-              selected={filters.description}
+            <SearchableSelect
+              placeholder="Filtrar por Descrição..."
               options={descriptions.map(desc => ({ value: desc, label: desc }))}
+              value={filters.description}
               onChange={(value) => onFilterChange('description', value)}
-              className="w-full"
-              disabled={filters.ean.length > 0}
+              disabled={!!filters.ean}
             />
-            <MultiSelect
-              placeholder="Marca"
-              selected={filters.brand}
+            <SearchableSelect
+              placeholder="Filtrar por Marca..."
               options={brands.map(brand => ({ value: brand, label: brand }))}
+              value={filters.brand}
               onChange={(value) => onFilterChange('brand', value)}
-              className="w-full"
-              disabled={filters.ean.length > 0}
+              disabled={!!filters.ean}
             />
-            <MultiSelect
-              placeholder="Marketplace"
-              selected={filters.marketplace}
+            <SearchableSelect
+              placeholder="Filtrar por Marketplace..."
               options={marketplaces.map(mp => ({ value: mp, label: mp }))}
+              value={filters.marketplace}
               onChange={(value) => onFilterChange('marketplace', value)}
-              className="w-full"
-              disabled={filters.ean.length > 0}
+              disabled={!!filters.ean}
             />
-            <MultiSelect
-              placeholder="Loja (Seller)"
-              selected={filters.seller}
+            <SearchableSelect
+              placeholder="Filtrar por Loja (Seller)..."
               options={sellers.map(seller => ({ value: seller, label: seller }))}
+              value={filters.seller}
               onChange={(value) => onFilterChange('seller', value)}
-              className="w-full"
-              disabled={filters.ean.length > 0}
+              disabled={!!filters.ean}
             />
         </div>
         <div className="flex justify-end">

@@ -2,15 +2,13 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import type { Product } from '@/types';
-import { AlertCircle, Package2, X } from 'lucide-react';
+import { AlertCircle, Package2 } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { FiltersGroup } from './filters-group';
 import { ProductAccordion } from './product-accordion';
 import { Card, CardContent } from '@/components/ui/card';
 import { EpocaAnalysis } from './epoca-analysis';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 
 // Helper to adapt the new API response to the existing Product type
 function adaptApiData(apiProduct: any): Product {
@@ -37,11 +35,11 @@ function adaptApiData(apiProduct: any): Product {
 }
 
 type Filters = {
-  ean: string[];
-  marketplace: string[];
-  seller: string[];
-  description: string[];
-  brand: string[];
+  ean: string | null;
+  marketplace: string | null;
+  seller: string | null;
+  description: string | null;
+  brand: string | null;
 };
 
 export function Dashboard() {
@@ -49,11 +47,11 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({
-    ean: [],
-    marketplace: [],
-    seller: [],
-    description: [],
-    brand: [],
+    ean: null,
+    marketplace: null,
+    seller: null,
+    description: null,
+    brand: null,
   });
 
   useEffect(() => {
@@ -92,46 +90,45 @@ export function Dashboard() {
   const uniqueBrands = useMemo(() => [...Array.from(new Set(products.map(p => p.brand).filter(Boolean).sort()))], [products]);
 
   const filteredProducts = useMemo(() => {
+    // If an EAN is selected, it should be the only filter applied.
+    if (filters.ean) {
+        return products.filter(p => p.ean === filters.ean);
+    }
     return products.filter(p => {
-      const eanMatch = filters.ean.length === 0 || filters.ean.includes(p.ean);
-      const marketplaceMatch = filters.marketplace.length === 0 || (p.marketplace && filters.marketplace.includes(p.marketplace));
-      const sellerMatch = filters.seller.length === 0 || (p.seller && filters.seller.includes(p.seller));
-      const descriptionMatch = filters.description.length === 0 || (p.name && filters.description.includes(p.name));
-      const brandMatch = filters.brand.length === 0 || (p.brand && filters.brand.includes(p.brand));
-      return eanMatch && marketplaceMatch && sellerMatch && descriptionMatch && brandMatch;
+      const marketplaceMatch = !filters.marketplace || p.marketplace === filters.marketplace;
+      const sellerMatch = !filters.seller || p.seller === filters.seller;
+      const descriptionMatch = !filters.description || p.name === filters.description;
+      const brandMatch = !filters.brand || p.brand === filters.brand;
+      return marketplaceMatch && sellerMatch && descriptionMatch && brandMatch;
     });
   }, [products, filters]);
 
-  const handleFilterChange = (filterName: keyof Filters, value: string[]) => {
-    setFilters(prev => ({ ...prev, [filterName]: value }));
-  };
-
-  const removeFilter = (filterName: keyof Filters, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [filterName]: prev[filterName].filter(item => item !== value),
-    }));
+  const handleFilterChange = (filterName: keyof Filters, value: string | null) => {
+    setFilters(prev => {
+        const newFilters = { ...prev, [filterName]: value };
+        // If EAN is being set, clear other filters
+        if (filterName === 'ean' && value) {
+            return {
+                ean: value,
+                marketplace: null,
+                seller: null,
+                description: null,
+                brand: null,
+            };
+        }
+        return newFilters;
+    });
   };
 
   const clearFilters = () => {
     setFilters({
-        ean: [],
-        marketplace: [],
-        seller: [],
-        description: [],
-        brand: [],
+        ean: null,
+        marketplace: null,
+        seller: null,
+        description: null,
+        brand: null,
     });
   };
-
-  const activeFilters = useMemo(() => {
-    return Object.entries(filters).flatMap(([key, values]) => 
-      (values as string[]).map(value => ({
-        category: key as keyof Filters,
-        label: key.charAt(0).toUpperCase() + key.slice(1),
-        value: value
-      }))
-    );
-  }, [filters]);
 
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
@@ -167,21 +164,6 @@ export function Dashboard() {
         </Card>
 
         <div>
-          {activeFilters.length > 0 && (
-            <div className="mb-4 space-y-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-sm font-medium text-muted-foreground">Filtros Ativos:</h3>
-                  {activeFilters.map(({ category, value, label }) => (
-                    <Badge key={`${category}-${value}`} variant="secondary" className="pl-2 pr-1">
-                      <span className="mr-1">{value}</span>
-                      <button onClick={() => removeFilter(category, value)} className="rounded-full hover:bg-muted-foreground/20 p-0.5">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-            </div>
-          )}
           {error ? (
               <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
