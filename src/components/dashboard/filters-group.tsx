@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton";
 import { SearchableSelect } from "./searchable-select";
-import { ScrollArea } from "../ui/scroll-area";
 
 interface Filters {
   ean: string;

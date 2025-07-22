@@ -98,7 +98,7 @@ export function Dashboard() {
   }, [products, filters]);
 
   const handleFilterChange = (filterName: keyof typeof filters, value: string) => {
-    setFilters(prev => ({ ...prev, [filterName]: value }));
+    setFilters(prev => ({ ...prev, ean: '', [filterName]: value }));
   };
   
   const handleEanChange = (value: string) => {
