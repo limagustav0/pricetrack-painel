@@ -6,11 +6,11 @@ import { useMemo, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { SearchX } from 'lucide-react';
+import { SearchableSelect } from './searchable-select';
 
 interface SellerComparisonTableProps {
   allProducts: Product[];
@@ -20,6 +20,7 @@ interface SellerComparisonTableProps {
 interface GroupedBySeller {
     sellerName: string;
     key_loja: string;
+    marketplaces: string[];
     products: Record<string, { // EAN as key
         name: string;
         brand: string | null;
@@ -29,9 +30,10 @@ interface GroupedBySeller {
 }
 
 export function SellerComparisonTable({ allProducts, loading }: SellerComparisonTableProps) {
-  const [sellerFilter, setSellerFilter] = useState('');
+  const [selectedSellers, setSelectedSellers] = useState<string[]>([]);
+  const [selectedMarketplaces, setSelectedMarketplaces] = useState<string[]>([]);
   
-  const { groupedSellers, uniqueMarketplaces } = useMemo(() => {
+  const { groupedSellers, uniqueMarketplaces, sellerOptions } = useMemo(() => {
     const marketplaces = [...new Set(allProducts.map(p => p.marketplace).filter(Boolean))].sort();
 
     const sellersData = allProducts.reduce((acc, product) => {
@@ -41,12 +43,13 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
             acc[product.key_loja] = {
                 sellerName: product.seller,
                 key_loja: product.key_loja,
+                marketplaces: [],
                 products: {},
             };
         }
         
-        if (!acc[product.key_loja].sellerName) {
-            acc[product.key_loja].sellerName = product.seller;
+        if (product.marketplace && !acc[product.key_loja].marketplaces.includes(product.marketplace)) {
+            acc[product.key_loja].marketplaces.push(product.marketplace);
         }
 
         if (!acc[product.key_loja].products[product.ean]) {
@@ -67,19 +70,45 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
 
         return acc;
     }, {} as Record<string, GroupedBySeller>);
+    
+    const sortedSellers = Object.values(sellersData).sort((a, b) => a.sellerName.localeCompare(b.sellerName));
+
+    const options = sortedSellers.map(s => ({ value: s.key_loja, label: s.sellerName }));
 
     return { 
-        groupedSellers: Object.values(sellersData).sort((a, b) => a.sellerName.localeCompare(b.sellerName)), 
-        uniqueMarketplaces: marketplaces 
+        groupedSellers: sortedSellers, 
+        uniqueMarketplaces: marketplaces,
+        sellerOptions: options
     };
   }, [allProducts]);
   
   const filteredSellers = useMemo(() => {
-      if (!sellerFilter) return groupedSellers;
-      return groupedSellers.filter(seller => 
-        seller.sellerName.toLowerCase().includes(sellerFilter.toLowerCase())
+      return groupedSellers.filter(seller => {
+          const sellerMatch = selectedSellers.length === 0 || selectedSellers.includes(seller.key_loja);
+          const marketplaceMatch = selectedMarketplaces.length === 0 || seller.marketplaces.some(m => selectedMarketplaces.includes(m));
+          return sellerMatch && marketplaceMatch;
+      });
+  }, [groupedSellers, selectedSellers, selectedMarketplaces]);
+
+  const handleSellerChange = (value: string) => {
+      setSelectedSellers(prev => 
+          prev.includes(value) 
+              ? prev.filter(v => v !== value) 
+              : [...prev, value]
       );
-  }, [groupedSellers, sellerFilter]);
+  };
+  
+  const handleMarketplaceChange = (value: string) => {
+    setSelectedMarketplaces(prev => 
+        prev.includes(value) 
+            ? prev.filter(v => v !== value) 
+            : [...prev, value]
+    );
+  };
+
+  const visibleMarketplaces = useMemo(() => {
+      return selectedMarketplaces.length > 0 ? uniqueMarketplaces.filter(m => selectedMarketplaces.includes(m)) : uniqueMarketplaces;
+  }, [uniqueMarketplaces, selectedMarketplaces]);
 
   if (loading) {
     return (
@@ -89,7 +118,10 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
                 <Skeleton className="h-4 w-3/4 mt-2" />
             </CardHeader>
             <CardContent>
-                <Skeleton className="h-10 w-1/3 mb-4" />
+                <div className="flex gap-4 mb-4">
+                  <Skeleton className="h-10 w-1/3" />
+                  <Skeleton className="h-10 w-1/3" />
+                </div>
                 <div className="space-y-4">
                     {[...Array(3)].map((_, i) => (
                        <Skeleton key={i} className="h-12 w-full" />
@@ -103,19 +135,29 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Comparativo de Preços por Vendedor</CardTitle>
+        <CardTitle>Análise por Vendedor</CardTitle>
         <CardDescription>
           Visualize e compare os preços de cada produto por vendedor nos diferentes marketplaces.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="mb-6">
-            <Input 
-                placeholder="Filtrar por nome do vendedor..."
-                value={sellerFilter}
-                onChange={(e) => setSellerFilter(e.target.value)}
-                className="max-w-sm"
-            />
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="flex-1 min-w-0">
+                <SearchableSelect
+                    placeholder="Filtrar por Vendedor..."
+                    options={sellerOptions}
+                    selectedValues={selectedSellers}
+                    onChange={handleSellerChange}
+                />
+            </div>
+            <div className="flex-1 min-w-0">
+                <SearchableSelect
+                    placeholder="Filtrar por Marketplace..."
+                    options={uniqueMarketplaces.map(m => ({ value: m, label: m }))}
+                    selectedValues={selectedMarketplaces}
+                    onChange={handleMarketplaceChange}
+                />
+            </div>
         </div>
 
         {filteredSellers.length > 0 ? (
@@ -131,7 +173,7 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
                                     <TableHeader className="sticky top-0 bg-background z-10">
                                         <TableRow>
                                             <TableHead className="min-w-[350px]">Produto (EAN/Marca)</TableHead>
-                                            {uniqueMarketplaces.map(mp => <TableHead key={mp} className="text-right min-w-[150px]">{mp}</TableHead>)}
+                                            {visibleMarketplaces.map(mp => <TableHead key={mp} className="text-right min-w-[150px]">{mp}</TableHead>)}
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -164,7 +206,7 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
                                                             </div>
                                                         </div>
                                                     </TableCell>
-                                                    {uniqueMarketplaces.map(mp => {
+                                                    {visibleMarketplaces.map(mp => {
                                                         const offer = product.offers[mp];
                                                         const isMinPrice = offer && offer.price === minPrice;
                                                         return (
