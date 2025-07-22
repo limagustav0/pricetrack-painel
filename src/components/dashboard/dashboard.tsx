@@ -1,9 +1,10 @@
 
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
 import type { Product } from '@/types';
-import { AlertCircle, PanelLeft } from 'lucide-react';
+import { AlertCircle, Menu } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { FiltersGroup } from './filters-group';
@@ -142,8 +143,8 @@ export function Dashboard() {
           <SidebarHeader>
               <div className="flex items-center justify-between">
                   <h2 className="text-lg font-semibold">Filtros</h2>
-                  <SidebarTrigger asChild>
-                    <Button variant="ghost" size="icon"><PanelLeft /></Button>
+                  <SidebarTrigger>
+                    <Menu/>
                   </SidebarTrigger>
               </div>
           </SidebarHeader>
@@ -166,11 +167,6 @@ export function Dashboard() {
         <div className="container mx-auto p-4 sm:p-6 lg:p-8">
           <header className="mb-8 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <SidebarTrigger asChild className="md:hidden">
-                <Button variant="ghost" size="icon">
-                  <PanelLeft />
-                </Button>
-              </SidebarTrigger>
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold text-foreground font-headline tracking-tight">PriceTrack</h1>
                 <p className="text-muted-foreground mt-2">Compare preços de diferentes marketplaces de forma eficiente.</p>
