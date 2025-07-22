@@ -12,6 +12,7 @@ import { Sidebar, SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PriceComparisonTable } from './price-comparison-table';
+import { SellerComparisonTable } from './seller-comparison-table';
 
 // Helper to adapt the new API response to the existing Product type
 function adaptApiData(apiProduct: any): Product {
@@ -22,6 +23,7 @@ function adaptApiData(apiProduct: any): Product {
     brand: apiProduct.marca,
     marketplace: apiProduct.marketplace,
     seller: apiProduct.loja,
+    key_loja: apiProduct.key_loja,
     price: parseFloat(apiProduct.preco_final),
     url: apiProduct.url,
     image: apiProduct.imagem,
@@ -184,9 +186,10 @@ function DashboardContent() {
             </header>
           
             <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-                    <TabsTrigger value="granular">Análise Detalhada</TabsTrigger>
+                    <TabsTrigger value="granular">Análise por Marketplace</TabsTrigger>
+                    <TabsTrigger value="seller">Análise por Vendedor</TabsTrigger>
                 </TabsList>
                 <TabsContent value="overview" className="mt-6">
                     <div className="space-y-6">
@@ -207,6 +210,9 @@ function DashboardContent() {
                 </TabsContent>
                 <TabsContent value="granular" className="mt-6">
                     <PriceComparisonTable allProducts={products} loading={loading} />
+                </TabsContent>
+                 <TabsContent value="seller" className="mt-6">
+                    <SellerComparisonTable allProducts={products} loading={loading} />
                 </TabsContent>
             </Tabs>
         </div>

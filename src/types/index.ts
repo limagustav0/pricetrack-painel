@@ -6,6 +6,7 @@ export interface Product {
   brand: string | null; // Brand is not available in the new structure
   marketplace: string;
   seller: string; // from 'loja'
+  key_loja: string | null;
   price: number; // from 'preco_final'
   url: string;
   image: string; // from 'imagem'
