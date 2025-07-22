@@ -96,12 +96,12 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
           Visualize os preços de cada produto lado a lado nos diferentes marketplaces.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="overflow-auto max-h-[calc(100vh-250px)]">
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 bg-background z-10">
             <TableRow>
-              <TableHead className="min-w-[300px]">Produto (EAN/Marca)</TableHead>
-              {uniqueMarketplaces.map(mp => <TableHead key={mp} className="text-right">{mp}</TableHead>)}
+              <TableHead className="min-w-[300px] whitespace-nowrap">Produto (EAN/Marca)</TableHead>
+              {uniqueMarketplaces.map(mp => <TableHead key={mp} className="text-right whitespace-nowrap">{mp}</TableHead>)}
             </TableRow>
           </TableHeader>
           <TableBody>
