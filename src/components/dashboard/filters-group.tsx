@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton";
 import { SearchableSelect } from "./searchable-select";
-import { useSidebar } from "../ui/sidebar";
 
 interface Filters {
   ean: string | null;
@@ -36,32 +35,31 @@ export function FiltersGroup({
     onClearFilters, 
     loading 
 }: FiltersGroupProps) {
-    const { state } = useSidebar();
-    
     if (loading) {
         return (
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 items-end">
                 {[...Array(5)].map((_, i) => (
-                    <Skeleton key={i} className="h-10 w-full" />
+                    <div key={i} className="space-y-2">
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
                 ))}
                 <Skeleton className="h-10 w-full" />
             </div>
         );
     }
   
-  if (state === 'collapsed') {
-    return null;
-  }
-  
   return (
-    <div className="space-y-4">
-        <div className="grid grid-cols-1 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 items-end">
+        <div className="xl:col-span-1">
             <SearchableSelect
               placeholder="Filtrar por EAN..."
               options={eans.map(ean => ({ value: ean, label: ean }))}
               value={filters.ean}
               onChange={(value) => onFilterChange('ean', value)}
             />
+        </div>
+        <div className="xl:col-span-1">
             <SearchableSelect
               placeholder="Filtrar por Descrição..."
               options={descriptions.map(desc => ({ value: desc, label: desc }))}
@@ -69,6 +67,8 @@ export function FiltersGroup({
               onChange={(value) => onFilterChange('description', value)}
               disabled={!!filters.ean}
             />
+        </div>
+        <div className="xl:col-span-1">
             <SearchableSelect
               placeholder="Filtrar por Marca..."
               options={brands.map(brand => ({ value: brand, label: brand }))}
@@ -76,6 +76,8 @@ export function FiltersGroup({
               onChange={(value) => onFilterChange('brand', value)}
               disabled={!!filters.ean}
             />
+        </div>
+        <div className="xl:col-span-1">
             <SearchableSelect
               placeholder="Filtrar por Marketplace..."
               options={marketplaces.map(mp => ({ value: mp, label: mp }))}
@@ -83,6 +85,8 @@ export function FiltersGroup({
               onChange={(value) => onFilterChange('marketplace', value)}
               disabled={!!filters.ean}
             />
+        </div>
+        <div className="xl:col-span-1">
             <SearchableSelect
               placeholder="Filtrar por Loja (Seller)..."
               options={sellers.map(seller => ({ value: seller, label: seller }))}
@@ -91,11 +95,9 @@ export function FiltersGroup({
               disabled={!!filters.ean}
             />
         </div>
-        <div className="flex justify-end">
-            <Button onClick={onClearFilters} variant="outline" className="w-full">
-                Limpar Filtros
-            </Button>
-        </div>
+        <Button onClick={onClearFilters} variant="outline">
+            Limpar Filtros
+        </Button>
     </div>
   );
 }

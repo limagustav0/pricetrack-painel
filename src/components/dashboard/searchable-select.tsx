@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown, X } from "lucide-react";
+import { Check, ChevronsUpDown } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -51,18 +51,7 @@ export function SearchableSelect({
           <span className="truncate">
             {selectedOption ? selectedOption.label : placeholder}
           </span>
-          <div className="flex items-center">
-            {value && (
-                <X
-                    className="h-4 w-4 opacity-50 hover:opacity-100 mr-2"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onChange(null);
-                    }}
-                />
-            )}
-            <ChevronsUpDown className="h-4 w-4 opacity-50" />
-          </div>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">

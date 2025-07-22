@@ -2,15 +2,12 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import type { Product } from '@/types';
-import { AlertCircle, Home, Package2, PanelLeft } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { FiltersGroup } from './filters-group';
 import { ProductAccordion } from './product-accordion';
-import { Card, CardContent } from '@/components/ui/card';
 import { EpocaAnalysis } from './epoca-analysis';
-import { Sidebar, SidebarContent, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger } from '../ui/sidebar';
-import { Button } from '../ui/button';
 
 // Helper to adapt the new API response to the existing Product type
 function adaptApiData(apiProduct: any): Product {
@@ -137,60 +134,52 @@ export function Dashboard() {
   };
 
   return (
-    <>
-      <Sidebar>
-        <SidebarHeader>
-            <div className="flex items-center gap-3 p-2">
-              <div className="flex-shrink-0 bg-primary text-primary-foreground p-3 rounded-lg shadow-md">
-                  <Package2 className="h-7 w-7" />
-              </div>
-              <div className="group-data-[collapsible=icon]:hidden">
-                  <h1 className="text-xl md:text-2xl font-bold text-foreground font-headline tracking-tight">PriceTrack</h1>
-                  <p className="text-sm text-muted-foreground">Seu comparador</p>
-              </div>
-          </div>
-        </SidebarHeader>
-        <SidebarContent>
-            <div className="p-2">
-                <h2 className="font-semibold text-lg mb-4 group-data-[collapsible=icon]:hidden">Filtros</h2>
-                <FiltersGroup
-                    eans={uniqueEans}
-                    marketplaces={uniqueMarketplaces}
-                    sellers={uniqueSellers}
-                    descriptions={uniqueDescriptions}
-                    brands={uniqueBrands}
-                    filters={filters}
-                    onFilterChange={handleFilterChange}
-                    onClearFilters={clearFilters}
-                    loading={loading}
-                    />
-            </div>
-        </SidebarContent>
-      </Sidebar>
-      <SidebarInset>
-        <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-            <header className="mb-8 flex items-center gap-4">
-                <SidebarTrigger className="md:hidden"/>
-                <h1 className="text-2xl md:text-3xl font-bold text-foreground font-headline tracking-tight">Dashboard</h1>
-            </header>
-            
-            <div className="space-y-8">
-                <EpocaAnalysis allProducts={products} loading={loading} />
+    <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+      <header className="mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-foreground font-headline tracking-tight">PriceTrack</h1>
+        <p className="text-muted-foreground mt-2">Compare preços de diferentes marketplaces de forma eficiente.</p>
+      </header>
+      
+      <div className="space-y-8">
+        <EpocaAnalysis allProducts={products} loading={loading} />
 
-                <div>
-                {error ? (
-                    <Alert variant="destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Erro de Comunicação</AlertTitle>
-                        <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                ) : (
-                    <ProductAccordion products={filteredProducts} loading={loading} />
-                )}
-                </div>
-            </div>
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Filtros de Produtos</CardTitle>
+              <CardDescription>Refine sua busca para encontrar exatamente o que você precisa.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FiltersGroup
+                eans={uniqueEans}
+                marketplaces={uniqueMarketplaces}
+                sellers={uniqueSellers}
+                descriptions={uniqueDescriptions}
+                brands={uniqueBrands}
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                onClearFilters={clearFilters}
+                loading={loading}
+              />
+            </CardContent>
+          </Card>
         </div>
-      </SidebarInset>
-    </>
+
+        <div>
+          {error ? (
+              <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Erro de Comunicação</AlertTitle>
+                  <AlertDescription>{error}</AlertDescription>
+              </Alert>
+          ) : (
+              <ProductAccordion products={filteredProducts} loading={loading} />
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
+
+// Add these imports to the top
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
