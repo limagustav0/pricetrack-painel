@@ -195,8 +195,8 @@ function DashboardContent() {
                     </TabsList>
                 </div>
               
-                <div className="p-4 md:p-6 flex-grow flex flex-col">
-                    <TabsContent value="overview" className="mt-0 flex-grow flex flex-col">
+                <div className="p-4 md:p-6 flex-grow">
+                    <TabsContent value="overview" className="mt-0 h-full flex flex-col">
                         <div className="space-y-6 overflow-y-auto flex-grow">
                             <EpocaAnalysis allProducts={products} loading={loading} />
 
@@ -213,10 +213,10 @@ function DashboardContent() {
                             </div>
                         </div>
                     </TabsContent>
-                    <TabsContent value="granular" className="mt-0 flex-grow flex flex-col">
+                    <TabsContent value="granular" className="mt-0">
                         <PriceComparisonTable allProducts={products} loading={loading} />
                     </TabsContent>
-                     <TabsContent value="seller" className="mt-0 flex-grow flex flex-col">
+                     <TabsContent value="seller" className="mt-0">
                         <SellerComparisonTable allProducts={products} loading={loading} />
                     </TabsContent>
                 </div>
