@@ -110,7 +110,8 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
         }, {} as Record<string, Product[]>);
     }, [productGroup]);
 
-    const handleCopy = () => {
+    const handleCopy = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation();
         navigator.clipboard.writeText(ean);
         setIsCopied(true);
         toast({
@@ -147,10 +148,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                                     variant="ghost"
                                     size="icon"
                                     className="h-5 w-5"
-                                    onClick={(e) => {
-                                        e.stopPropagation(); // Prevent accordion from toggling
-                                        handleCopy();
-                                    }}
+                                    onClick={handleCopy}
                                     aria-label="Copiar EAN"
                                 >
                                     {isCopied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
