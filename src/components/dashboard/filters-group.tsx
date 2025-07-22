@@ -4,14 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton";
 import { SearchableSelect } from "./searchable-select";
 import { Label } from "@/components/ui/label";
-
-interface Filters {
-  ean: string | null;
-  marketplace: string | null;
-  seller: string | null;
-  description: string | null;
-  brand: string | null;
-}
+import type { Filters } from "./dashboard";
 
 interface FiltersGroupProps {
   eans: string[];
@@ -20,7 +13,7 @@ interface FiltersGroupProps {
   descriptions: string[];
   brands: string[];
   filters: Filters;
-  onFilterChange: (filterName: keyof Filters, value: string | null) => void;
+  onFilterChange: (filterName: keyof Filters, value: string) => void;
   onClearFilters: () => void;
   loading: boolean;
 }
@@ -57,7 +50,7 @@ export function FiltersGroup({
             <SearchableSelect
               placeholder="Filtrar por EAN..."
               options={eans.map(ean => ({ value: ean, label: ean }))}
-              value={filters.ean}
+              selectedValues={filters.ean}
               onChange={(value) => onFilterChange('ean', value)}
             />
         </div>
@@ -66,9 +59,8 @@ export function FiltersGroup({
             <SearchableSelect
               placeholder="Filtrar por Descrição..."
               options={descriptions.map(desc => ({ value: desc, label: desc }))}
-              value={filters.description}
+              selectedValues={filters.description}
               onChange={(value) => onFilterChange('description', value)}
-              disabled={!!filters.ean}
             />
         </div>
         <div>
@@ -76,9 +68,8 @@ export function FiltersGroup({
             <SearchableSelect
               placeholder="Filtrar por Marca..."
               options={brands.map(brand => ({ value: brand, label: brand }))}
-              value={filters.brand}
+              selectedValues={filters.brand}
               onChange={(value) => onFilterChange('brand', value)}
-              disabled={!!filters.ean}
             />
         </div>
         <div>
@@ -86,9 +77,8 @@ export function FiltersGroup({
             <SearchableSelect
               placeholder="Filtrar por Marketplace..."
               options={marketplaces.map(mp => ({ value: mp, label: mp }))}
-              value={filters.marketplace}
+              selectedValues={filters.marketplace}
               onChange={(value) => onFilterChange('marketplace', value)}
-              disabled={!!filters.ean}
             />
         </div>
         <div>
@@ -96,9 +86,8 @@ export function FiltersGroup({
             <SearchableSelect
               placeholder="Filtrar por Loja (Seller)..."
               options={sellers.map(seller => ({ value: seller, label: seller }))}
-              value={filters.seller}
+              selectedValues={filters.seller}
               onChange={(value) => onFilterChange('seller', value)}
-              disabled={!!filters.ean}
             />
         </div>
         <Button onClick={onClearFilters} variant="outline" className="w-full mt-4">

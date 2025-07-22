@@ -35,24 +35,25 @@ function adaptApiData(apiProduct: any): Product {
   };
 }
 
-type Filters = {
-  ean: string | null;
-  marketplace: string | null;
-  seller: string | null;
-  description: string | null;
-  brand: string | null;
+export type Filters = {
+  ean: string[];
+  marketplace: string[];
+  seller: string[];
+  description: string[];
+  brand: string[];
 };
+
 
 function DashboardContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({
-    ean: null,
-    marketplace: null,
-    seller: null,
-    description: null,
-    brand: null,
+    ean: [],
+    marketplace: [],
+    seller: [],
+    description: [],
+    brand: [],
   });
 
   const { toggleSidebar } = useSidebar();
@@ -123,47 +124,38 @@ function DashboardContent() {
   const uniqueBrands = useMemo(() => [...Array.from(new Set(products.map(p => p.brand).filter(Boolean).sort()))], [products]);
 
   const filteredProducts = useMemo(() => {
-    // If an EAN is selected, it should be the only filter applied.
-    if (filters.ean) {
-        return products.filter(p => p.ean === filters.ean);
-    }
     return products.filter(p => {
-      const marketplaceMatch = !filters.marketplace || p.marketplace === filters.marketplace;
-      const sellerMatch = !filters.seller || p.seller === filters.seller;
-      const descriptionMatch = !filters.description || p.name === filters.description;
-      const brandMatch = !filters.brand || p.brand === filters.brand;
-      return marketplaceMatch && sellerMatch && descriptionMatch && brandMatch;
+        const eanMatch = filters.ean.length === 0 || (p.ean && filters.ean.includes(p.ean));
+        const marketplaceMatch = filters.marketplace.length === 0 || (p.marketplace && filters.marketplace.includes(p.marketplace));
+        const sellerMatch = filters.seller.length === 0 || (p.seller && filters.seller.includes(p.seller));
+        const descriptionMatch = filters.description.length === 0 || filters.description.includes(p.name);
+        const brandMatch = filters.brand.length === 0 || (p.brand && filters.brand.includes(p.brand));
+
+        return eanMatch && marketplaceMatch && sellerMatch && descriptionMatch && brandMatch;
     });
   }, [products, filters]);
 
-  const handleFilterChange = (filterName: keyof Filters, value: string | null) => {
+  const handleFilterChange = (filterName: keyof Filters, value: string) => {
     setFilters(prev => {
-        const newFilters = { ...prev, [filterName]: value };
-        // If EAN is being set, clear other filters
-        if (filterName === 'ean' && value) {
-            return {
-                ean: value,
-                marketplace: null,
-                seller: null,
-                description: null,
-                brand: null,
-            };
-        }
-        // If other filter is set, clear EAN
-        if (filterName !== 'ean' && value) {
-            newFilters.ean = null;
-        }
-        return newFilters;
+      const currentValues = prev[filterName];
+      const newValues = currentValues.includes(value)
+        ? currentValues.filter(v => v !== value)
+        : [...currentValues, value];
+      
+      return {
+        ...prev,
+        [filterName]: newValues,
+      };
     });
   };
 
   const clearFilters = () => {
     setFilters({
-        ean: null,
-        marketplace: null,
-        seller: null,
-        description: null,
-        brand: null,
+        ean: [],
+        marketplace: [],
+        seller: [],
+        description: [],
+        brand: [],
     });
   };
 
