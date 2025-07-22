@@ -93,7 +93,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
     const imageSrc = isValidHttpUrl(firstProduct.image) ? firstProduct.image! : `https://placehold.co/100x100.png`;
 
     const isSoldAtEpoca = useMemo(() => {
-        return productGroup.some(p => p.marketplace === "Epoca Cosmeticos");
+        return productGroup.some(p => p.marketplace === "Época Cosméticos");
     }, [productGroup]);
 
     const offersByMarketplace = useMemo(() => {

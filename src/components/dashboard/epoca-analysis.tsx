@@ -12,7 +12,7 @@ interface EpocaAnalysisProps {
   loading: boolean;
 }
 
-const TARGET_MARKETPLACE = "Epoca Cosmeticos";
+const TARGET_MARKETPLACE = "Época Cosméticos";
 
 export function EpocaAnalysis({ allProducts, loading }: EpocaAnalysisProps) {
   const analysis = useMemo(() => {
