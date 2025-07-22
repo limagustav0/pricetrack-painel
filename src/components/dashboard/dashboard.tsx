@@ -28,6 +28,7 @@ function adaptApiData(apiProduct: any): Product {
     url: apiProduct.url,
     image: apiProduct.imagem,
     updated_at: apiProduct.data_hora,
+    change_price: apiProduct.change_price ? parseInt(apiProduct.change_price, 10) : 0,
   };
 }
 
@@ -92,7 +93,7 @@ function DashboardContent() {
         
         const mergedProducts = adaptedProducts.map(product => {
             if (!product.url && product.ean && product.marketplace) {
-                const key = `${product.ean}-${item.marketplace}`;
+                const key = `${product.ean}-${product.marketplace}`;
                 if (urlMap.has(key)) {
                     return { ...product, url: urlMap.get(key)! };
                 }
@@ -184,15 +185,15 @@ function DashboardContent() {
             </header>
             <Tabs defaultValue="overview" className="w-full flex flex-col flex-1 min-h-0">
                 <div className="px-4 md:px-6 pt-4">
-                     <TabsList>
-                        <TabsTrigger value="overview" className="flex-1">Visão Geral</TabsTrigger>
-                        <TabsTrigger value="granular" className="flex-1">Análise por Marketplace</TabsTrigger>
-                        <TabsTrigger value="seller" className="flex-1">Análise por Vendedor</TabsTrigger>
+                     <TabsList className="grid w-full grid-cols-3 max-w-lg">
+                        <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+                        <TabsTrigger value="granular">Análise por Marketplace</TabsTrigger>
+                        <TabsTrigger value="seller">Análise por Vendedor</TabsTrigger>
                     </TabsList>
                 </div>
               
                 <div className="flex-1 min-h-0 p-4 md:p-6">
-                    <TabsContent value="overview" className="mt-0 h-full">
+                    <TabsContent value="overview" className="mt-0 h-full flex flex-col">
                         <div className="space-y-6 h-full overflow-y-auto">
                             <EpocaAnalysis allProducts={products} loading={loading} />
 

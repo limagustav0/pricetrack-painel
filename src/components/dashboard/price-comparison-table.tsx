@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { SearchableSelect } from './searchable-select';
+import { TrendingUp } from 'lucide-react';
 
 interface PriceComparisonTableProps {
   allProducts: Product[];
@@ -21,7 +22,7 @@ interface GroupedProduct {
     name: string;
     brand: string | null;
     image: string;
-    offers: Record<string, { price: number; seller: string; }>;
+    offers: Record<string, { price: number; seller: string; change_price: number | null; }>;
 }
 
 
@@ -51,6 +52,7 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
           acc[product.ean].offers[product.marketplace] = {
               price: product.price,
               seller: product.seller,
+              change_price: product.change_price,
           };
       }
 
@@ -184,6 +186,12 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
                                                     {formatCurrency(offer.price)}
                                                 </p>
                                                 <p className="text-xs text-muted-foreground">{offer.seller}</p>
+                                                {offer.change_price && offer.change_price > 0 && (
+                                                    <p className="text-xs text-muted-foreground flex items-center justify-end gap-1 mt-1">
+                                                        <TrendingUp className="h-3 w-3" />
+                                                        {offer.change_price} alteraç{offer.change_price > 1 ? 'ões' : 'ão'}
+                                                    </p>
+                                                )}
                                                 {isMinPrice && prices.length > 1 && <Badge variant="secondary" className="mt-1">Melhor Preço</Badge>}
                                             </div>
                                         ) : (

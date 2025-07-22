@@ -10,7 +10,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { SearchX } from 'lucide-react';
+import { SearchX, TrendingUp } from 'lucide-react';
 import { SearchableSelect } from './searchable-select';
 
 interface SellerComparisonTableProps {
@@ -26,7 +26,7 @@ interface GroupedBySeller {
         name: string;
         brand: string | null;
         image: string;
-        offers: Record<string, { price: number; }>; // Marketplace as key
+        offers: Record<string, { price: number; change_price: number | null; }>; // Marketplace as key
     }>;
 }
 
@@ -66,6 +66,7 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
         if (!existingOffer || product.price < existingOffer.price) {
             acc[product.key_loja].products[product.ean].offers[product.marketplace] = {
                 price: product.price,
+                change_price: product.change_price,
             };
         }
 
@@ -220,6 +221,12 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
                                                                           <p className={`font-bold ${isMinPrice ? 'text-primary' : ''}`}>
                                                                               {formatCurrency(offer.price)}
                                                                           </p>
+                                                                          {offer.change_price && offer.change_price > 0 && (
+                                                                              <p className="text-xs text-muted-foreground flex items-center justify-end gap-1 mt-1">
+                                                                                  <TrendingUp className="h-3 w-3" />
+                                                                                  {offer.change_price} alteraç{offer.change_price > 1 ? 'ões' : 'ão'}
+                                                                              </p>
+                                                                          )}
                                                                           {isMinPrice && prices.length > 1 && <Badge variant="secondary" className="mt-1">Melhor Preço</Badge>}
                                                                       </div>
                                                                   ) : (

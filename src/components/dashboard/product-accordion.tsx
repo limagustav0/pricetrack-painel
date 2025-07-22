@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ExternalLink, SearchX } from 'lucide-react';
+import { ExternalLink, SearchX, TrendingUp } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -92,6 +92,10 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
     const maxPrice = Math.max(...prices);
     const imageSrc = isValidHttpUrl(firstProduct.image) ? firstProduct.image! : `https://placehold.co/100x100.png`;
 
+    const totalChanges = useMemo(() => {
+        return productGroup.reduce((sum, p) => sum + (p.change_price || 0), 0);
+    }, [productGroup]);
+
     const isSoldAtEpoca = useMemo(() => {
         return productGroup.some(p => p.marketplace === "Época Cosméticos");
     }, [productGroup]);
@@ -138,6 +142,12 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                                     <Badge variant="secondary">Variação: {formatCurrency(minPrice)} - {formatCurrency(maxPrice)}</Badge>
                                 )}
                                 <Badge variant="outline">{productGroup.length} oferta{productGroup.length > 1 ? 's' : ''}</Badge>
+                                {totalChanges > 0 && (
+                                    <Badge variant="outline" className="flex items-center gap-1">
+                                        <TrendingUp className="h-3 w-3" />
+                                        {totalChanges} alteraç{totalChanges > 1 ? 'ões' : 'ão'}
+                                    </Badge>
+                                )}
                                 {!isSoldAtEpoca && <Badge variant="destructive">Não vende na Época</Badge>}
                             </div>
                         </div>
@@ -161,6 +171,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                                                 <TableRow>
                                                     <TableHead>Loja (Seller)</TableHead>
                                                     <TableHead className="text-right">Preço</TableHead>
+                                                    <TableHead>Alterações</TableHead>
                                                     <TableHead>Última Atualização</TableHead>
                                                     <TableHead></TableHead>
                                                 </TableRow>
@@ -171,6 +182,9 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                                                     <TableCell>{product.seller}</TableCell>
                                                     <TableCell className={`font-bold text-right ${product.price === minPrice ? 'text-primary' : 'text-foreground'}`}>
                                                         {formatCurrency(product.price)}
+                                                    </TableCell>
+                                                    <TableCell className="text-muted-foreground text-sm text-center">
+                                                        {product.change_price || 0}
                                                     </TableCell>
                                                     <TableCell className="text-muted-foreground text-sm">
                                                         {product.updated_at ? formatDistanceToNow(new Date(product.updated_at), { addSuffix: true, locale: ptBR }) : '-'}

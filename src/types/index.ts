@@ -11,4 +11,5 @@ export interface Product {
   url: string;
   image: string; // from 'imagem'
   updated_at: string; // from 'data_hora'
+  change_price: number | null;
 }
