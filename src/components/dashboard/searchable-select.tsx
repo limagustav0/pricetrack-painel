@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronsUpDown, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -33,6 +33,11 @@ export function SearchableSelect({ options, value, onChange, placeholder, noResu
 
   const selectedOption = options.find((option) => option.value.toLowerCase() === value.toLowerCase())
 
+  const handleClear = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation(); // Prevents the popover from opening
+    onChange("");
+  }
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -40,11 +45,21 @@ export function SearchableSelect({ options, value, onChange, placeholder, noResu
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between"
+          className="w-full justify-between font-normal"
           disabled={disabled}
         >
-          {selectedOption ? selectedOption.label : placeholder || "Selecione..."}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <span className="truncate">
+            {selectedOption ? selectedOption.label : placeholder || "Selecione..."}
+          </span>
+          <div className="flex items-center">
+            {value && !disabled && (
+               <X
+                className="h-4 w-4 shrink-0 opacity-50 hover:opacity-100 ml-2"
+                onClick={(e: any) => handleClear(e)}
+              />
+            )}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </div>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">

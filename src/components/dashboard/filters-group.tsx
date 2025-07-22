@@ -47,6 +47,7 @@ export function FiltersGroup({
                         <Skeleton className="h-10 w-full" />
                     </div>
                 ))}
+                <Skeleton className="h-10 w-full" />
             </div>
         );
     }
@@ -113,7 +114,7 @@ export function FiltersGroup({
         </div>
 
         <Button onClick={onClearFilters} variant="outline" className="w-full">
-            Limpar Filtros
+            Limpar Todos os Filtros
         </Button>
     </div>
   );
