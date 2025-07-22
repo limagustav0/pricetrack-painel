@@ -40,6 +40,10 @@ const nextConfig: NextConfig = {
         source: '/api/price-data',
         destination: 'http://201.23.64.234:8000/api/products/',
       },
+      {
+        source: '/api/url-data',
+        destination: 'http://201.23.64.234:8000/api/urls/',
+      },
     ];
   },
 };

@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -62,17 +60,47 @@ export function Dashboard() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch('/api/price-data');
-        if (!response.ok) {
-          throw new Error(`Erro ao conectar com a API. Status: ${response.status} ${response.statusText}`);
+        const [productsResponse, urlsResponse] = await Promise.all([
+            fetch('/api/price-data'),
+            fetch('/api/url-data')
+        ]);
+
+        if (!productsResponse.ok) {
+          throw new Error(`Erro ao conectar com a API de produtos. Status: ${productsResponse.status} ${productsResponse.statusText}`);
         }
-        const data = await response.json();
-        const results = data.results || data; 
-        if (Array.isArray(results)) {
-            setProducts(results.map(adaptApiData));
-        } else {
-            throw new Error("O formato dos dados recebidos da API não é o esperado.");
+        if (!urlsResponse.ok) {
+            throw new Error(`Erro ao conectar com a API de URLs. Status: ${urlsResponse.status} ${urlsResponse.statusText}`);
         }
+
+        const productsData = await productsResponse.json();
+        const urlsData = await urlsResponse.json();
+        
+        const results = productsData.results || productsData;
+        
+        if (!Array.isArray(results)) {
+            throw new Error("O formato dos dados de produtos recebidos da API não é o esperado.");
+        }
+
+        const urlMap = new Map<string, string>();
+        if (Array.isArray(urlsData)) {
+            for (const item of urlsData) {
+                if(item.ean && item.url) {
+                    urlMap.set(item.ean, item.url);
+                }
+            }
+        }
+
+        const adaptedProducts = results.map(adaptApiData);
+        
+        const mergedProducts = adaptedProducts.map(product => {
+            if (!product.url && product.ean && urlMap.has(product.ean)) {
+                return { ...product, url: urlMap.get(product.ean)! };
+            }
+            return product;
+        });
+
+        setProducts(mergedProducts);
+
       } catch (e) {
         if (e instanceof Error) {
           setError(`Falha ao buscar os dados: ${e.message}. Verifique sua conexão ou a URL da API.`);
@@ -143,9 +171,6 @@ export function Dashboard() {
           <SidebarHeader>
               <div className="flex items-center justify-between">
                   <h2 className="text-lg font-semibold">Filtros</h2>
-                  <SidebarTrigger>
-                    <Menu/>
-                  </SidebarTrigger>
               </div>
           </SidebarHeader>
           <SidebarContent>
@@ -167,6 +192,11 @@ export function Dashboard() {
         <div className="container mx-auto p-4 sm:p-6 lg:p-8">
           <header className="mb-8 flex items-center justify-between">
             <div className="flex items-center gap-4">
+               <SidebarTrigger asChild>
+                    <Button variant="ghost" size="icon" className="md:hidden">
+                        <Menu />
+                    </Button>
+                </SidebarTrigger>
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold text-foreground font-headline tracking-tight">PriceTrack</h1>
                 <p className="text-muted-foreground mt-2">Compare preços de diferentes marketplaces de forma eficiente.</p>
