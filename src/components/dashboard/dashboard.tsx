@@ -10,6 +10,8 @@ import { ProductAccordion } from './product-accordion';
 import { EpocaAnalysis } from './epoca-analysis';
 import { Sidebar, SidebarProvider, SidebarTrigger, SidebarInset, SidebarHeader, SidebarContent, SidebarRail, useSidebar } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GranularAnalysis } from './granular-analysis';
 
 // Helper to adapt the new API response to the existing Product type
 function adaptApiData(apiProduct: any): Product {
@@ -192,21 +194,32 @@ function DashboardContent() {
                 </div>
             </header>
           
-          <div className="space-y-8">
-            <EpocaAnalysis allProducts={products} loading={loading} />
+            <Tabs defaultValue="overview" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+                    <TabsTrigger value="granular">Análise Detalhada</TabsTrigger>
+                </TabsList>
+                <TabsContent value="overview" className="mt-6">
+                    <div className="space-y-8">
+                        <EpocaAnalysis allProducts={products} loading={loading} />
 
-            <div>
-              {error ? (
-                  <Alert variant="destructive">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertTitle>Erro de Comunicação</AlertTitle>
-                      <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-              ) : (
-                  <ProductAccordion products={filteredProducts} loading={loading} />
-              )}
-            </div>
-          </div>
+                        <div>
+                            {error ? (
+                                <Alert variant="destructive">
+                                    <AlertCircle className="h-4 w-4" />
+                                    <AlertTitle>Erro de Comunicação</AlertTitle>
+                                    <AlertDescription>{error}</AlertDescription>
+                                </Alert>
+                            ) : (
+                                <ProductAccordion products={filteredProducts} loading={loading} />
+                            )}
+                        </div>
+                    </div>
+                </TabsContent>
+                <TabsContent value="granular" className="mt-6">
+                    <GranularAnalysis allProducts={filteredProducts} loading={loading} />
+                </TabsContent>
+            </Tabs>
         </div>
       </SidebarInset>
     </>
