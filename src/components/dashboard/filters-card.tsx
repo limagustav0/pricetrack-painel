@@ -9,7 +9,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "../ui/input";
 import { SearchableSelect } from "./searchable-select";
 
 interface Filters {
@@ -23,13 +22,14 @@ interface FiltersCardProps {
   eans: string[];
   marketplaces: string[];
   sellers: string[];
+  descriptions: string[];
   filters: Filters;
   onFilterChange: (filterName: keyof Filters, value: string) => void;
   onClearFilters: () => void;
   loading: boolean;
 }
 
-export function FiltersCard({ eans, marketplaces, sellers, filters, onFilterChange, onClearFilters, loading }: FiltersCardProps) {
+export function FiltersCard({ eans, marketplaces, sellers, descriptions, filters, onFilterChange, onClearFilters, loading }: FiltersCardProps) {
   if (loading) {
     return (
       <Card>
@@ -54,11 +54,12 @@ export function FiltersCard({ eans, marketplaces, sellers, filters, onFilterChan
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 items-end">
           <div className="grid w-full items-center gap-1.5">
             <Label htmlFor="description-filter">Descrição</Label>
-            <Input 
-              id="description-filter"
-              placeholder="Digite a descrição..."
+            <SearchableSelect
+              placeholder="Digite ou selecione a descrição"
+              noResultsText="Nenhuma descrição encontrada."
               value={filters.description}
-              onChange={(e) => onFilterChange('description', e.target.value)}
+              onChange={(value) => onFilterChange('description', value)}
+              options={descriptions.map(desc => ({ value: desc, label: desc }))}
             />
           </div>
           <div className="grid w-full items-center gap-1.5">

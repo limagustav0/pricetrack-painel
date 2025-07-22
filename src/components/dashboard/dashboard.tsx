@@ -72,6 +72,7 @@ export function Dashboard() {
   const uniqueEans = useMemo(() => [...Array.from(new Set(products.map(p => p.ean).filter(Boolean).sort()))], [products]);
   const uniqueMarketplaces = useMemo(() => [...Array.from(new Set(products.map(p => p.marketplace).filter(Boolean).sort()))], [products]);
   const uniqueSellers = useMemo(() => [...Array.from(new Set(products.map(p => p.seller).filter(Boolean).sort()))], [products]);
+  const uniqueDescriptions = useMemo(() => [...Array.from(new Set(products.map(p => p.name).filter(Boolean).sort()))], [products]);
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
@@ -112,6 +113,7 @@ export function Dashboard() {
         eans={uniqueEans}
         marketplaces={uniqueMarketplaces}
         sellers={uniqueSellers}
+        descriptions={uniqueDescriptions}
         filters={filters}
         onFilterChange={handleFilterChange}
         onClearFilters={clearFilters}
