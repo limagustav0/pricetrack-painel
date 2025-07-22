@@ -169,9 +169,6 @@ export function Dashboard() {
               <h1 className="text-3xl md:text-4xl font-bold text-foreground font-headline tracking-tight">PriceTrack</h1>
               <p className="text-muted-foreground mt-2">Compare preços de diferentes marketplaces de forma eficiente.</p>
             </div>
-            <SidebarTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon"><PanelLeft/></Button>
-            </SidebarTrigger>
           </header>
           
           <div className="space-y-8">

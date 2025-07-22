@@ -94,7 +94,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
     return (
         <AccordionItem value={ean} className="border-none">
             <Card className="overflow-hidden transition-all hover:shadow-lg">
-                <AccordionTrigger className="p-4 text-left hover:no-underline [&[data-state=open]>div>svg]:rotate-180">
+                <AccordionTrigger className="p-4 text-left hover:no-underline [&[data-state=open]>div>div>svg]:rotate-180">
                     <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full">
                         <Image
                             src={imageSrc}
@@ -120,7 +120,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                 </AccordionTrigger>
                 <AccordionContent className="px-6 pb-4">
                     <h4 className="font-semibold mb-2 text-foreground">Ofertas disponíveis ({productGroup.length})</h4>
-                    <Accordion type="multiple" className="w-full space-y-2">
+                     <Accordion type="multiple" className="w-full space-y-2">
                          {Object.entries(offersByMarketplace).map(([marketplace, offers]) => (
                              <AccordionItem key={marketplace} value={marketplace} className="border rounded-lg">
                                  <AccordionTrigger className="px-4 py-2 text-left hover:no-underline bg-muted/50">
