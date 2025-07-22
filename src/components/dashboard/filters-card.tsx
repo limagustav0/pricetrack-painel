@@ -13,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,6 +24,7 @@ interface Filters {
 }
 
 interface FiltersCardProps {
+  eans: string[];
   marketplaces: string[];
   sellers: string[];
   filters: Filters;
@@ -33,7 +33,7 @@ interface FiltersCardProps {
   loading: boolean;
 }
 
-export function FiltersCard({ marketplaces, sellers, filters, onFilterChange, onClearFilters, loading }: FiltersCardProps) {
+export function FiltersCard({ eans, marketplaces, sellers, filters, onFilterChange, onClearFilters, loading }: FiltersCardProps) {
   if (loading) {
     return (
       <Card>
@@ -58,7 +58,16 @@ export function FiltersCard({ marketplaces, sellers, filters, onFilterChange, on
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
           <div className="grid w-full items-center gap-1.5">
             <Label htmlFor="ean-filter">EAN</Label>
-            <Input id="ean-filter" placeholder="Filtrar por EAN..." value={filters.ean} onChange={(e) => onFilterChange('ean', e.target.value)} />
+            <Select value={filters.ean} onValueChange={(value) => onFilterChange('ean', value)}>
+              <SelectTrigger id="ean-filter" className="w-full">
+                <SelectValue placeholder="Selecione o EAN" />
+              </SelectTrigger>
+              <SelectContent>
+                {eans.map(ean => (
+                  <SelectItem key={ean} value={ean}>{ean === 'all' ? 'Todos os EANs' : ean}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid w-full items-center gap-1.5">
             <Label htmlFor="marketplace-filter">Marketplace</Label>

@@ -30,7 +30,7 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({
-    ean: '',
+    ean: 'all',
     marketplace: 'all',
     seller: 'all', // 'loja' from API
   });
@@ -65,13 +65,14 @@ export function Dashboard() {
     fetchProducts();
   }, []);
 
+  const uniqueEans = useMemo(() => ['all', ...Array.from(new Set(products.map(p => p.ean).filter(Boolean).sort()))], [products]);
   const uniqueMarketplaces = useMemo(() => ['all', ...Array.from(new Set(products.map(p => p.marketplace).filter(Boolean).sort()))], [products]);
   const uniqueSellers = useMemo(() => ['all', ...Array.from(new Set(products.map(p => p.seller).filter(Boolean).sort()))], [products]);
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
         const marketplaceMatch = filters.marketplace === 'all' || (p.marketplace && p.marketplace.toLowerCase() === filters.marketplace.toLowerCase());
-        const eanMatch = !filters.ean || (p.ean && p.ean.includes(filters.ean.trim()));
+        const eanMatch = filters.ean === 'all' || (p.ean && p.ean.includes(filters.ean.trim()));
         const sellerMatch = filters.seller === 'all' || (p.seller && p.seller.toLowerCase() === filters.seller.toLowerCase());
         return marketplaceMatch && eanMatch && sellerMatch;
     });
@@ -83,7 +84,7 @@ export function Dashboard() {
 
   const clearFilters = () => {
     setFilters({
-        ean: '',
+        ean: 'all',
         marketplace: 'all',
         seller: 'all',
     });
@@ -102,6 +103,7 @@ export function Dashboard() {
       </header>
 
       <FiltersCard
+        eans={uniqueEans}
         marketplaces={uniqueMarketplaces}
         sellers={uniqueSellers}
         filters={filters}
