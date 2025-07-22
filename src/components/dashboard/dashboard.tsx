@@ -192,7 +192,7 @@ function DashboardContent() {
                     </TabsList>
                 </div>
               
-                <div className="flex-1 min-h-0 p-4 md:p-6">
+                <div className="p-4 md:p-6">
                     <TabsContent value="overview" className="mt-0 flex flex-col h-full">
                         <div className="space-y-6 overflow-y-auto">
                             <EpocaAnalysis allProducts={products} loading={loading} />
