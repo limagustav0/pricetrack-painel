@@ -16,11 +16,13 @@ import {
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "../ui/input";
 
 interface Filters {
   ean: string;
   marketplace: string;
   seller: string;
+  description: string;
 }
 
 interface FiltersCardProps {
@@ -42,7 +44,7 @@ export function FiltersCard({ eans, marketplaces, sellers, filters, onFilterChan
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+            {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
           </div>
         </CardContent>
       </Card>
@@ -55,7 +57,16 @@ export function FiltersCard({ eans, marketplaces, sellers, filters, onFilterChan
         <CardTitle>Filtros</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 items-end">
+          <div className="grid w-full items-center gap-1.5">
+            <Label htmlFor="description-filter">Descrição</Label>
+            <Input 
+              id="description-filter"
+              placeholder="Digite a descrição..."
+              value={filters.description}
+              onChange={(e) => onFilterChange('description', e.target.value)}
+            />
+          </div>
           <div className="grid w-full items-center gap-1.5">
             <Label htmlFor="ean-filter">EAN</Label>
             <Select value={filters.ean} onValueChange={(value) => onFilterChange('ean', value)}>

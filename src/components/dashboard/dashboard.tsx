@@ -7,6 +7,9 @@ import { AlertCircle, Package2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { FiltersCard } from './filters-card';
 import { ProductAccordion } from './product-accordion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { AnalyticsTab } from './analytics-tab';
+
 
 // Helper to adapt the new API response to the existing Product type
 function adaptApiData(apiProduct: any): Product {
@@ -33,6 +36,7 @@ export function Dashboard() {
     ean: 'all',
     marketplace: 'all',
     seller: 'all', // 'loja' from API
+    description: '',
   });
 
   useEffect(() => {
@@ -74,7 +78,8 @@ export function Dashboard() {
         const marketplaceMatch = filters.marketplace === 'all' || (p.marketplace && p.marketplace.toLowerCase() === filters.marketplace.toLowerCase());
         const eanMatch = filters.ean === 'all' || (p.ean && p.ean.includes(filters.ean.trim()));
         const sellerMatch = filters.seller === 'all' || (p.seller && p.seller.toLowerCase() === filters.seller.toLowerCase());
-        return marketplaceMatch && eanMatch && sellerMatch;
+        const descriptionMatch = filters.description === '' || (p.name && p.name.toLowerCase().includes(filters.description.toLowerCase()));
+        return marketplaceMatch && eanMatch && sellerMatch && descriptionMatch;
     });
   }, [products, filters]);
 
@@ -87,6 +92,7 @@ export function Dashboard() {
         ean: 'all',
         marketplace: 'all',
         seller: 'all',
+        description: '',
     });
   };
 
@@ -113,7 +119,7 @@ export function Dashboard() {
       />
 
       <div className="mt-8">
-        {error && (
+        {error ? (
             <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Erro de Comunicação</AlertTitle>
@@ -121,8 +127,20 @@ export function Dashboard() {
                     {error}
                 </AlertDescription>
             </Alert>
+        ) : (
+          <Tabs defaultValue="products">
+            <TabsList className="grid w-full grid-cols-2 md:w-1/3">
+              <TabsTrigger value="products">Produtos</TabsTrigger>
+              <TabsTrigger value="analytics">Análise de Marketplace</TabsTrigger>
+            </TabsList>
+            <TabsContent value="products" className="mt-6">
+              <ProductAccordion products={filteredProducts} loading={loading} />
+            </TabsContent>
+            <TabsContent value="analytics" className="mt-6">
+              <AnalyticsTab products={filteredProducts} loading={loading} />
+            </TabsContent>
+          </Tabs>
         )}
-        <ProductAccordion products={filteredProducts} loading={loading} />
       </div>
     </div>
   );
