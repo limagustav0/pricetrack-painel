@@ -96,10 +96,6 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
         return productGroup.reduce((sum, p) => sum + (p.change_price || 0), 0);
     }, [productGroup]);
 
-    const isSoldAtEpoca = useMemo(() => {
-        return productGroup.some(p => p.marketplace === "Época Cosméticos");
-    }, [productGroup]);
-
     const offersByMarketplace = useMemo(() => {
         return productGroup.reduce((acc, product) => {
             const marketplace = product.marketplace || 'Outros';
@@ -148,7 +144,6 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                                         {totalChanges} alteraç{totalChanges > 1 ? 'ões' : 'ão'}
                                     </Badge>
                                 )}
-                                {!isSoldAtEpoca && <Badge variant="destructive">Não vende na Época</Badge>}
                             </div>
                         </div>
                     </div>
