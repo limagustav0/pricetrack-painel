@@ -8,7 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { FiltersGroup } from './filters-group';
 import { ProductAccordion } from './product-accordion';
 import { EpocaAnalysis } from './epoca-analysis';
-import { Sidebar, SidebarProvider, SidebarTrigger, SidebarInset, SidebarHeader, SidebarContent, SidebarRail } from '@/components/ui/sidebar';
+import { Sidebar, SidebarProvider, SidebarTrigger, SidebarInset, SidebarHeader, SidebarContent, SidebarRail, useSidebar } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 
 // Helper to adapt the new API response to the existing Product type
@@ -43,7 +43,7 @@ type Filters = {
   brand: string | null;
 };
 
-export function Dashboard() {
+function DashboardContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +54,8 @@ export function Dashboard() {
     description: null,
     brand: null,
   });
+
+  const { toggleSidebar } = useSidebar();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -166,7 +168,7 @@ export function Dashboard() {
   };
 
   return (
-    <SidebarProvider>
+    <>
       <Sidebar>
           <SidebarHeader>
               <div className="flex items-center justify-between">
@@ -190,19 +192,17 @@ export function Dashboard() {
       </Sidebar>
       <SidebarInset>
         <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-          <header className="mb-8 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-               <SidebarTrigger asChild>
-                    <Button variant="ghost" size="icon" className="md:hidden">
+            <header className="mb-8 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon" className="md:hidden" onClick={toggleSidebar}>
                         <Menu />
                     </Button>
-                </SidebarTrigger>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-foreground font-headline tracking-tight">PriceTrack</h1>
-                <p className="text-muted-foreground mt-2">Compare preços de diferentes marketplaces de forma eficiente.</p>
-              </div>
-            </div>
-          </header>
+                    <div>
+                        <h1 className="text-3xl md:text-4xl font-bold text-foreground font-headline tracking-tight">PriceTrack</h1>
+                        <p className="text-muted-foreground mt-2">Compare preços de diferentes marketplaces de forma eficiente.</p>
+                    </div>
+                </div>
+            </header>
           
           <div className="space-y-8">
             <EpocaAnalysis allProducts={products} loading={loading} />
@@ -221,6 +221,14 @@ export function Dashboard() {
           </div>
         </div>
       </SidebarInset>
-    </SidebarProvider>
+    </>
   );
+}
+
+export function Dashboard() {
+    return (
+        <SidebarProvider>
+            <DashboardContent />
+        </SidebarProvider>
+    )
 }
