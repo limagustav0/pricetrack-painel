@@ -87,8 +87,9 @@ function DashboardContent() {
         const urlMap = new Map<string, string>();
         if (Array.isArray(urlsData)) {
             for (const item of urlsData) {
-                if(item.ean && item.url) {
-                    urlMap.set(item.ean, item.url);
+                if(item.ean && item.marketplace && item.url) {
+                    const key = `${item.ean}-${item.marketplace}`;
+                    urlMap.set(key, item.url);
                 }
             }
         }
@@ -96,8 +97,11 @@ function DashboardContent() {
         const adaptedProducts = results.map(adaptApiData);
         
         const mergedProducts = adaptedProducts.map(product => {
-            if (!product.url && product.ean && urlMap.has(product.ean)) {
-                return { ...product, url: urlMap.get(product.ean)! };
+            if (!product.url && product.ean && product.marketplace) {
+                const key = `${product.ean}-${product.marketplace}`;
+                if (urlMap.has(key)) {
+                    return { ...product, url: urlMap.get(key)! };
+                }
             }
             return product;
         });
