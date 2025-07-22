@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { Product } from '@/types';
 import Image from 'next/image';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
@@ -10,10 +10,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ExternalLink, SearchX, TrendingUp } from 'lucide-react';
+import { ExternalLink, SearchX, TrendingUp, Copy, Check } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useToast } from "@/hooks/use-toast";
 
 interface ProductAccordionProps {
   products: Product[];
@@ -86,6 +87,8 @@ export function ProductAccordion({ products, loading }: ProductAccordionProps) {
 }
 
 function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup: Product[] }) {
+    const { toast } = useToast();
+    const [isCopied, setIsCopied] = useState(false);
     const firstProduct = productGroup[0];
     const prices = productGroup.map(p => p.price);
     const minPrice = Math.min(...prices);
@@ -106,6 +109,16 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
             return acc;
         }, {} as Record<string, Product[]>);
     }, [productGroup]);
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(ean);
+        setIsCopied(true);
+        toast({
+            title: "EAN Copiado!",
+            description: `O EAN ${ean} foi copiado para a área de transferência.`,
+        })
+        setTimeout(() => setIsCopied(false), 2000);
+    };
 
     return (
         <AccordionItem value={ean} className="border-none">
@@ -128,7 +141,21 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                         <div className="flex-1">
                             <p className="text-sm text-muted-foreground font-medium">{firstProduct.brand}</p>
                             <h3 className="font-semibold text-lg text-foreground">{firstProduct.name}</h3>
-                            <p className="text-xs text-muted-foreground mt-1">EAN: {ean}</p>
+                             <div className="flex items-center gap-2 mt-1">
+                                <p className="text-xs text-muted-foreground">EAN: {ean}</p>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-5 w-5"
+                                    onClick={(e) => {
+                                        e.stopPropagation(); // Prevent accordion from toggling
+                                        handleCopy();
+                                    }}
+                                    aria-label="Copiar EAN"
+                                >
+                                    {isCopied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
+                                </Button>
+                            </div>
                         </div>
                         <div className="flex flex-col items-start md:items-end gap-1 w-full md:w-auto">
                             <p className="text-sm text-muted-foreground">Preços a partir de</p>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -13,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PriceComparisonTable } from './price-comparison-table';
 import { SellerComparisonTable } from './seller-comparison-table';
+import { Toaster } from '@/components/ui/toaster';
 
 // Helper to adapt the new API response to the existing Product type
 function adaptApiData(apiProduct: any): Product {
@@ -160,6 +162,7 @@ function DashboardContent() {
 
   return (
     <div className="flex h-screen bg-gray-100">
+        <Toaster />
         <div className="w-72 bg-white border-r p-4 flex-shrink-0 overflow-y-auto">
              <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold">Filtros</h2>
@@ -183,7 +186,7 @@ function DashboardContent() {
                     <p className="text-sm text-muted-foreground">Compare preços de diferentes marketplaces de forma eficiente.</p>
                 </div>
             </header>
-            <Tabs defaultValue="overview" className="w-full flex flex-col">
+            <Tabs defaultValue="overview" className="w-full flex-grow flex flex-col">
                 <div className="px-4 md:px-6 pt-4">
                      <TabsList className="w-full max-w-lg">
                         <TabsTrigger value="overview">Visão Geral</TabsTrigger>
@@ -192,9 +195,9 @@ function DashboardContent() {
                     </TabsList>
                 </div>
               
-                <div className="p-4 md:p-6 flex-1 flex flex-col">
-                    <TabsContent value="overview" className="mt-0 flex flex-col flex-1">
-                        <div className="space-y-6 overflow-y-auto">
+                <div className="p-4 md:p-6 flex-grow flex flex-col">
+                    <TabsContent value="overview" className="mt-0 flex-grow flex flex-col">
+                        <div className="space-y-6 overflow-y-auto flex-grow">
                             <EpocaAnalysis allProducts={products} loading={loading} />
 
                             <div>
@@ -210,10 +213,10 @@ function DashboardContent() {
                             </div>
                         </div>
                     </TabsContent>
-                    <TabsContent value="granular" className="mt-0">
+                    <TabsContent value="granular" className="mt-0 flex-grow flex flex-col">
                         <PriceComparisonTable allProducts={products} loading={loading} />
                     </TabsContent>
-                     <TabsContent value="seller" className="mt-0">
+                     <TabsContent value="seller" className="mt-0 flex-grow flex flex-col">
                         <SellerComparisonTable allProducts={products} loading={loading} />
                     </TabsContent>
                 </div>
