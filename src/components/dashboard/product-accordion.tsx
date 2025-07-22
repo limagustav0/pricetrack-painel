@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo } from 'react';
@@ -17,6 +18,17 @@ import { ptBR } from 'date-fns/locale';
 interface ProductAccordionProps {
   products: Product[];
   loading: boolean;
+}
+
+function isValidHttpUrl(string: string | null | undefined) {
+    if (!string) return false;
+    let url;
+    try {
+        url = new URL(string);
+    } catch (_) {
+        return false;
+    }
+    return url.protocol === "http:" || url.protocol === "https:";
 }
 
 export function ProductAccordion({ products, loading }: ProductAccordionProps) {
@@ -78,7 +90,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
     const prices = productGroup.map(p => p.price);
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
-    const imageSrc = firstProduct.image || `https://placehold.co/100x100.png`;
+    const imageSrc = isValidHttpUrl(firstProduct.image) ? firstProduct.image! : `https://placehold.co/100x100.png`;
 
     const offersByMarketplace = useMemo(() => {
         return productGroup.reduce((acc, product) => {
@@ -103,6 +115,11 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                             height={100}
                             className="rounded-md object-cover border"
                             data-ai-hint="cosmetics bottle"
+                            onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.onerror = null; // prevents looping
+                                target.src = `https://placehold.co/100x100.png`;
+                            }}
                         />
                         <div className="flex-1">
                             <p className="text-sm text-muted-foreground font-medium">{firstProduct.brand}</p>
@@ -151,7 +168,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                                                         {product.updated_at ? formatDistanceToNow(new Date(product.updated_at), { addSuffix: true, locale: ptBR }) : '-'}
                                                     </TableCell>
                                                     <TableCell className="text-right">
-                                                        <Button asChild variant="ghost" size="icon">
+                                                        <Button asChild variant="ghost" size="icon" disabled={!product.url}>
                                                             <a href={product.url} target="_blank" rel="noopener noreferrer" aria-label="Ver produto">
                                                                 <ExternalLink className="h-4 w-4"/>
                                                             </a>
