@@ -2,15 +2,14 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import type { Product } from '@/types';
-import { AlertCircle, Package2, LineChart, BarChart } from 'lucide-react';
+import { AlertCircle, Package2, BarChart } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Sidebar, SidebarContent, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger } from '@/components/ui/sidebar';
 import { FiltersGroup } from './filters-group';
 import { ProductAccordion } from './product-accordion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AnalyticsTab } from './analytics-tab';
-
+import { Card, CardContent } from '@/components/ui/card';
 
 // Helper to adapt the new API response to the existing Product type
 function adaptApiData(apiProduct: any): Product {
@@ -37,7 +36,6 @@ function adaptApiData(apiProduct: any): Product {
   };
 }
 
-
 export function Dashboard() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,7 +58,6 @@ export function Dashboard() {
           throw new Error(`Erro ao conectar com a API. Status: ${response.status} ${response.statusText}`);
         }
         const data = await response.json();
-        // The API returns an object with a 'results' key which is an array
         const results = data.results || data; 
         if (Array.isArray(results)) {
             setProducts(results.map(adaptApiData));
@@ -126,75 +123,68 @@ export function Dashboard() {
   };
 
   return (
-    <>
-      <Sidebar>
-        <SidebarHeader>
-            <div className="flex items-center gap-2">
-                <div className="flex-shrink-0 bg-primary text-primary-foreground p-2 rounded-lg shadow-md">
-                    <Package2 className="h-6 w-6" />
-                </div>
-                <div className="group-data-[collapsible=icon]:hidden">
-                    <h2 className="text-lg font-bold text-foreground">PriceTrack</h2>
-                </div>
-            </div>
-        </SidebarHeader>
-        <SidebarContent>
-            <FiltersGroup
-              eans={uniqueEans}
-              marketplaces={uniqueMarketplaces}
-              sellers={uniqueSellers}
-              descriptions={uniqueDescriptions}
-              brands={uniqueBrands}
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              onEanChange={handleEanChange}
-              onClearFilters={clearFilters}
-              loading={loading}
-            />
-        </SidebarContent>
-      </Sidebar>
-      <SidebarInset>
-        <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-            <header className="mb-8 flex items-center gap-4">
-                <SidebarTrigger className="md:hidden"/>
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-foreground font-headline tracking-tight">Dashboard de Produtos</h1>
-                    <p className="text-muted-foreground">Seu comparador de preços inteligente.</p>
-                </div>
-            </header>
+    <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+      <header className="mb-8 flex items-center gap-4">
+          <div className="flex items-center gap-3">
+              <div className="flex-shrink-0 bg-primary text-primary-foreground p-3 rounded-lg shadow-md">
+                  <Package2 className="h-7 w-7" />
+              </div>
+              <div>
+                  <h1 className="text-2xl md:text-3xl font-bold text-foreground font-headline tracking-tight">PriceTrack</h1>
+                  <p className="text-muted-foreground">Seu comparador de preços inteligente.</p>
+              </div>
+          </div>
+      </header>
 
-            <div className="mt-8">
-                {error ? (
-                    <Alert variant="destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Erro de Comunicação</AlertTitle>
-                        <AlertDescription>
-                            {error}
-                        </AlertDescription>
-                    </Alert>
-                ) : (
-                <Tabs defaultValue="products">
-                    <TabsList className="grid w-full grid-cols-2 md:w-auto md:grid-cols-2">
-                      <TabsTrigger value="products">
-                        <Package2 className="mr-2 h-4 w-4" />
-                        Produtos
-                      </TabsTrigger>
-                      <TabsTrigger value="analytics">
-                        <BarChart className="mr-2 h-4 w-4" />
-                        Análise de Marketplace
-                      </TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="products" className="mt-6">
-                    <ProductAccordion products={filteredProducts} loading={loading} />
-                    </TabsContent>
-                    <TabsContent value="analytics" className="mt-6">
-                    <AnalyticsTab products={filteredProducts} loading={loading} />
-                    </TabsContent>
-                </Tabs>
-                )}
-            </div>
-        </div>
-      </SidebarInset>
-    </>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <aside className="lg:col-span-1">
+            <Card>
+                <CardContent className="p-4">
+                    <FiltersGroup
+                      eans={uniqueEans}
+                      marketplaces={uniqueMarketplaces}
+                      sellers={uniqueSellers}
+                      descriptions={uniqueDescriptions}
+                      brands={uniqueBrands}
+                      filters={filters}
+                      onFilterChange={handleFilterChange}
+                      onEanChange={handleEanChange}
+                      onClearFilters={clearFilters}
+                      loading={loading}
+                    />
+                </CardContent>
+            </Card>
+        </aside>
+
+        <main className="lg:col-span-3">
+            {error ? (
+                <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Erro de Comunicação</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
+            ) : (
+            <Tabs defaultValue="products">
+                <TabsList className="grid w-full grid-cols-2 md:w-auto md:grid-cols-2">
+                  <TabsTrigger value="products">
+                    <Package2 className="mr-2 h-4 w-4" />
+                    Produtos
+                  </TabsTrigger>
+                  <TabsTrigger value="analytics">
+                    <BarChart className="mr-2 h-4 w-4" />
+                    Análise de Marketplace
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="products" className="mt-6">
+                  <ProductAccordion products={filteredProducts} loading={loading} />
+                </TabsContent>
+                <TabsContent value="analytics" className="mt-6">
+                  <AnalyticsTab products={filteredProducts} loading={loading} />
+                </TabsContent>
+            </Tabs>
+            )}
+        </main>
+      </div>
+    </div>
   );
 }

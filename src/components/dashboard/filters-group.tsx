@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton";
 import { SearchableSelect } from "./searchable-select";
-import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "../ui/sidebar";
 import { ScrollArea } from "../ui/scroll-area";
 
 interface Filters {
@@ -42,7 +41,7 @@ export function FiltersGroup({
 }: FiltersGroupProps) {
     if (loading) {
         return (
-            <div className="p-4 space-y-4">
+            <div className="space-y-6">
                 {[...Array(5)].map((_, i) => (
                     <div key={i} className="space-y-2">
                         <Skeleton className="h-4 w-20" />
@@ -54,75 +53,69 @@ export function FiltersGroup({
     }
   
   return (
-    <ScrollArea className="h-full">
-        <div className="p-4 space-y-4">
-            <SidebarGroup>
-                <SidebarGroupLabel>Filtro Rápido por EAN</SidebarGroupLabel>
-                <SidebarGroupContent>
-                     <SearchableSelect
-                      placeholder="Selecione um EAN"
-                      noResultsText="Nenhum EAN encontrado."
-                      value={filters.ean}
-                      onChange={onEanChange}
-                      options={eans.map(ean => ({ value: ean, label: ean }))}
-                    />
-                </SidebarGroupContent>
-            </SidebarGroup>
-            
-            <SidebarGroup>
-                <SidebarGroupLabel>Filtros Avançados</SidebarGroupLabel>
-                <SidebarGroupContent className="space-y-4">
-                    <div className="grid w-full items-center gap-1.5">
-                        <Label>Descrição</Label>
-                        <SearchableSelect
-                          placeholder="Filtre por descrição"
-                          noResultsText="Nenhuma descrição encontrada."
-                          value={filters.description}
-                          onChange={(value) => onFilterChange('description', value)}
-                          options={descriptions.map(desc => ({ value: desc, label: desc }))}
-                          disabled={!!filters.ean}
-                        />
-                    </div>
-                    <div className="grid w-full items-center gap-1.5">
-                        <Label>Marca</Label>
-                        <SearchableSelect
-                          placeholder="Filtre por marca"
-                          noResultsText="Nenhuma marca encontrada."
-                          value={filters.brand}
-                          onChange={(value) => onFilterChange('brand', value)}
-                          options={brands.map(brand => ({ value: brand, label: brand }))}
-                          disabled={!!filters.ean}
-                        />
-                    </div>
-                    <div className="grid w-full items-center gap-1.5">
-                        <Label>Marketplace</Label>
-                        <SearchableSelect
-                          placeholder="Filtre por marketplace"
-                          noResultsText="Nenhum marketplace encontrado."
-                          value={filters.marketplace}
-                          onChange={(value) => onFilterChange('marketplace', value)}
-                          options={marketplaces.map(mp => ({ value: mp, label: mp }))}
-                           disabled={!!filters.ean}
-                        />
-                    </div>
-                    <div className="grid w-full items-center gap-1.5">
-                        <Label>Loja (Seller)</Label>
-                        <SearchableSelect
-                          placeholder="Filtre por loja"
-                          noResultsText="Nenhuma loja encontrada."
-                          value={filters.seller}
-                          onChange={(value) => onFilterChange('seller', value)}
-                          options={sellers.map(seller => ({ value: seller, label: seller }))}
-                           disabled={!!filters.ean}
-                        />
-                    </div>
-                </SidebarGroupContent>
-            </SidebarGroup>
-
-            <Button onClick={onClearFilters} variant="outline" className="w-full">
-                Limpar Filtros
-            </Button>
+    <div className="space-y-6">
+        <div>
+            <Label className="text-sm font-semibold text-muted-foreground">Filtro Rápido por EAN</Label>
+             <SearchableSelect
+              placeholder="Selecione um EAN"
+              noResultsText="Nenhum EAN encontrado."
+              value={filters.ean}
+              onChange={onEanChange}
+              options={eans.map(ean => ({ value: ean, label: ean }))}
+            />
         </div>
-    </ScrollArea>
+        
+        <div className="space-y-4">
+            <Label className="text-sm font-semibold text-muted-foreground">Filtros Avançados</Label>
+            <div className="grid w-full items-center gap-1.5">
+                <Label>Descrição</Label>
+                <SearchableSelect
+                  placeholder="Filtre por descrição"
+                  noResultsText="Nenhuma descrição encontrada."
+                  value={filters.description}
+                  onChange={(value) => onFilterChange('description', value)}
+                  options={descriptions.map(desc => ({ value: desc, label: desc }))}
+                  disabled={!!filters.ean}
+                />
+            </div>
+            <div className="grid w-full items-center gap-1.5">
+                <Label>Marca</Label>
+                <SearchableSelect
+                  placeholder="Filtre por marca"
+                  noResultsText="Nenhuma marca encontrada."
+                  value={filters.brand}
+                  onChange={(value) => onFilterChange('brand', value)}
+                  options={brands.map(brand => ({ value: brand, label: brand }))}
+                  disabled={!!filters.ean}
+                />
+            </div>
+            <div className="grid w-full items-center gap-1.5">
+                <Label>Marketplace</Label>
+                <SearchableSelect
+                  placeholder="Filtre por marketplace"
+                  noResultsText="Nenhum marketplace encontrado."
+                  value={filters.marketplace}
+                  onChange={(value) => onFilterChange('marketplace', value)}
+                  options={marketplaces.map(mp => ({ value: mp, label: mp }))}
+                   disabled={!!filters.ean}
+                />
+            </div>
+            <div className="grid w-full items-center gap-1.5">
+                <Label>Loja (Seller)</Label>
+                <SearchableSelect
+                  placeholder="Filtre por loja"
+                  noResultsText="Nenhuma loja encontrada."
+                  value={filters.seller}
+                  onChange={(value) => onFilterChange('seller', value)}
+                  options={sellers.map(seller => ({ value: seller, label: seller }))}
+                   disabled={!!filters.ean}
+                />
+            </div>
+        </div>
+
+        <Button onClick={onClearFilters} variant="outline" className="w-full">
+            Limpar Filtros
+        </Button>
+    </div>
   );
 }
