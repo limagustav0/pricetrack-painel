@@ -16,6 +16,7 @@ interface Filters {
   marketplace: string;
   seller: string;
   description: string;
+  brand: string;
 }
 
 interface FiltersCardProps {
@@ -23,13 +24,14 @@ interface FiltersCardProps {
   marketplaces: string[];
   sellers: string[];
   descriptions: string[];
+  brands: string[];
   filters: Filters;
   onFilterChange: (filterName: keyof Filters, value: string) => void;
   onClearFilters: () => void;
   loading: boolean;
 }
 
-export function FiltersCard({ eans, marketplaces, sellers, descriptions, filters, onFilterChange, onClearFilters, loading }: FiltersCardProps) {
+export function FiltersCard({ eans, marketplaces, sellers, descriptions, brands, filters, onFilterChange, onClearFilters, loading }: FiltersCardProps) {
   if (loading) {
     return (
       <Card>
@@ -37,7 +39,7 @@ export function FiltersCard({ eans, marketplaces, sellers, descriptions, filters
           <Skeleton className="h-7 w-32" />
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
           </div>
         </CardContent>
@@ -51,8 +53,8 @@ export function FiltersCard({ eans, marketplaces, sellers, descriptions, filters
         <CardTitle>Filtros</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 items-end">
-          <div className="grid w-full items-center gap-1.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-6 items-end">
+          <div className="grid w-full items-center gap-1.5 xl:col-span-2">
             <Label htmlFor="description-filter">Descrição</Label>
             <SearchableSelect
               placeholder="Digite ou selecione a descrição"
@@ -70,6 +72,16 @@ export function FiltersCard({ eans, marketplaces, sellers, descriptions, filters
               value={filters.ean}
               onChange={(value) => onFilterChange('ean', value)}
               options={eans.map(ean => ({ value: ean, label: ean }))}
+            />
+          </div>
+           <div className="grid w-full items-center gap-1.5">
+            <Label>Marca</Label>
+            <SearchableSelect
+              placeholder="Digite ou selecione a marca"
+              noResultsText="Nenhuma marca encontrada."
+              value={filters.brand}
+              onChange={(value) => onFilterChange('brand', value)}
+              options={brands.map(brand => ({ value: brand, label: brand }))}
             />
           </div>
           <div className="grid w-full items-center gap-1.5">
@@ -92,7 +104,7 @@ export function FiltersCard({ eans, marketplaces, sellers, descriptions, filters
               options={sellers.map(seller => ({ value: seller, label: seller }))}
             />
           </div>
-          <Button onClick={onClearFilters} variant="outline" className="w-full lg:w-auto">
+          <Button onClick={onClearFilters} variant="outline" className="w-full lg:w-auto xl:col-start-6">
             Limpar Filtros
           </Button>
         </div>

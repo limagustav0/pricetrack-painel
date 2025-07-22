@@ -13,11 +13,20 @@ import { AnalyticsTab } from './analytics-tab';
 
 // Helper to adapt the new API response to the existing Product type
 function adaptApiData(apiProduct: any): Product {
+  // Basic heuristic to extract brand from description
+  let brand = null;
+  if (apiProduct.descricao) {
+    const parts = apiProduct.descricao.split(' - ');
+    if (parts.length > 1) {
+      brand = parts[parts.length - 1];
+    }
+  }
+
   return {
     id: apiProduct.sku,
     ean: apiProduct.ean,
     name: apiProduct.descricao,
-    brand: null, // Brand is not in the new API structure
+    brand: brand,
     marketplace: apiProduct.marketplace,
     seller: apiProduct.loja,
     price: parseFloat(apiProduct.preco_final),
@@ -37,6 +46,7 @@ export function Dashboard() {
     marketplace: '',
     seller: '', // 'loja' from API
     description: '',
+    brand: '',
   });
 
   useEffect(() => {
@@ -73,6 +83,7 @@ export function Dashboard() {
   const uniqueMarketplaces = useMemo(() => [...Array.from(new Set(products.map(p => p.marketplace).filter(Boolean).sort()))], [products]);
   const uniqueSellers = useMemo(() => [...Array.from(new Set(products.map(p => p.seller).filter(Boolean).sort()))], [products]);
   const uniqueDescriptions = useMemo(() => [...Array.from(new Set(products.map(p => p.name).filter(Boolean).sort()))], [products]);
+  const uniqueBrands = useMemo(() => [...Array.from(new Set(products.map(p => p.brand).filter(Boolean).sort()))], [products]);
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
@@ -80,7 +91,8 @@ export function Dashboard() {
         const marketplaceMatch = filters.marketplace === '' || (p.marketplace && p.marketplace.toLowerCase().includes(filters.marketplace.toLowerCase()));
         const sellerMatch = filters.seller === '' || (p.seller && p.seller.toLowerCase().includes(filters.seller.toLowerCase()));
         const descriptionMatch = filters.description === '' || (p.name && p.name.toLowerCase().includes(filters.description.toLowerCase()));
-        return eanMatch && marketplaceMatch && sellerMatch && descriptionMatch;
+        const brandMatch = filters.brand === '' || (p.brand && p.brand.toLowerCase().includes(filters.brand.toLowerCase()));
+        return eanMatch && marketplaceMatch && sellerMatch && descriptionMatch && brandMatch;
     });
   }, [products, filters]);
 
@@ -94,6 +106,7 @@ export function Dashboard() {
         marketplace: '',
         seller: '',
         description: '',
+        brand: '',
     });
   };
 
@@ -114,6 +127,7 @@ export function Dashboard() {
         marketplaces={uniqueMarketplaces}
         sellers={uniqueSellers}
         descriptions={uniqueDescriptions}
+        brands={uniqueBrands}
         filters={filters}
         onFilterChange={handleFilterChange}
         onClearFilters={clearFilters}
