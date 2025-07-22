@@ -19,6 +19,10 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'epocacosmeticos.vteximg.com.br',
+      },
+      {
+        protocol: 'https',
+        hostname: 'a-static.mlcdn.com.br',
       }
     ],
   },
