@@ -112,12 +112,12 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
 
   if (loading) {
     return (
-        <Card>
+        <Card className="h-full flex flex-col">
             <CardHeader>
                 <Skeleton className="h-6 w-1/2" />
                 <Skeleton className="h-4 w-3/4 mt-2" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1">
                 <div className="flex gap-4 mb-4">
                   <Skeleton className="h-10 w-1/3" />
                   <Skeleton className="h-10 w-1/3" />
@@ -133,15 +133,15 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
   }
 
   return (
-    <Card>
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <CardTitle>Análise por Vendedor</CardTitle>
         <CardDescription>
           Visualize e compare os preços de cada produto por vendedor nos diferentes marketplaces.
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
+      <CardContent className="flex-1 flex flex-col min-h-0">
+        <div className="flex flex-col md:flex-row gap-4 mb-4">
             <div className="flex-1 min-w-0">
                 <SearchableSelect
                     placeholder="Filtrar por Vendedor..."
@@ -161,81 +161,83 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
         </div>
 
         {filteredSellers.length > 0 ? (
-            <Accordion type="multiple" className="space-y-4">
-                {filteredSellers.map((seller) => (
-                    <AccordionItem value={seller.key_loja} key={seller.key_loja} className="border rounded-lg">
-                        <AccordionTrigger className="px-4 py-3 text-left hover:no-underline bg-muted/50">
-                            <h3 className="text-lg font-bold">{seller.sellerName}</h3>
-                        </AccordionTrigger>
-                        <AccordionContent className="p-0">
-                            <div className="border-t overflow-auto max-h-[600px]">
-                                <Table>
-                                    <TableHeader className="sticky top-0 bg-background z-10">
-                                        <TableRow>
-                                            <TableHead className="min-w-[350px]">Produto (EAN/Marca)</TableHead>
-                                            {visibleMarketplaces.map(mp => <TableHead key={mp} className="text-right min-w-[150px]">{mp}</TableHead>)}
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {Object.entries(seller.products).map(([ean, product]) => {
-                                            const imageSrc = product.image && product.image.startsWith('http') ? product.image : 'https://placehold.co/100x100.png';
-                                            const prices = Object.values(product.offers).map(o => o.price);
-                                            const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+            <div className="flex-1 overflow-y-auto">
+              <Accordion type="multiple" className="space-y-4">
+                  {filteredSellers.map((seller) => (
+                      <AccordionItem value={seller.key_loja} key={seller.key_loja} className="border rounded-lg">
+                          <AccordionTrigger className="px-4 py-3 text-left hover:no-underline bg-muted/50">
+                              <h3 className="text-lg font-bold">{seller.sellerName}</h3>
+                          </AccordionTrigger>
+                          <AccordionContent className="p-0">
+                              <div className="border-t overflow-auto max-h-[600px]">
+                                  <Table>
+                                      <TableHeader className="sticky top-0 bg-background z-10">
+                                          <TableRow>
+                                              <TableHead className="min-w-[350px]">Produto (EAN/Marca)</TableHead>
+                                              {visibleMarketplaces.map(mp => <TableHead key={mp} className="text-right min-w-[150px]">{mp}</TableHead>)}
+                                          </TableRow>
+                                      </TableHeader>
+                                      <TableBody>
+                                          {Object.entries(seller.products).map(([ean, product]) => {
+                                              const imageSrc = product.image && product.image.startsWith('http') ? product.image : 'https://placehold.co/100x100.png';
+                                              const prices = Object.values(product.offers).map(o => o.price);
+                                              const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
 
-                                            return (
-                                                <TableRow key={ean}>
-                                                    <TableCell>
-                                                        <div className="flex items-center gap-4">
-                                                            <Image
-                                                                src={imageSrc}
-                                                                alt={product.name}
-                                                                width={64}
-                                                                height={64}
-                                                                className="rounded-md object-cover border"
-                                                                data-ai-hint="cosmetics product"
-                                                                onError={(e) => {
-                                                                    const target = e.target as HTMLImageElement;
-                                                                    target.onerror = null;
-                                                                    target.src = 'https://placehold.co/100x100.png';
-                                                                }}
-                                                            />
-                                                            <div className="flex-1">
-                                                                <div className="font-medium">{product.name}</div>
-                                                                <div className="text-sm text-muted-foreground">EAN: {ean}</div>
-                                                                <div className="text-xs text-muted-foreground">{product.brand}</div>
-                                                            </div>
-                                                        </div>
-                                                    </TableCell>
-                                                    {visibleMarketplaces.map(mp => {
-                                                        const offer = product.offers[mp];
-                                                        const isMinPrice = offer && offer.price === minPrice;
-                                                        return (
-                                                            <TableCell key={mp} className="text-right align-top">
-                                                                {offer ? (
-                                                                    <div>
-                                                                        <p className={`font-bold ${isMinPrice ? 'text-primary' : ''}`}>
-                                                                            {formatCurrency(offer.price)}
-                                                                        </p>
-                                                                        {isMinPrice && prices.length > 1 && <Badge variant="secondary" className="mt-1">Melhor Preço</Badge>}
-                                                                    </div>
-                                                                ) : (
-                                                                    <span className="text-muted-foreground">-</span>
-                                                                )}
-                                                            </TableCell>
-                                                        )
-                                                    })}
-                                                </TableRow>
-                                            )
-                                        })}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                        </AccordionContent>
-                    </AccordionItem>
-                ))}
-            </Accordion>
+                                              return (
+                                                  <TableRow key={ean}>
+                                                      <TableCell>
+                                                          <div className="flex items-center gap-4">
+                                                              <Image
+                                                                  src={imageSrc}
+                                                                  alt={product.name}
+                                                                  width={64}
+                                                                  height={64}
+                                                                  className="rounded-md object-cover border"
+                                                                  data-ai-hint="cosmetics product"
+                                                                  onError={(e) => {
+                                                                      const target = e.target as HTMLImageElement;
+                                                                      target.onerror = null;
+                                                                      target.src = 'https://placehold.co/100x100.png';
+                                                                  }}
+                                                              />
+                                                              <div className="flex-1">
+                                                                  <div className="font-medium">{product.name}</div>
+                                                                  <div className="text-sm text-muted-foreground">EAN: {ean}</div>
+                                                                  <div className="text-xs text-muted-foreground">{product.brand}</div>
+                                                              </div>
+                                                          </div>
+                                                      </TableCell>
+                                                      {visibleMarketplaces.map(mp => {
+                                                          const offer = product.offers[mp];
+                                                          const isMinPrice = offer && offer.price === minPrice;
+                                                          return (
+                                                              <TableCell key={mp} className="text-right align-top">
+                                                                  {offer ? (
+                                                                      <div>
+                                                                          <p className={`font-bold ${isMinPrice ? 'text-primary' : ''}`}>
+                                                                              {formatCurrency(offer.price)}
+                                                                          </p>
+                                                                          {isMinPrice && prices.length > 1 && <Badge variant="secondary" className="mt-1">Melhor Preço</Badge>}
+                                                                      </div>
+                                                                  ) : (
+                                                                      <span className="text-muted-foreground">-</span>
+                                                                  )}
+                                                              </TableCell>
+                                                          )
+                                                      })}
+                                                  </TableRow>
+                                              )
+                                          })}
+                                      </TableBody>
+                                  </Table>
+                              </div>
+                          </AccordionContent>
+                      </AccordionItem>
+                  ))}
+              </Accordion>
+            </div>
         ) : (
-            <div className="text-center py-16 text-muted-foreground border border-dashed rounded-lg">
+            <div className="text-center py-16 text-muted-foreground border border-dashed rounded-lg flex-1 flex flex-col justify-center">
                 <SearchX className="h-10 w-10 mx-auto mb-4" />
                 <p className="font-semibold">Nenhum vendedor encontrado</p>
                 <p className="text-sm">Tente limpar o filtro ou aguarde a carga dos dados.</p>

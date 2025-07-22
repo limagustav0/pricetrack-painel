@@ -175,45 +175,45 @@ function DashboardContent() {
                   loading={loading}
               />
         </div>
-        <div className="flex-1 overflow-auto p-8">
-            <header className="mb-8 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div>
-                        <h1 className="text-3xl md:text-4xl font-bold text-foreground font-headline tracking-tight">PriceTrack</h1>
-                        <p className="text-muted-foreground mt-2">Compare preços de diferentes marketplaces de forma eficiente.</p>
+        <div className="flex-1 overflow-auto p-4 md:p-6">
+            <Tabs defaultValue="overview" className="w-full flex flex-col h-full">
+                <header className="flex items-center justify-between mb-4 flex-wrap gap-4">
+                    <div className="flex-1 min-w-[200px]">
+                        <h1 className="text-2xl font-bold text-foreground font-headline tracking-tight">PriceTrack</h1>
+                        <p className="text-sm text-muted-foreground">Compare preços de diferentes marketplaces de forma eficiente.</p>
                     </div>
-                </div>
-            </header>
-          
-            <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-                    <TabsTrigger value="granular">Análise por Marketplace</TabsTrigger>
-                    <TabsTrigger value="seller">Análise por Vendedor</TabsTrigger>
-                </TabsList>
-                <TabsContent value="overview" className="mt-6">
-                    <div className="space-y-6">
-                        <EpocaAnalysis allProducts={products} loading={loading} />
+                    <TabsList className="grid grid-cols-3 max-w-md">
+                        <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+                        <TabsTrigger value="granular">Análise por Marketplace</TabsTrigger>
+                        <TabsTrigger value="seller">Análise por Vendedor</TabsTrigger>
+                    </TabsList>
+                </header>
+              
+                <div className="flex-1 min-h-0">
+                    <TabsContent value="overview" className="mt-0 h-full">
+                        <div className="space-y-6 h-full overflow-y-auto">
+                            <EpocaAnalysis allProducts={products} loading={loading} />
 
-                        <div>
-                            {error ? (
-                                <Alert variant="destructive">
-                                    <AlertCircle className="h-4 w-4" />
-                                    <AlertTitle>Erro de Comunicação</AlertTitle>
-                                    <AlertDescription>{error}</AlertDescription>
-                                </Alert>
-                            ) : (
-                                <ProductAccordion products={filteredProducts} loading={loading} />
-                            )}
+                            <div>
+                                {error ? (
+                                    <Alert variant="destructive">
+                                        <AlertCircle className="h-4 w-4" />
+                                        <AlertTitle>Erro de Comunicação</AlertTitle>
+                                        <AlertDescription>{error}</AlertDescription>
+                                    </Alert>
+                                ) : (
+                                    <ProductAccordion products={filteredProducts} loading={loading} />
+                                )}
+                            </div>
                         </div>
-                    </div>
-                </TabsContent>
-                <TabsContent value="granular" className="mt-6">
-                    <PriceComparisonTable allProducts={products} loading={loading} />
-                </TabsContent>
-                 <TabsContent value="seller" className="mt-6">
-                    <SellerComparisonTable allProducts={products} loading={loading} />
-                </TabsContent>
+                    </TabsContent>
+                    <TabsContent value="granular" className="mt-0 h-full">
+                        <PriceComparisonTable allProducts={products} loading={loading} />
+                    </TabsContent>
+                     <TabsContent value="seller" className="mt-0 h-full">
+                        <SellerComparisonTable allProducts={products} loading={loading} />
+                    </TabsContent>
+                </div>
             </Tabs>
         </div>
     </div>

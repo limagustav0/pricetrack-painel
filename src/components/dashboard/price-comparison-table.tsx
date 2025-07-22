@@ -79,12 +79,12 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
 
   if (loading) {
     return (
-        <Card>
+        <Card className="h-full flex flex-col">
             <CardHeader>
                 <Skeleton className="h-6 w-1/2" />
                 <Skeleton className="h-4 w-3/4 mt-2" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1">
                 <div className="space-y-4">
                     {[...Array(10)].map((_, i) => (
                         <div key={i} className="flex items-center gap-4 p-2">
@@ -108,15 +108,15 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
   }
 
   return (
-    <Card>
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <CardTitle>Comparativo de Preços por Marketplace</CardTitle>
         <CardDescription>
           Visualize os preços de cada produto lado a lado nos diferentes marketplaces.
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
+      <CardContent className="flex flex-col min-h-0 flex-1">
+        <div className="flex flex-col md:flex-row gap-4 mb-4">
             <div className="flex-1 min-w-0">
                 <SearchableSelect
                     placeholder="Filtrar por Produto..."
@@ -135,7 +135,7 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
             </div>
         </div>
 
-        <div className="relative overflow-auto max-h-[calc(100vh-350px)]">
+        <div className="relative overflow-auto flex-1">
             <Table>
             <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
