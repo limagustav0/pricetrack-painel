@@ -97,73 +97,75 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
           Visualize os preços de cada produto lado a lado nos diferentes marketplaces.
         </CardDescription>
       </CardHeader>
-      <CardContent className="overflow-auto max-h-[calc(100vh-250px)]">
-        <Table>
-          <TableHeader className="sticky top-0 bg-background z-10">
-            <TableRow>
-              <TableHead className="min-w-[300px] whitespace-nowrap">Produto (EAN/Marca)</TableHead>
-              {uniqueMarketplaces.map(mp => <TableHead key={mp} className="text-right whitespace-nowrap">{mp}</TableHead>)}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {groupedProducts.map((product) => {
-                const imageSrc = product.image && product.image.startsWith('http') ? product.image : 'https://placehold.co/100x100.png';
-                const prices = Object.values(product.offers).map(o => o.price);
-                const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
-                
-                return (
-                    <TableRow key={product.ean}>
-                        <TableCell>
-                            <div className="flex items-center gap-4">
-                                <Image
-                                    src={imageSrc}
-                                    alt={product.name}
-                                    width={64}
-                                    height={64}
-                                    className="rounded-md object-cover border"
-                                    data-ai-hint="cosmetics product"
-                                    onError={(e) => {
-                                        const target = e.target as HTMLImageElement;
-                                        target.onerror = null;
-                                        target.src = 'https://placehold.co/100x100.png';
-                                    }}
-                                />
-                                <div className="flex-1">
-                                    <div className="font-medium">{product.name}</div>
-                                    <div className="text-sm text-muted-foreground">EAN: {product.ean}</div>
-                                    <div className="text-xs text-muted-foreground">{product.brand}</div>
+      <CardContent>
+        <div className="relative overflow-auto max-h-[calc(100vh-250px)]">
+            <Table>
+            <TableHeader className="sticky top-0 bg-background z-10">
+                <TableRow>
+                <TableHead className="min-w-[300px] whitespace-nowrap">Produto (EAN/Marca)</TableHead>
+                {uniqueMarketplaces.map(mp => <TableHead key={mp} className="text-right whitespace-nowrap">{mp}</TableHead>)}
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {groupedProducts.map((product) => {
+                    const imageSrc = product.image && product.image.startsWith('http') ? product.image : 'https://placehold.co/100x100.png';
+                    const prices = Object.values(product.offers).map(o => o.price);
+                    const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+                    
+                    return (
+                        <TableRow key={product.ean}>
+                            <TableCell>
+                                <div className="flex items-center gap-4">
+                                    <Image
+                                        src={imageSrc}
+                                        alt={product.name}
+                                        width={64}
+                                        height={64}
+                                        className="rounded-md object-cover border"
+                                        data-ai-hint="cosmetics product"
+                                        onError={(e) => {
+                                            const target = e.target as HTMLImageElement;
+                                            target.onerror = null;
+                                            target.src = 'https://placehold.co/100x100.png';
+                                        }}
+                                    />
+                                    <div className="flex-1">
+                                        <div className="font-medium">{product.name}</div>
+                                        <div className="text-sm text-muted-foreground">EAN: {product.ean}</div>
+                                        <div className="text-xs text-muted-foreground">{product.brand}</div>
+                                    </div>
                                 </div>
-                            </div>
-                        </TableCell>
-                        {uniqueMarketplaces.map(mp => {
-                            const offer = product.offers[mp];
-                            const isMinPrice = offer && offer.price === minPrice;
-                            return (
-                                <TableCell key={mp} className="text-right align-top">
-                                    {offer ? (
-                                        <div>
-                                            <p className={`font-bold ${isMinPrice ? 'text-primary' : ''}`}>
-                                                {formatCurrency(offer.price)}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground">{offer.seller}</p>
-                                            {isMinPrice && prices.length > 1 && <Badge variant="secondary" className="mt-1">Melhor Preço</Badge>}
-                                        </div>
-                                    ) : (
-                                        <span className="text-muted-foreground">-</span>
-                                    )}
-                                </TableCell>
-                            )
-                        })}
-                    </TableRow>
-                )
-            })}
-          </TableBody>
-        </Table>
-         {groupedProducts.length === 0 && !loading && (
-            <div className="text-center py-16 text-muted-foreground">
-                Nenhum produto encontrado para comparar.
-            </div>
-        )}
+                            </TableCell>
+                            {uniqueMarketplaces.map(mp => {
+                                const offer = product.offers[mp];
+                                const isMinPrice = offer && offer.price === minPrice;
+                                return (
+                                    <TableCell key={mp} className="text-right align-top">
+                                        {offer ? (
+                                            <div>
+                                                <p className={`font-bold ${isMinPrice ? 'text-primary' : ''}`}>
+                                                    {formatCurrency(offer.price)}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">{offer.seller}</p>
+                                                {isMinPrice && prices.length > 1 && <Badge variant="secondary" className="mt-1">Melhor Preço</Badge>}
+                                            </div>
+                                        ) : (
+                                            <span className="text-muted-foreground">-</span>
+                                        )}
+                                    </TableCell>
+                                )
+                            })}
+                        </TableRow>
+                    )
+                })}
+            </TableBody>
+            </Table>
+            {groupedProducts.length === 0 && !loading && (
+                <div className="text-center py-16 text-muted-foreground absolute inset-0 flex items-center justify-center">
+                    Nenhum produto encontrado para comparar.
+                </div>
+            )}
+        </div>
       </CardContent>
     </Card>
   );
