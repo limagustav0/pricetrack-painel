@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton";
 import { SearchableSelect } from "./searchable-select";
+import { useSidebar } from "../ui/sidebar";
 
 interface Filters {
   ean: string | null;
@@ -35,22 +36,26 @@ export function FiltersGroup({
     onClearFilters, 
     loading 
 }: FiltersGroupProps) {
+    const { state } = useSidebar();
+    
     if (loading) {
         return (
-            <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                    {[...Array(5)].map((_, i) => (
-                        <Skeleton key={i} className="h-10 w-full" />
-                    ))}
-                </div>
-                <Skeleton className="h-10 w-40 ml-auto" />
+            <div className="space-y-4">
+                {[...Array(5)].map((_, i) => (
+                    <Skeleton key={i} className="h-10 w-full" />
+                ))}
+                <Skeleton className="h-10 w-full" />
             </div>
         );
     }
   
+  if (state === 'collapsed') {
+    return null;
+  }
+  
   return (
     <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 gap-4">
             <SearchableSelect
               placeholder="Filtrar por EAN..."
               options={eans.map(ean => ({ value: ean, label: ean }))}
@@ -87,8 +92,8 @@ export function FiltersGroup({
             />
         </div>
         <div className="flex justify-end">
-            <Button onClick={onClearFilters} variant="outline">
-                Limpar Todos os Filtros
+            <Button onClick={onClearFilters} variant="outline" className="w-full">
+                Limpar Filtros
             </Button>
         </div>
     </div>
