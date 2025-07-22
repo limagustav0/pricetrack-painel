@@ -78,6 +78,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
     const prices = productGroup.map(p => p.price);
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
+    const imageSrc = firstProduct.image || `https://placehold.co/100x100.png`;
 
     return (
         <AccordionItem value={ean} className="border-none">
@@ -85,7 +86,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                 <AccordionTrigger className="p-4 text-left hover:no-underline [&[data-state=open]>div>svg]:rotate-180">
                     <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full">
                         <Image
-                            src={firstProduct.image}
+                            src={imageSrc}
                             alt={firstProduct.name}
                             width={100}
                             height={100}
