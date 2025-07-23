@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { FiltersGroup } from './filters-group';
 import { ProductAccordion } from './product-accordion';
 import { EpocaAnalysis } from './epoca-analysis';
+import { EpocaPriceAnalysis } from './epoca-price-analysis';
 import { Sidebar, SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -186,38 +187,43 @@ function DashboardContent() {
                     <p className="text-sm text-muted-foreground">Compare preços de diferentes marketplaces de forma eficiente.</p>
                 </div>
             </header>
-            <Tabs defaultValue="overview" className="w-full flex flex-col">
+            <Tabs defaultValue="overview" className="w-full flex flex-col flex-1">
                 <div className="px-4 md:px-6 pt-4">
-                     <TabsList className="w-full max-w-lg">
+                     <TabsList className="w-full grid grid-cols-1 md:grid-cols-4 max-w-2xl">
                         <TabsTrigger value="overview">Visão Geral</TabsTrigger>
                         <TabsTrigger value="granular">Análise por Marketplace</TabsTrigger>
                         <TabsTrigger value="seller">Análise por Vendedor</TabsTrigger>
+                         <TabsTrigger value="epoca">Análise Época</TabsTrigger>
                     </TabsList>
                 </div>
-              
-                <TabsContent value="overview" className="mt-0 p-4 md:p-6 flex-grow flex flex-col">
-                    <div className="space-y-6 overflow-y-auto flex-grow">
-                        <EpocaAnalysis allProducts={products} loading={loading} />
+                <div className="flex-grow">
+                    <TabsContent value="overview" className="mt-0 p-4 md:p-6 h-full flex flex-col">
+                        <div className="space-y-6 overflow-y-auto flex-grow">
+                            <EpocaAnalysis allProducts={products} loading={loading} />
 
-                        <div>
-                            {error ? (
-                                <Alert variant="destructive">
-                                    <AlertCircle className="h-4 w-4" />
-                                    <AlertTitle>Erro de Comunicação</AlertTitle>
-                                    <AlertDescription>{error}</AlertDescription>
-                                </Alert>
-                            ) : (
-                                <ProductAccordion products={filteredProducts} loading={loading} />
-                            )}
+                            <div>
+                                {error ? (
+                                    <Alert variant="destructive">
+                                        <AlertCircle className="h-4 w-4" />
+                                        <AlertTitle>Erro de Comunicação</AlertTitle>
+                                        <AlertDescription>{error}</AlertDescription>
+                                    </Alert>
+                                ) : (
+                                    <ProductAccordion products={filteredProducts} loading={loading} />
+                                )}
+                            </div>
                         </div>
-                    </div>
-                </TabsContent>
-                <TabsContent value="granular" className="mt-0 p-4 md:p-6">
-                    <PriceComparisonTable allProducts={products} loading={loading} />
-                </TabsContent>
-                 <TabsContent value="seller" className="mt-0 p-4 md:p-6">
-                    <SellerComparisonTable allProducts={products} loading={loading} />
-                </TabsContent>
+                    </TabsContent>
+                    <TabsContent value="granular" className="mt-0 p-4 md:p-6">
+                        <PriceComparisonTable allProducts={products} loading={loading} />
+                    </TabsContent>
+                    <TabsContent value="seller" className="mt-0 p-4 md:p-6">
+                        <SellerComparisonTable allProducts={products} loading={loading} />
+                    </TabsContent>
+                    <TabsContent value="epoca" className="mt-0 p-4 md:p-6">
+                        <EpocaPriceAnalysis allProducts={products} loading={loading} />
+                    </TabsContent>
+                </div>
             </Tabs>
         </div>
     </div>
