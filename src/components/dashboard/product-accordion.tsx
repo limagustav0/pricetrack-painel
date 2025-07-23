@@ -23,15 +23,20 @@ interface ProductAccordionProps {
   loading: boolean;
 }
 
-function isValidHttpUrl(string: string | null | undefined) {
+function isValidImageUrl(string: string | null | undefined) {
     if (!string) return false;
-    let url;
     try {
-        url = new URL(string);
+        const url = new URL(string);
+        if (url.protocol !== "http:" && url.protocol !== "https:") {
+            return false;
+        }
+        // Check if the pathname ends with a common image extension
+        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+        const pathname = url.pathname.toLowerCase();
+        return imageExtensions.some(ext => pathname.endsWith(ext));
     } catch (_) {
         return false;
     }
-    return url.protocol === "http:" || url.protocol === "https:";
 }
 
 export function ProductAccordion({ products, loading }: ProductAccordionProps) {
@@ -95,7 +100,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
     const prices = productGroup.map(p => p.price);
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
-    const imageSrc = isValidHttpUrl(firstProduct.image) ? firstProduct.image! : `https://placehold.co/100x100.png`;
+    const imageSrc = isValidImageUrl(firstProduct.image) ? firstProduct.image! : `https://placehold.co/100x100.png`;
 
     const totalChanges = useMemo(() => {
         return productGroup.reduce((sum, p) => sum + (p.change_price || 0), 0);
@@ -233,7 +238,3 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
         </AccordionItem>
     );
 }
-
-    
-
-    
