@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, isValidImageUrl } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { SearchX, TrendingUp } from 'lucide-react';
 import { SearchableSelect } from './searchable-select';
@@ -173,7 +173,7 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
                               </div>
                           </AccordionTrigger>
                           <AccordionContent className="p-0">
-                              <div className="border-t overflow-auto max-h-[600px]">
+                              <div className="border-t overflow-auto max-h-[calc(100vh-22rem)]">
                                   <Table>
                                       <TableHeader className="sticky top-0 bg-background z-10">
                                           <TableRow>
@@ -183,7 +183,7 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
                                       </TableHeader>
                                       <TableBody>
                                           {Object.entries(seller.products).map(([ean, product]) => {
-                                              const imageSrc = product.image && product.image.startsWith('http') ? product.image : 'https://placehold.co/100x100.png';
+                                              const imageSrc = isValidImageUrl(product.image) ? product.image : 'https://placehold.co/100x100.png';
                                               const prices = Object.values(product.offers).map(o => o.price);
                                               const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
 

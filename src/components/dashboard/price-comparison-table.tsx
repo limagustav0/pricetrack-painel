@@ -7,7 +7,7 @@ import { useMemo, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, isValidImageUrl } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { SearchableSelect } from './searchable-select';
 import { TrendingUp } from 'lucide-react';
@@ -137,7 +137,7 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
             </div>
         </div>
 
-        <div className="relative overflow-auto border rounded-lg">
+        <div className="relative overflow-auto border rounded-lg max-h-[calc(100vh-20rem)]">
             <Table>
             <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
@@ -147,7 +147,7 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
             </TableHeader>
             <TableBody>
                 {filteredProducts.map((product) => {
-                    const imageSrc = product.image && product.image.startsWith('http') ? product.image : 'https://placehold.co/100x100.png';
+                    const imageSrc = isValidImageUrl(product.image) ? product.image : 'https://placehold.co/100x100.png';
                     const prices = Object.values(product.offers).map(o => o.price);
                     const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
                     

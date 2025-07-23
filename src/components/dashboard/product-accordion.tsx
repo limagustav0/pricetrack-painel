@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ExternalLink, SearchX, TrendingUp, Copy, Check } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, isValidImageUrl } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from "@/hooks/use-toast";
@@ -21,22 +21,6 @@ import { buttonVariants } from '@/components/ui/button';
 interface ProductAccordionProps {
   products: Product[];
   loading: boolean;
-}
-
-function isValidImageUrl(string: string | null | undefined) {
-    if (!string) return false;
-    try {
-        const url = new URL(string);
-        if (url.protocol !== "http:" && url.protocol !== "https:") {
-            return false;
-        }
-        // Check if the pathname ends with a common image extension
-        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
-        const pathname = url.pathname.toLowerCase();
-        return imageExtensions.some(ext => pathname.endsWith(ext));
-    } catch (_) {
-        return false;
-    }
 }
 
 export function ProductAccordion({ products, loading }: ProductAccordionProps) {
