@@ -196,34 +196,32 @@ function DashboardContent() {
                          <TabsTrigger value="epoca">Análise Época</TabsTrigger>
                     </TabsList>
                 </div>
-                <div className="flex-grow">
-                    <TabsContent value="overview" className="mt-0 p-4 md:p-6 h-full flex flex-col">
-                        <div className="space-y-6 overflow-y-auto flex-grow">
-                            <EpocaAnalysis allProducts={products} loading={loading} />
+                <TabsContent value="overview" className="mt-0 p-4 md:p-6 flex-grow flex flex-col">
+                    <div className="space-y-6 overflow-y-auto flex-grow">
+                        <EpocaAnalysis allProducts={products} loading={loading} />
 
-                            <div>
-                                {error ? (
-                                    <Alert variant="destructive">
-                                        <AlertCircle className="h-4 w-4" />
-                                        <AlertTitle>Erro de Comunicação</AlertTitle>
-                                        <AlertDescription>{error}</AlertDescription>
-                                    </Alert>
-                                ) : (
-                                    <ProductAccordion products={filteredProducts} loading={loading} />
-                                )}
-                            </div>
+                        <div>
+                            {error ? (
+                                <Alert variant="destructive">
+                                    <AlertCircle className="h-4 w-4" />
+                                    <AlertTitle>Erro de Comunicação</AlertTitle>
+                                    <AlertDescription>{error}</AlertDescription>
+                                </Alert>
+                            ) : (
+                                <ProductAccordion products={filteredProducts} loading={loading} />
+                            )}
                         </div>
-                    </TabsContent>
-                    <TabsContent value="granular" className="mt-0 p-4 md:p-6">
-                        <PriceComparisonTable allProducts={products} loading={loading} />
-                    </TabsContent>
-                    <TabsContent value="seller" className="mt-0 p-4 md:p-6">
-                        <SellerComparisonTable allProducts={products} loading={loading} />
-                    </TabsContent>
-                    <TabsContent value="epoca" className="mt-0 p-4 md:p-6">
-                        <EpocaPriceAnalysis allProducts={products} loading={loading} />
-                    </TabsContent>
-                </div>
+                    </div>
+                </TabsContent>
+                <TabsContent value="granular" className="mt-0 p-4 md:p-6">
+                    <PriceComparisonTable allProducts={products} loading={loading} />
+                </TabsContent>
+                <TabsContent value="seller" className="mt-0 p-4 md:p-6">
+                    <SellerComparisonTable allProducts={products} loading={loading} />
+                </TabsContent>
+                <TabsContent value="epoca" className="mt-0 p-4 md:p-6">
+                    <EpocaPriceAnalysis allProducts={products} loading={loading} />
+                </TabsContent>
             </Tabs>
         </div>
     </div>
