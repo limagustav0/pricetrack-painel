@@ -199,8 +199,8 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
-                                                    {offers.sort((a,b) => a.price - b.price).map((product) => (
-                                                    <TableRow key={product.id}>
+                                                    {offers.sort((a,b) => a.price - b.price).map((product, index) => (
+                                                    <TableRow key={`${product.id}-${index}`}>
                                                         <TableCell>{product.seller}</TableCell>
                                                         <TableCell className={`font-bold text-right ${product.price === minPrice ? 'text-primary' : 'text-foreground'}`}>
                                                             {formatCurrency(product.price)}
@@ -233,5 +233,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
         </AccordionItem>
     );
 }
+
+    
 
     
