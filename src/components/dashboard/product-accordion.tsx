@@ -11,11 +11,10 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ExternalLink, SearchX, TrendingUp, Copy, Check } from 'lucide-react';
-import { formatCurrency, isValidImageUrl } from '@/lib/utils';
+import { formatCurrency, isValidImageUrl, cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from "@/hooks/use-toast";
-import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
 
 interface ProductAccordionProps {
@@ -86,6 +85,22 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
     const maxPrice = Math.max(...prices);
     const imageSrc = isValidImageUrl(firstProduct.image) ? firstProduct.image! : `https://placehold.co/100x100.png`;
 
+    const mostRecentUpdate = useMemo(() => {
+        if (!productGroup || productGroup.length === 0) {
+            return null;
+        }
+        const validDates = productGroup
+            .map(p => p.updated_at ? new Date(p.updated_at) : null)
+            .filter((d): d is Date => d !== null && !isNaN(d.getTime()));
+    
+        if (validDates.length === 0) {
+            return null;
+        }
+    
+        const mostRecentDate = new Date(Math.max(...validDates.map(d => d.getTime())));
+        return mostRecentDate;
+    }, [productGroup]);
+
     const totalChanges = useMemo(() => {
         return productGroup.reduce((sum, p) => sum + (p.change_price || 0), 0);
     }, [productGroup]);
@@ -137,9 +152,11 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                                 <p className="text-xs text-muted-foreground">EAN: {ean}</p>
                                 <div
                                     role="button"
+                                    tabIndex={0}
                                     aria-label="Copiar EAN"
                                     onClick={handleCopy}
-                                    className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'h-5 w-5')}
+                                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCopy(e); }}
+                                    className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'h-5 w-5 cursor-pointer')}
                                 >
                                     {isCopied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
                                 </div>
@@ -148,7 +165,12 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                         <div className="flex flex-col items-start md:items-end gap-1 w-full md:w-auto">
                             <p className="text-sm text-muted-foreground">Preços a partir de</p>
                             <p className="text-2xl font-bold text-primary">{formatCurrency(minPrice)}</p>
-                            <div className="flex items-center gap-2 flex-wrap justify-end">
+                            {mostRecentUpdate && (
+                                <p className="text-xs text-muted-foreground">
+                                    Atualizado {formatDistanceToNow(mostRecentUpdate, { addSuffix: true, locale: ptBR })}
+                                </p>
+                            )}
+                            <div className="flex items-center gap-2 flex-wrap justify-end mt-1">
                                 {productGroup.length > 1 && (
                                     <Badge variant="secondary">Variação: {formatCurrency(minPrice)} - {formatCurrency(maxPrice)}</Badge>
                                 )}
