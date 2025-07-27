@@ -196,8 +196,8 @@ function DashboardContent() {
                          <TabsTrigger value="epoca">Análise Época</TabsTrigger>
                     </TabsList>
                 </div>
-                <TabsContent value="overview" className="mt-0 p-4 md:p-6 flex-grow flex flex-col">
-                    <div className="space-y-6 overflow-y-auto flex-grow">
+                <TabsContent value="overview" className="mt-0 p-4 md:p-6 overflow-y-auto">
+                    <div className="space-y-6">
                         <EpocaAnalysis allProducts={products} loading={loading} />
 
                         <div>
@@ -213,10 +213,10 @@ function DashboardContent() {
                         </div>
                     </div>
                 </TabsContent>
-                <TabsContent value="granular" className="mt-0 p-4 md:p-6">
+                <TabsContent value="granular" className="mt-0 p-4 md:p-6 flex flex-col">
                     <PriceComparisonTable allProducts={products} loading={loading} />
                 </TabsContent>
-                <TabsContent value="seller" className="mt-0 p-4 md:p-6">
+                <TabsContent value="seller" className="mt-0 p-4 md:p-6 flex flex-col">
                     <SellerComparisonTable allProducts={products} loading={loading} />
                 </TabsContent>
                 <TabsContent value="epoca" className="mt-0 p-4 md:p-6">

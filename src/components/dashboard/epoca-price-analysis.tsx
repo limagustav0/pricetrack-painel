@@ -10,13 +10,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, isValidImageUrl } from '@/lib/utils';
 import { ExternalLink, TrendingDown, TrendingUp } from 'lucide-react';
 import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 
 interface EpocaPriceAnalysisProps {
   allProducts: Product[];
   loading: boolean;
 }
 
-const TARGET_MARKETPLACE = "Época Cosméticos";
 const TOP_N = 10;
 
 function ProductTable({ title, description, products, icon: Icon }: { title: string, description: string, products: Product[], icon: React.ElementType }) {
@@ -37,6 +37,7 @@ function ProductTable({ title, description, products, icon: Icon }: { title: str
                         <TableHeader>
                             <TableRow>
                                 <TableHead className="min-w-[250px]">Produto</TableHead>
+                                <TableHead>Marketplace</TableHead>
                                 <TableHead className="text-right">Preço</TableHead>
                                 <TableHead></TableHead>
                             </TableRow>
@@ -45,7 +46,7 @@ function ProductTable({ title, description, products, icon: Icon }: { title: str
                             {products.map(product => {
                                 const imageSrc = isValidImageUrl(product.image) ? product.image : 'https://placehold.co/100x100.png';
                                 return (
-                                    <TableRow key={product.id}>
+                                    <TableRow key={`${product.id}-${product.marketplace}`}>
                                         <TableCell>
                                             <div className="flex items-center gap-3">
                                                 <Image
@@ -62,6 +63,9 @@ function ProductTable({ title, description, products, icon: Icon }: { title: str
                                                 </div>
                                             </div>
                                         </TableCell>
+                                        <TableCell>
+                                            <Badge variant="outline">{product.marketplace}</Badge>
+                                        </TableCell>
                                         <TableCell className="text-right font-bold text-primary">{formatCurrency(product.price)}</TableCell>
                                         <TableCell>
                                              <Button asChild variant="ghost" size="icon" disabled={!product.url}>
@@ -75,7 +79,7 @@ function ProductTable({ title, description, products, icon: Icon }: { title: str
                             })}
                              {products.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
+                                    <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
                                         Nenhum produto encontrado.
                                     </TableCell>
                                 </TableRow>
@@ -122,16 +126,22 @@ function LoadingSkeleton() {
 
 export function EpocaPriceAnalysis({ allProducts, loading }: EpocaPriceAnalysisProps) {
     const { cheapestProducts, mostExpensiveProducts } = useMemo(() => {
-        const epocaProducts = allProducts
-            .filter(p => p.marketplace === TARGET_MARKETPLACE)
-            .sort((a, b) => a.price - b.price);
+        if (!allProducts || allProducts.length === 0) {
+            return { cheapestProducts: [], mostExpensiveProducts: [] };
+        }
+
+        // Create a copy to avoid mutating the original array
+        const sortedProducts = [...allProducts].sort((a, b) => a.price - b.price);
 
         // Remove duplicates by EAN, keeping the one with the lowest price (already sorted)
-        const uniqueEpocaProducts = Array.from(new Map(epocaProducts.map(p => [p.ean, p])).values());
+        const uniqueProducts = Array.from(new Map(sortedProducts.map(p => [p.ean, p])).values());
+
+        const cheapest = uniqueProducts.slice(0, TOP_N);
+        const mostExpensive = uniqueProducts.slice(-TOP_N).sort((a,b) => b.price - a.price);
 
         return {
-            cheapestProducts: uniqueEpocaProducts.slice(0, TOP_N),
-            mostExpensiveProducts: uniqueEpocaProducts.slice(-TOP_N).sort((a,b) => b.price - a.price),
+            cheapestProducts: cheapest,
+            mostExpensiveProducts: mostExpensive,
         };
     }, [allProducts]);
 
@@ -147,14 +157,14 @@ export function EpocaPriceAnalysis({ allProducts, loading }: EpocaPriceAnalysisP
     return (
         <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
             <ProductTable
-                title="Top 10 Mais Baratos na Época"
-                description="Os produtos com os menores preços encontrados."
+                title={`Top ${TOP_N} Mais Baratos (Todos os Marketplaces)`}
+                description="Os produtos com os menores preços encontrados no geral."
                 products={cheapestProducts}
                 icon={TrendingDown}
             />
             <ProductTable
-                title="Top 10 Mais Caros na Época"
-                description="Os produtos com os maiores preços encontrados."
+                title={`Top ${TOP_N} Mais Caros (Todos os Marketplaces)`}
+                description="Os produtos com os maiores preços encontrados no geral."
                 products={mostExpensiveProducts}
                 icon={TrendingUp}
             />
