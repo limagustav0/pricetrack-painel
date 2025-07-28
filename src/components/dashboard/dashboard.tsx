@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -16,9 +17,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PriceComparisonTable } from './price-comparison-table';
 import { SellerComparisonTable } from './seller-comparison-table';
 import { Toaster } from '@/components/ui/toaster';
+import { isValidHttpUrl } from '@/lib/utils';
+
 
 // Helper to adapt the new API response to the existing Product type
 function adaptApiData(apiProduct: any): Product {
+    const imageUrl = apiProduct.imagem?.startsWith('//')
+    ? `https:${apiProduct.imagem}`
+    : apiProduct.imagem;
+
   return {
     id: apiProduct.sku,
     ean: apiProduct.ean,
@@ -28,8 +35,8 @@ function adaptApiData(apiProduct: any): Product {
     seller: apiProduct.loja,
     key_loja: apiProduct.key_loja,
     price: parseFloat(apiProduct.preco_final),
-    url: apiProduct.url,
-    image: apiProduct.imagem,
+    url: isValidHttpUrl(apiProduct.url) ? apiProduct.url : null,
+    image: imageUrl,
     updated_at: apiProduct.data_hora,
     change_price: apiProduct.change_price ? parseInt(apiProduct.change_price, 10) : 0,
   };
@@ -85,7 +92,7 @@ function DashboardContent() {
         const urlMap = new Map<string, string>();
         if (Array.isArray(urlsData)) {
             for (const item of urlsData) {
-                if(item.ean && item.marketplace && item.url) {
+                if(item.ean && item.marketplace && item.url && isValidHttpUrl(item.url)) {
                     const key = `${item.ean}-${item.marketplace}`;
                     urlMap.set(key, item.url);
                 }
@@ -98,6 +105,7 @@ function DashboardContent() {
             if (!product.url && product.ean && product.marketplace) {
                 const key = `${product.ean}-${product.marketplace}`;
                 if (urlMap.has(key)) {
+                    // No need to re-validate, already validated when creating the map
                     return { ...product, url: urlMap.get(key)! };
                 }
             }

@@ -8,8 +8,8 @@ export interface Product {
   seller: string; // from 'loja'
   key_loja: string | null;
   price: number; // from 'preco_final'
-  url: string;
-  image: string; // from 'imagem'
+  url: string | null;
+  image: string | null; // from 'imagem'
   updated_at: string; // from 'data_hora'
   change_price: number | null;
 }
