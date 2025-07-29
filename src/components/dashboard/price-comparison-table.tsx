@@ -7,10 +7,11 @@ import { useMemo, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatCurrency, isValidImageUrl } from '@/lib/utils';
+import { formatCurrency, isValidHttpUrl } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { SearchableSelect } from './searchable-select';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, ChevronsUpDown } from 'lucide-react';
+import { Button } from '../ui/button';
 
 interface PriceComparisonTableProps {
   allProducts: Product[];
@@ -29,6 +30,7 @@ interface GroupedProduct {
 export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTableProps) {
   const [selectedEans, setSelectedEans] = useState<string[]>([]);
   const [selectedMarketplaces, setSelectedMarketplaces] = useState<string[]>([]);
+  const [showIncomplete, setShowIncomplete] = useState(false);
 
   const { groupedProducts, uniqueMarketplaces } = useMemo(() => {
     const marketplaces = [...new Set(allProducts.map(p => p.marketplace).filter(Boolean))].sort();
@@ -37,11 +39,24 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
       if (!product.ean) return acc;
       
       if (!acc[product.ean]) {
+        const epocaProduct = allProducts.find(p => p.ean === product.ean && p.marketplace === 'Época Cosméticos');
+        const belezaProduct = allProducts.find(p => p.ean === product.ean && p.marketplace === 'Beleza na Web');
+        const firstValidImage = allProducts.find(p => p.ean === product.ean && isValidHttpUrl(p.image))?.image;
+        
+        let image = 'https://placehold.co/100x100.png';
+        if (epocaProduct && isValidHttpUrl(epocaProduct.image)) {
+            image = epocaProduct.image!;
+        } else if (belezaProduct && isValidHttpUrl(belezaProduct.image)) {
+            image = belezaProduct.image!;
+        } else if (firstValidImage) {
+            image = firstValidImage;
+        }
+
         acc[product.ean] = {
             ean: product.ean,
             name: product.name,
             brand: product.brand,
-            image: product.image || 'https://placehold.co/100x100.png',
+            image: image,
             offers: {},
         };
       }
@@ -69,15 +84,33 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
     return groupedProducts.map(p => ({ value: p.ean, label: `${p.name} (${p.ean})` })).sort((a,b) => a.label.localeCompare(b.label));
   }, [groupedProducts]);
 
-  const filteredProducts = useMemo(() => {
-    if (selectedEans.length === 0) return groupedProducts;
-    return groupedProducts.filter(p => selectedEans.includes(p.ean));
-  }, [groupedProducts, selectedEans]);
+  const filteredAndSortedProducts = useMemo(() => {
+    let products = groupedProducts;
+
+    if (selectedEans.length > 0) {
+      products = products.filter(p => selectedEans.includes(p.ean));
+    }
+    
+    const completeProducts = products.filter(p => Object.keys(p.offers).length === uniqueMarketplaces.length);
+    const incompleteProducts = products.filter(p => Object.keys(p.offers).length !== uniqueMarketplaces.length);
+
+    if (showIncomplete) {
+        return [...completeProducts, ...incompleteProducts];
+    }
+    return completeProducts;
+
+  }, [groupedProducts, selectedEans, uniqueMarketplaces.length, showIncomplete]);
 
   const visibleMarketplaces = useMemo(() => {
     if (selectedMarketplaces.length === 0) return uniqueMarketplaces;
     return uniqueMarketplaces.filter(m => selectedMarketplaces.includes(m));
   }, [uniqueMarketplaces, selectedMarketplaces]);
+
+  const incompleteProductsCount = useMemo(() => {
+      let products = selectedEans.length > 0 ? groupedProducts.filter(p => selectedEans.includes(p.ean)) : groupedProducts;
+      return products.filter(p => Object.keys(p.offers).length !== uniqueMarketplaces.length).length;
+  }, [groupedProducts, selectedEans, uniqueMarketplaces.length]);
+
 
   if (loading) {
     return (
@@ -114,7 +147,7 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
       <CardHeader>
         <CardTitle>Comparativo de Preços por Marketplace</CardTitle>
         <CardDescription>
-          Visualize os preços de cada produto lado a lado nos diferentes marketplaces.
+          Visualize os preços de cada produto lado a lado nos diferentes marketplaces. Produtos presentes em todos os marketplaces são exibidos primeiro.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -146,8 +179,8 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {filteredProducts.map((product) => {
-                    const imageSrc = isValidImageUrl(product.image) ? product.image : 'https://placehold.co/100x100.png';
+                {filteredAndSortedProducts.map((product) => {
+                    const imageSrc = isValidHttpUrl(product.image) ? product.image : 'https://placehold.co/100x100.png';
                     const prices = Object.values(product.offers).map(o => o.price);
                     const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
                     
@@ -203,7 +236,20 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
                         </TableRow>
                     )
                 })}
-                 {filteredProducts.length === 0 && !loading && (
+
+                {incompleteProductsCount > 0 && (
+                    <TableRow>
+                        <TableCell colSpan={visibleMarketplaces.length + 1} className="text-center">
+                            <Button variant="ghost" onClick={() => setShowIncomplete(prev => !prev)} className="w-full">
+                                <ChevronsUpDown className="mr-2 h-4 w-4" />
+                                {showIncomplete ? 'Recolher' : `Expandir para ver ${incompleteProductsCount} produto(s) incompletos`}
+                            </Button>
+                        </TableCell>
+                    </TableRow>
+                )}
+
+
+                 {filteredAndSortedProducts.length === 0 && !loading && (
                     <TableRow>
                         <TableCell colSpan={visibleMarketplaces.length + 1}>
                              <div className="text-center py-16 text-muted-foreground">
