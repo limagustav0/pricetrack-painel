@@ -217,7 +217,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                                                             {formatCurrency(product.price)}
                                                         </TableCell>
                                                         <TableCell className="text-muted-foreground text-sm text-center">
-                                                            {product.change_price || 0}
+                                                            {product.change_price && product.change_price > 0 ? product.change_price : '-'}
                                                         </TableCell>
                                                         <TableCell className="text-muted-foreground text-sm">
                                                             {product.updated_at ? formatDistanceToNow(new Date(product.updated_at), { addSuffix: true, locale: ptBR }) : '-'}
