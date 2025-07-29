@@ -88,12 +88,12 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
         const productToUse = epocaProduct || belezaProduct || productGroup[0];
         let image = `https://placehold.co/100x100.png`;
 
-        if (epocaProduct) {
-            image = epocaProduct.image!;
-        } else if (belezaProduct) {
-            image = belezaProduct.image!;
-        } else if (firstAvailable) {
-            image = firstAvailable.image!;
+        if (epocaProduct && epocaProduct.image) {
+            image = epocaProduct.image;
+        } else if (belezaProduct && belezaProduct.image) {
+            image = belezaProduct.image;
+        } else if (firstAvailable && firstAvailable.image) {
+            image = firstAvailable.image;
         }
 
         return {

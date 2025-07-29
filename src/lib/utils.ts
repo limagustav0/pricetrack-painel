@@ -1,6 +1,15 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
+const ALLOWED_IMAGE_HOSTNAMES = [
+    'placehold.co',
+    'epocacosmeticos.vteximg.com.br',
+    'a-static.mlcdn.com.br',
+    'm.media-amazon.com',
+    'res.cloudinary.com',
+];
+
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -16,11 +25,11 @@ export function isValidImageUrl(string: string | null | undefined): boolean {
     if (!string) return false;
     try {
         const url = new URL(string);
-        // Must be http or https
         if (url.protocol !== "http:" && url.protocol !== "https:") {
             return false;
         }
-        return true;
+        // Check if the hostname is in the allowed list
+        return ALLOWED_IMAGE_HOSTNAMES.includes(url.hostname);
     } catch (_) {
         return false;
     }
