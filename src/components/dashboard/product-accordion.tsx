@@ -79,11 +79,33 @@ export function ProductAccordion({ products, loading }: ProductAccordionProps) {
 function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup: Product[] }) {
     const { toast } = useToast();
     const [isCopied, setIsCopied] = useState(false);
-    const firstProduct = productGroup[0];
+    
+    const { firstProduct, imageSrc } = useMemo(() => {
+        const epocaProduct = productGroup.find(p => p.marketplace === 'Época Cosméticos' && isValidImageUrl(p.image));
+        const belezaProduct = productGroup.find(p => p.marketplace === 'Beleza na Web' && isValidImageUrl(p.image));
+        const firstAvailable = productGroup.find(p => isValidImageUrl(p.image));
+
+        const productToUse = epocaProduct || belezaProduct || productGroup[0];
+        let image = `https://placehold.co/100x100.png`;
+
+        if (epocaProduct) {
+            image = epocaProduct.image!;
+        } else if (belezaProduct) {
+            image = belezaProduct.image!;
+        } else if (firstAvailable) {
+            image = firstAvailable.image!;
+        }
+
+        return {
+            firstProduct: productToUse,
+            imageSrc: image
+        };
+
+    }, [productGroup]);
+
     const prices = productGroup.map(p => p.price);
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
-    const imageSrc = isValidImageUrl(firstProduct.image) ? firstProduct.image! : `https://placehold.co/100x100.png`;
 
     const mostRecentUpdate = useMemo(() => {
         if (!productGroup || productGroup.length === 0) {
@@ -97,7 +119,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
             return null;
         }
     
-        const mostRecentDate = new Date(Math.max(...validDates.map(d => d.getTime())));
+        const mostRecentDate = new Date(Math.max(...validates.map(d => d.getTime())));
         return mostRecentDate;
     }, [productGroup]);
 
@@ -244,3 +266,5 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
         </AccordionItem>
     );
 }
+
+    
