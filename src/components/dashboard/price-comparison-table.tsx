@@ -7,7 +7,7 @@ import { useMemo, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatCurrency, isValidHttpUrl } from '@/lib/utils';
+import { formatCurrency, isValidImageUrl } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { SearchableSelect } from './searchable-select';
 import { TrendingUp, ChevronsUpDown } from 'lucide-react';
@@ -39,17 +39,18 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
       if (!product.ean) return acc;
       
       if (!acc[product.ean]) {
-        const epocaProduct = allProducts.find(p => p.ean === product.ean && p.marketplace === 'Época Cosméticos');
-        const belezaProduct = allProducts.find(p => p.ean === product.ean && p.marketplace === 'Beleza na Web');
-        const firstValidImage = allProducts.find(p => p.ean === product.ean && isValidHttpUrl(p.image))?.image;
-        
+        const productsForEan = allProducts.filter(p => p.ean === product.ean);
+        const epocaProduct = productsForEan.find(p => p.marketplace === 'Época Cosméticos' && isValidImageUrl(p.image));
+        const belezaProduct = productsForEan.find(p => p.marketplace === 'Beleza na Web' && isValidImageUrl(p.image));
+        const firstValidImageProduct = productsForEan.find(p => isValidImageUrl(p.image));
+
         let image = 'https://placehold.co/100x100.png';
-        if (epocaProduct && isValidHttpUrl(epocaProduct.image)) {
+        if (epocaProduct) {
             image = epocaProduct.image!;
-        } else if (belezaProduct && isValidHttpUrl(belezaProduct.image)) {
+        } else if (belezaProduct) {
             image = belezaProduct.image!;
-        } else if (firstValidImage) {
-            image = firstValidImage;
+        } else if (firstValidImageProduct) {
+            image = firstValidImageProduct.image!;
         }
 
         acc[product.ean] = {
@@ -180,7 +181,7 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
             </TableHeader>
             <TableBody>
                 {filteredAndSortedProducts.map((product) => {
-                    const imageSrc = isValidHttpUrl(product.image) ? product.image : 'https://placehold.co/100x100.png';
+                    const imageSrc = product.image; // Already validated
                     const prices = Object.values(product.offers).map(o => o.price);
                     const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
                     
@@ -265,3 +266,5 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
     </Card>
   );
 }
+
+    

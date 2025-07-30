@@ -54,10 +54,21 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
         }
 
         if (!acc[product.key_loja].products[product.ean]) {
+            let image = 'https://placehold.co/100x100.png';
+            if (isValidImageUrl(product.image)) {
+                image = product.image!;
+            } else {
+                 const sameEanProducts = allProducts.filter(p => p.ean === product.ean);
+                 const validImageProduct = sameEanProducts.find(p => isValidImageUrl(p.image));
+                 if (validImageProduct) {
+                     image = validImageProduct.image!;
+                 }
+            }
+
             acc[product.key_loja].products[product.ean] = {
                 name: product.name,
                 brand: product.brand,
-                image: product.image || 'https://placehold.co/100x100.png',
+                image: image,
                 offers: {},
             };
         }
@@ -183,7 +194,7 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
                                       </TableHeader>
                                       <TableBody>
                                           {Object.entries(seller.products).map(([ean, product]) => {
-                                              const imageSrc = isValidImageUrl(product.image) ? product.image : 'https://placehold.co/100x100.png';
+                                              const imageSrc = product.image; // Already validated
                                               const prices = Object.values(product.offers).map(o => o.price);
                                               const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
 
@@ -257,3 +268,5 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
     </Card>
   );
 }
+
+    
