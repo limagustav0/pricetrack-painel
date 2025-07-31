@@ -50,6 +50,10 @@ const nextConfig: NextConfig = {
         source: '/api/url-data',
         destination: 'http://201.23.64.234:8000/api/urls/',
       },
+      {
+        source: '/api/price-changes',
+        destination: 'http://201.23.64.234:8000/api/price_changes',
+      },
     ];
   },
 };
