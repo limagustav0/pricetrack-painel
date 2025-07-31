@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -104,10 +103,9 @@ function DashboardContent() {
         const adaptedProducts = results.map(adaptApiData);
         
         const mergedProducts = adaptedProducts.map(product => {
-            if (!product.url && product.ean && product.marketplace) {
+            if (!isValidHttpUrl(product.url) && product.ean && product.marketplace) {
                 const key = `${product.ean}-${product.marketplace}`;
                 if (urlMap.has(key)) {
-                    // No need to re-validate, already validated when creating the map
                     return { ...product, url: urlMap.get(key)! };
                 }
             }
@@ -255,7 +253,7 @@ function DashboardContent() {
                     <SellerComparisonTable allProducts={products} loading={loading} />
                 </TabsContent>
                 <TabsContent value="epoca" className="mt-0 p-4 md:p-6">
-                    <EpocaPriceAnalysis allProducts={products} loading={loading} />
+                    <EpocaPriceAnalysis allProducts={filteredProducts} loading={loading} />
                 </TabsContent>
             </Tabs>
         </div>
