@@ -223,7 +223,7 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
                                                 {offer.change_price && offer.change_price > 0 && (
                                                     <p className="text-xs text-muted-foreground flex items-center justify-end gap-1 mt-1">
                                                         <TrendingUp className="h-3 w-3" />
-                                                        {offer.change_price} alteraç{offer.change_price > 1 ? 'ões' : 'ão'}
+                                                        {offer.change_price} alteraç{offer.change_price === 1 ? 'ão' : 'ões'}
                                                     </p>
                                                 )}
                                                 {isMinPrice && prices.length > 1 && <Badge variant="secondary" className="mt-1">Melhor Preço</Badge>}
@@ -266,5 +266,3 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
     </Card>
   );
 }
-
-    
