@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { FiltersGroup } from './filters-group';
 import { ProductAccordion } from './product-accordion';
 import { ComparativeAnalysis } from './comparative-analysis';
-import { EpocaPriceAnalysis } from './epoca-price-analysis';
+import { OverallPriceAnalysis } from './overall-price-analysis';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PriceComparisonTable } from './price-comparison-table';
@@ -209,7 +209,7 @@ function DashboardContent() {
                         <TabsTrigger value="overview">Visão Geral</TabsTrigger>
                         <TabsTrigger value="granular">Análise por Marketplace</TabsTrigger>
                         <TabsTrigger value="seller">Análise por Vendedor</TabsTrigger>
-                         <TabsTrigger value="epoca">Análise Época</TabsTrigger>
+                         <TabsTrigger value="geral">Análise Geral</TabsTrigger>
                     </TabsList>
                 </div>
                 <TabsContent value="overview" className="mt-0 p-4 md:p-6 overflow-y-auto">
@@ -252,8 +252,8 @@ function DashboardContent() {
                 <TabsContent value="seller" className="mt-0 p-4 md:p-6 flex flex-col">
                     <SellerComparisonTable allProducts={products} loading={loading} />
                 </TabsContent>
-                <TabsContent value="epoca" className="mt-0 p-4 md:p-6">
-                    <EpocaPriceAnalysis allProducts={filteredProducts} loading={loading} />
+                <TabsContent value="geral" className="mt-0 p-4 md:p-6">
+                    <OverallPriceAnalysis allProducts={filteredProducts} loading={loading} />
                 </TabsContent>
             </Tabs>
         </div>
