@@ -4,20 +4,21 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import type { Product } from '@/types';
-import { AlertCircle, Menu } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { FiltersGroup } from './filters-group';
 import { ProductAccordion } from './product-accordion';
-import { EpocaAnalysis } from './epoca-analysis';
+import { ComparativeAnalysis } from './comparative-analysis';
 import { EpocaPriceAnalysis } from './epoca-price-analysis';
-import { Sidebar, SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PriceComparisonTable } from './price-comparison-table';
 import { SellerComparisonTable } from './seller-comparison-table';
 import { Toaster } from '@/components/ui/toaster';
 import { isValidHttpUrl } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Card } from '../ui/card';
 
 
 // Helper to adapt the new API response to the existing Product type
@@ -55,6 +56,7 @@ function DashboardContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [comparisonMarketplace, setComparisonMarketplace] = useState<string>("");
   const [filters, setFilters] = useState<Filters>({
     ean: [],
     marketplace: [],
@@ -133,6 +135,14 @@ function DashboardContent() {
   const uniqueDescriptions = useMemo(() => [...Array.from(new Set(products.map(p => p.name).filter(Boolean).sort()))], [products]);
   const uniqueBrands = useMemo(() => [...Array.from(new Set(products.map(p => p.brand).filter(Boolean).sort()))], [products]);
 
+  // Set default comparison marketplace once data is loaded
+  useEffect(() => {
+      if(uniqueMarketplaces.length > 0 && !comparisonMarketplace) {
+          const epoca = uniqueMarketplaces.find(m => m.toLowerCase().includes('época'));
+          setComparisonMarketplace(epoca || uniqueMarketplaces[0]);
+      }
+  }, [uniqueMarketplaces, comparisonMarketplace]);
+
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
         const eanMatch = filters.ean.length === 0 || (p.ean && filters.ean.includes(p.ean));
@@ -206,7 +216,24 @@ function DashboardContent() {
                 </div>
                 <TabsContent value="overview" className="mt-0 p-4 md:p-6 overflow-y-auto">
                     <div className="space-y-6">
-                        <EpocaAnalysis allProducts={products} loading={loading} />
+                        <Card className="p-4">
+                             <div className="flex flex-col md:flex-row items-center gap-4">
+                                <h2 className="text-lg font-bold tracking-tight">Análise Comparativa</h2>
+                                <div className="w-full md:w-64">
+                                <Select value={comparisonMarketplace} onValueChange={setComparisonMarketplace} disabled={loading}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Selecione um Marketplace" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {uniqueMarketplaces.map(mp => (
+                                            <SelectItem key={mp} value={mp}>{mp}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                </div>
+                            </div>
+                        </Card>
+                        <ComparativeAnalysis allProducts={products} loading={loading} selectedMarketplace={comparisonMarketplace} />
 
                         <div>
                             {error ? (
