@@ -23,5 +23,5 @@ export interface PriceChange {
     marketplace: string;
     preco_antigo: number;
     preco_novo: number;
-    data_mudanca: string;
+    data_mudanca_timestamp: number;
 }

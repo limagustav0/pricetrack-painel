@@ -139,7 +139,7 @@ export function PriceChangeAnalysis({ priceChanges, loading }: PriceChangeAnalys
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {priceChanges.sort((a,b) => new Date(b.data_mudanca).getTime() - new Date(a.data_mudanca).getTime()).map((change) => {
+                {priceChanges.sort((a,b) => b.data_mudanca_timestamp - a.data_mudanca_timestamp).map((change) => {
                     const difference = change.preco_novo - change.preco_antigo;
                     const isIncrease = difference > 0;
                     const isDecrease = difference < 0;
@@ -169,7 +169,7 @@ export function PriceChangeAnalysis({ priceChanges, loading }: PriceChangeAnalys
                                 </div>
                             </TableCell>
                             <TableCell className="text-muted-foreground">
-                                {format(new Date(change.data_mudanca), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                                {format(new Date(change.data_mudanca_timestamp), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                             </TableCell>
                         </TableRow>
                     )
@@ -189,3 +189,4 @@ export function PriceChangeAnalysis({ priceChanges, loading }: PriceChangeAnalys
     </div>
   );
 }
+

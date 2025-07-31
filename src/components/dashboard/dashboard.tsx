@@ -53,7 +53,7 @@ function adaptPriceChangeData(apiChange: any): PriceChange {
         marketplace: apiChange.marketplace,
         preco_antigo: parseFloat(apiChange.preco_antigo),
         preco_novo: parseFloat(apiChange.preco_novo),
-        data_mudanca: apiChange.data_mudanca,
+        data_mudanca_timestamp: parseInt(apiChange.data_mudanca, 10) * 1000,
     }
 }
 
@@ -297,3 +297,4 @@ export function Dashboard() {
         </SidebarProvider>
     )
 }
+
