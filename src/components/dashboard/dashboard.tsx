@@ -45,6 +45,8 @@ function adaptApiData(apiProduct: any): Product {
 }
 
 function adaptPriceChangeData(apiChange: any): PriceChange {
+    // Ensure the timestamp from the API is correctly converted to a number in milliseconds
+    const timestamp = parseFloat(apiChange.data_mudanca);
     return {
         id: apiChange.id,
         ean: apiChange.ean,
@@ -54,7 +56,8 @@ function adaptPriceChangeData(apiChange: any): PriceChange {
         marketplace: apiChange.marketplace,
         preco_antigo: parseFloat(apiChange.preco_antigo),
         preco_novo: parseFloat(apiChange.preco_novo),
-        data_mudanca_timestamp: parseFloat(apiChange.data_mudanca) * 1000,
+        // Convert from seconds to milliseconds if it's a valid number
+        data_mudanca_timestamp: !isNaN(timestamp) ? timestamp * 1000 : null,
     }
 }
 
@@ -298,5 +301,3 @@ export function Dashboard() {
         </SidebarProvider>
     )
 }
-
-
