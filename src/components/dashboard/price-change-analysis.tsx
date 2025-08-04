@@ -1,13 +1,12 @@
 
 "use client";
 
-import { useMemo } from 'react';
 import type { PriceChange } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/utils';
-import { ArrowDown, ArrowUp, DollarSign, ListFilter, TrendingUp, TrendingDown, Package } from 'lucide-react';
+import { ArrowDown, ArrowUp } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -18,37 +17,9 @@ interface PriceChangeAnalysisProps {
 }
 
 export function PriceChangeAnalysis({ priceChanges, loading }: PriceChangeAnalysisProps) {
-  const analysis = useMemo(() => {
-    const totalChanges = priceChanges.length;
-    const priceIncreases = priceChanges.filter(p => p.preco_novo > p.preco_antigo).length;
-    const priceDecreases = priceChanges.filter(p => p.preco_novo < p.preco_antigo).length;
-    const uniqueProductsChanged = new Set(priceChanges.map(p => p.ean)).size;
-
-    return {
-      totalChanges,
-      priceIncreases,
-      priceDecreases,
-      uniqueProductsChanged,
-    };
-  }, [priceChanges]);
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <Skeleton className="h-5 w-32" />
-                <Skeleton className="h-4 w-4" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-8 w-1/2" />
-                <Skeleton className="h-4 w-3/4 mt-1" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
         <Card>
             <CardHeader>
                 <Skeleton className="h-6 w-1/2" />
@@ -68,56 +39,11 @@ export function PriceChangeAnalysis({ priceChanges, loading }: PriceChangeAnalys
                 </div>
             </CardContent>
         </Card>
-      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Alterações</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analysis.totalChanges}</div>
-            <p className="text-xs text-muted-foreground">Mudanças de preço registradas</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Produtos Afetados</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analysis.uniqueProductsChanged}</div>
-            <p className="text-xs text-muted-foreground">Produtos únicos com preço alterado</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Aumentos de Preço</CardTitle>
-            <ArrowUp className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analysis.priceIncreases}</div>
-            <p className="text-xs text-muted-foreground">Produtos que ficaram mais caros</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Reduções de Preço</CardTitle>
-            <ArrowDown className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analysis.priceDecreases}</div>
-            <p className="text-xs text-muted-foreground">Produtos que ficaram mais baratos</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
+    <Card>
         <CardHeader>
           <CardTitle>Histórico de Mudanças de Preço</CardTitle>
           <CardDescription>
@@ -125,7 +51,7 @@ export function PriceChangeAnalysis({ priceChanges, loading }: PriceChangeAnalys
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="border rounded-lg overflow-auto max-h-[calc(100vh-25rem)]">
+          <div className="border rounded-lg overflow-auto max-h-[calc(100vh-20rem)]">
             <Table>
               <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
@@ -188,7 +114,6 @@ export function PriceChangeAnalysis({ priceChanges, loading }: PriceChangeAnalys
             </Table>
           </div>
         </CardContent>
-      </Card>
-    </div>
+    </Card>
   );
 }

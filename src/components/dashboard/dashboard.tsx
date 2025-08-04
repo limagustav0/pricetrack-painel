@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -17,7 +18,7 @@ import { SellerComparisonTable } from './seller-comparison-table';
 import { Toaster } from '@/components/ui/toaster';
 import { isValidHttpUrl } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Card, CardHeader } from '../ui/card';
+import { Card, CardContent, CardHeader } from '../ui/card';
 import { PriceChangeAnalysis } from './price-change-analysis';
 
 
@@ -125,7 +126,7 @@ function DashboardContent() {
         
         const mergedProducts = adaptedProducts.map(product => {
             if (!isValidHttpUrl(product.url) && product.ean && product.marketplace) {
-                const key = `${item.ean}-${product.marketplace}`;
+                const key = `${product.ean}-${product.marketplace}`;
                 if (urlMap.has(key)) {
                     return { ...product, url: urlMap.get(key)! };
                 }
@@ -247,17 +248,19 @@ function DashboardContent() {
                             <CardHeader>
                                 <h2 className="text-lg font-semibold">Filtros de Produtos</h2>
                             </CardHeader>
-                            <FiltersGroup
-                                eans={uniqueEans}
-                                marketplaces={uniqueMarketplaces}
-                                sellers={uniqueSellers}
-                                descriptions={uniqueDescriptions}
-                                brands={uniqueBrands}
-                                filters={filters}
-                                onFilterChange={handleFilterChange}
-                                onClearFilters={clearFilters}
-                                loading={loading}
-                            />
+                            <CardContent>
+                                <FiltersGroup
+                                    eans={uniqueEans}
+                                    marketplaces={uniqueMarketplaces}
+                                    sellers={uniqueSellers}
+                                    descriptions={uniqueDescriptions}
+                                    brands={uniqueBrands}
+                                    filters={filters}
+                                    onFilterChange={handleFilterChange}
+                                    onClearFilters={clearFilters}
+                                    loading={loading}
+                                />
+                            </CardContent>
                         </Card>
 
                         <div>
@@ -298,5 +301,3 @@ export function Dashboard() {
         </SidebarProvider>
     )
 }
-
-    

@@ -25,5 +25,3 @@ export interface PriceChange {
     preco_novo: number;
     data_mudanca_timestamp: number | null;
 }
-
-    
