@@ -1,3 +1,4 @@
+
 export interface Product {
   // Keeping some of the old fields for compatibility, but adapting to the new structure
   id: string; // Using sku as id
@@ -11,7 +12,6 @@ export interface Product {
   url: string | null;
   image: string | null; // from 'imagem'
   updated_at: string; // from 'data_hora'
-  change_price: number | null;
 }
 
 export interface PriceChange {
@@ -25,3 +25,5 @@ export interface PriceChange {
     preco_novo: number;
     data_mudanca_timestamp: number | null;
 }
+
+    

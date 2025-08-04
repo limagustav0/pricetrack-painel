@@ -17,7 +17,7 @@ import { SellerComparisonTable } from './seller-comparison-table';
 import { Toaster } from '@/components/ui/toaster';
 import { isValidHttpUrl } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Card } from '../ui/card';
+import { Card, CardHeader } from '../ui/card';
 import { PriceChangeAnalysis } from './price-change-analysis';
 
 
@@ -39,12 +39,10 @@ function adaptApiData(apiProduct: any): Product {
     url: isValidHttpUrl(apiProduct.url) ? apiProduct.url : null,
     image: imageUrl,
     updated_at: apiProduct.data_hora,
-    change_price: apiProduct.change_price ? parseInt(apiProduct.change_price, 10) : 0,
   };
 }
 
 function adaptPriceChangeData(apiChange: any): PriceChange {
-    // Ensure the timestamp from the API is correctly converted to a number in milliseconds
     const timestamp = parseFloat(apiChange.data_mudanca);
     return {
         id: apiChange.id,
@@ -55,7 +53,6 @@ function adaptPriceChangeData(apiChange: any): PriceChange {
         marketplace: apiChange.marketplace,
         preco_antigo: parseFloat(apiChange.preco_antigo),
         preco_novo: parseFloat(apiChange.preco_novo),
-        // Convert from seconds to milliseconds if it's a valid number
         data_mudanca_timestamp: !isNaN(timestamp) ? timestamp * 1000 : null,
     }
 }
@@ -128,7 +125,7 @@ function DashboardContent() {
         
         const mergedProducts = adaptedProducts.map(product => {
             if (!isValidHttpUrl(product.url) && product.ean && product.marketplace) {
-                const key = `${product.ean}-${product.marketplace}`;
+                const key = `${item.ean}-${product.marketplace}`;
                 if (urlMap.has(key)) {
                     return { ...product, url: urlMap.get(key)! };
                 }
@@ -208,22 +205,6 @@ function DashboardContent() {
   return (
     <div className="flex h-screen bg-gray-100">
         <Toaster />
-        <div className="w-72 bg-white border-r p-4 flex-shrink-0 overflow-y-auto">
-             <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold">Filtros</h2>
-              </div>
-              <FiltersGroup
-                  eans={uniqueEans}
-                  marketplaces={uniqueMarketplaces}
-                  sellers={uniqueSellers}
-                  descriptions={uniqueDescriptions}
-                  brands={uniqueBrands}
-                  filters={filters}
-                  onFilterChange={handleFilterChange}
-                  onClearFilters={clearFilters}
-                  loading={loading}
-              />
-        </div>
         <div className="flex-1 flex flex-col overflow-auto">
              <header className="px-4 pt-4 md:px-6 md:pt-6">
                 <div className="flex-1 min-w-[200px]">
@@ -261,6 +242,23 @@ function DashboardContent() {
                             </div>
                         </Card>
                         <ComparativeAnalysis allProducts={products} loading={loading} selectedMarketplace={comparisonMarketplace} />
+                        
+                        <Card>
+                            <CardHeader>
+                                <h2 className="text-lg font-semibold">Filtros de Produtos</h2>
+                            </CardHeader>
+                            <FiltersGroup
+                                eans={uniqueEans}
+                                marketplaces={uniqueMarketplaces}
+                                sellers={uniqueSellers}
+                                descriptions={uniqueDescriptions}
+                                brands={uniqueBrands}
+                                filters={filters}
+                                onFilterChange={handleFilterChange}
+                                onClearFilters={clearFilters}
+                                loading={loading}
+                            />
+                        </Card>
 
                         <div>
                             {error ? (
@@ -300,3 +298,5 @@ export function Dashboard() {
         </SidebarProvider>
     )
 }
+
+    

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { Product } from '@/types';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -133,11 +133,8 @@ export function OverallPriceAnalysis({ allProducts, loading }: OverallPriceAnaly
         // Create a copy to avoid mutating the original array
         const sortedProducts = [...allProducts].sort((a, b) => a.price - b.price);
 
-        // Remove duplicates by EAN, keeping the one with the lowest price (already sorted)
-        const uniqueProducts = Array.from(new Map(sortedProducts.map(p => [p.ean, p])).values());
-
-        const cheapest = uniqueProducts.slice(0, TOP_N);
-        const mostExpensive = uniqueProducts.slice(-TOP_N).sort((a,b) => b.price - a.price);
+        const cheapest = sortedProducts.slice(0, TOP_N);
+        const mostExpensive = [...allProducts].sort((a, b) => b.price - a.price).slice(0, TOP_N);
 
         return {
             cheapestProducts: cheapest,
@@ -157,17 +154,19 @@ export function OverallPriceAnalysis({ allProducts, loading }: OverallPriceAnaly
     return (
         <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
             <ProductTable
-                title={`Top ${TOP_N} Mais Baratos (Todos os Marketplaces)`}
-                description="Os produtos com os menores preços encontrados no geral."
+                title={`Top ${TOP_N} Mais Baratos`}
+                description="Os produtos com os menores preços encontrados, considerando os filtros aplicados."
                 products={cheapestProducts}
                 icon={TrendingDown}
             />
             <ProductTable
-                title={`Top ${TOP_N} Mais Caros (Todos os Marketplaces)`}
-                description="Os produtos com os maiores preços encontrados no geral."
+                title={`Top ${TOP_N} Mais Caros`}
+                description="Os produtos com os maiores preços encontrados, considerando os filtros aplicados."
                 products={mostExpensiveProducts}
                 icon={TrendingUp}
             />
         </div>
     );
 }
+
+    
