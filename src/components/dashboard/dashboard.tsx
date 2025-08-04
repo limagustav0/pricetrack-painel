@@ -137,7 +137,8 @@ function DashboardContent() {
         setProducts(mergedProducts);
 
         if (Array.isArray(changesData)) {
-            setPriceChanges(changesData.map(adaptPriceChangeData));
+            const adaptedChanges = changesData.map(adaptPriceChangeData);
+            setPriceChanges(adaptedChanges);
         }
 
       } catch (e) {
@@ -301,3 +302,5 @@ export function Dashboard() {
         </SidebarProvider>
     )
 }
+
+    
