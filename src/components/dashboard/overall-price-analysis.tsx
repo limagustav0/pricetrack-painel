@@ -43,10 +43,10 @@ function ProductTable({ title, description, products, icon: Icon }: { title: str
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {products.map(product => {
+                            {products.map((product, index) => {
                                 const imageSrc = isValidImageUrl(product.image) ? product.image : 'https://placehold.co/100x100.png';
                                 return (
-                                    <TableRow key={`${product.id}-${product.marketplace}`}>
+                                    <TableRow key={`${product.id}-${product.marketplace}-${index}`}>
                                         <TableCell>
                                             <div className="flex items-center gap-3">
                                                 <Image
