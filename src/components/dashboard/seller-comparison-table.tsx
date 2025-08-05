@@ -184,7 +184,7 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
                               </div>
                           </AccordionTrigger>
                           <AccordionContent className="p-0">
-                              <div className="border-t overflow-auto max-h-[calc(100vh-22rem)]">
+                              <div className="border-t overflow-auto">
                                   <Table>
                                       <TableHeader className="sticky top-0 bg-background z-10">
                                           <TableRow>
