@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
-import type { Product, PriceChange } from '@/types';
+import type { Product } from '@/types';
 import { AlertCircle } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -19,7 +19,6 @@ import { Toaster } from '@/components/ui/toaster';
 import { isValidHttpUrl } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Card, CardContent, CardHeader } from '../ui/card';
-import { PriceChangeAnalysis } from './price-change-analysis';
 
 
 // Helper to adapt the new API response to the existing Product type
@@ -43,21 +42,6 @@ function adaptApiData(apiProduct: any): Product {
   };
 }
 
-function adaptPriceChangeData(apiChange: any): PriceChange {
-    const timestamp = parseFloat(apiChange.data_mudanca);
-    return {
-        id: apiChange.id,
-        ean: apiChange.ean,
-        descricao: apiChange.descricao,
-        loja: apiChange.loja,
-        key_loja: apiChange.key_loja,
-        marketplace: apiChange.marketplace,
-        preco_antigo: parseFloat(apiChange.preco_antigo),
-        preco_novo: parseFloat(apiChange.preco_novo),
-        data_mudanca_timestamp: !isNaN(timestamp) ? timestamp * 1000 : null,
-    }
-}
-
 export type Filters = {
   ean: string[];
   marketplace: string[];
@@ -69,7 +53,6 @@ export type Filters = {
 
 function DashboardContent() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [priceChanges, setPriceChanges] = useState<PriceChange[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [comparisonMarketplace, setComparisonMarketplace] = useState<string>("");
@@ -86,10 +69,9 @@ function DashboardContent() {
       setLoading(true);
       setError(null);
       try {
-        const [productsResponse, urlsResponse, changesResponse] = await Promise.all([
+        const [productsResponse, urlsResponse] = await Promise.all([
             fetch('/api/price-data'),
             fetch('/api/url-data'),
-            fetch('/api/price-changes'),
         ]);
 
         if (!productsResponse.ok) {
@@ -98,13 +80,9 @@ function DashboardContent() {
         if (!urlsResponse.ok) {
             throw new Error(`Erro ao conectar com a API de URLs. Status: ${urlsResponse.status} ${urlsResponse.statusText}`);
         }
-        if (!changesResponse.ok) {
-            throw new Error(`Erro ao conectar com a API de mudanças de preço. Status: ${changesResponse.status} ${changesResponse.statusText}`);
-        }
 
         const productsData = await productsResponse.json();
         const urlsData = await urlsResponse.json();
-        const changesData = await changesResponse.json();
         
         const results = productsData.results || productsData;
         
@@ -135,11 +113,6 @@ function DashboardContent() {
         });
 
         setProducts(mergedProducts);
-
-        if (Array.isArray(changesData)) {
-            const adaptedChanges = changesData.map(adaptPriceChangeData);
-            setPriceChanges(adaptedChanges);
-        }
 
       } catch (e) {
         if (e instanceof Error) {
@@ -216,9 +189,8 @@ function DashboardContent() {
             </header>
             <Tabs defaultValue="overview" className="w-full flex flex-col flex-1">
                 <div className="px-4 md:px-6 pt-4">
-                     <TabsList className="w-full grid grid-cols-1 md:grid-cols-5 max-w-3xl">
+                     <TabsList className="w-full grid grid-cols-1 md:grid-cols-4 max-w-2xl">
                         <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-                        <TabsTrigger value="price_changes">Análise de Mudanças</TabsTrigger>
                         <TabsTrigger value="granular">Análise por Marketplace</TabsTrigger>
                         <TabsTrigger value="seller">Análise por Vendedor</TabsTrigger>
                          <TabsTrigger value="geral">Análise Geral</TabsTrigger>
@@ -277,9 +249,6 @@ function DashboardContent() {
                         </div>
                     </div>
                 </TabsContent>
-                <TabsContent value="price_changes" className="mt-0 p-4 md:p-6 flex flex-col">
-                    <PriceChangeAnalysis priceChanges={priceChanges} loading={loading} />
-                </TabsContent>
                 <TabsContent value="granular" className="mt-0 p-4 md:p-6 flex flex-col">
                     <PriceComparisonTable allProducts={products} loading={loading} />
                 </TabsContent>
@@ -302,5 +271,3 @@ export function Dashboard() {
         </SidebarProvider>
     )
 }
-
-    

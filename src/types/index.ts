@@ -13,15 +13,3 @@ export interface Product {
   image: string | null; // from 'imagem'
   updated_at: string; // from 'data_hora'
 }
-
-export interface PriceChange {
-    id: number;
-    ean: string;
-    descricao: string;
-    loja: string;
-    key_loja: string;
-    marketplace: string;
-    preco_antigo: number;
-    preco_novo: number;
-    data_mudanca_timestamp: number | null;
-}
