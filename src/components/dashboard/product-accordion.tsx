@@ -119,7 +119,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
             return null;
         }
     
-        const mostRecentDate = new Date(Math.max(...validates.map(d => d.getTime())));
+        const mostRecentDate = new Date(Math.max(...validDates.map(d => d.getTime())));
         return mostRecentDate;
     }, [productGroup]);
 
