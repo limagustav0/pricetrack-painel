@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ExternalLink, SearchX, TrendingUp, Copy, Check } from 'lucide-react';
+import { ExternalLink, SearchX, TrendingUp, Copy, Check, Shield, ShieldOff } from 'lucide-react';
 import { formatCurrency, isValidImageUrl, cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -119,7 +119,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
             return null;
         }
     
-        const mostRecentDate = new Date(Math.max(...validDates.map(d => d.getTime())));
+        const mostRecentDate = new Date(Math.max(...validates.map(d => d.getTime())));
         return mostRecentDate;
     }, [productGroup]);
 
@@ -193,6 +193,12 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                                 </p>
                             )}
                             <div className="flex items-center gap-2 flex-wrap justify-end mt-1">
+                                {firstProduct.status && (
+                                    <Badge variant={firstProduct.status.toLowerCase() === 'ativo' ? 'default' : 'destructive'} className="capitalize flex items-center gap-1">
+                                        {firstProduct.status.toLowerCase() === 'ativo' ? <Shield className="h-3 w-3" /> : <ShieldOff className="h-3 w-3" />}
+                                        {firstProduct.status}
+                                    </Badge>
+                                )}
                                 {productGroup.length > 1 && (
                                     <Badge variant="secondary">Variação: {formatCurrency(minPrice)} - {formatCurrency(maxPrice)}</Badge>
                                 )}
@@ -225,6 +231,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                                                 <TableHeader>
                                                     <TableRow>
                                                         <TableHead>Loja (Seller)</TableHead>
+                                                        <TableHead>Status</TableHead>
                                                         <TableHead className="text-right">Preço</TableHead>
                                                         <TableHead>Alterações</TableHead>
                                                         <TableHead>Última Atualização</TableHead>
@@ -235,6 +242,13 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                                                     {offers.sort((a,b) => a.price - b.price).map((product, index) => (
                                                     <TableRow key={`${product.id}-${index}`}>
                                                         <TableCell>{product.seller}</TableCell>
+                                                         <TableCell>
+                                                            {product.status ? (
+                                                                <Badge variant={product.status.toLowerCase() === 'ativo' ? 'secondary' : 'destructive'} className="capitalize">
+                                                                    {product.status}
+                                                                </Badge>
+                                                            ) : '-'}
+                                                        </TableCell>
                                                         <TableCell className={`font-bold text-right ${product.price === minPrice ? 'text-primary' : 'text-foreground'}`}>
                                                             {formatCurrency(product.price)}
                                                         </TableCell>
@@ -266,7 +280,3 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
         </AccordionItem>
     );
 }
-
-    
-
-    

@@ -13,6 +13,7 @@ interface FiltersGroupProps {
   sellers: string[];
   descriptions: string[];
   brands: string[];
+  statuses: string[];
   filters: Filters;
   onFilterChange: (filterName: keyof Filters, value: string) => void;
   onClearFilters: () => void;
@@ -25,6 +26,7 @@ export function FiltersGroup({
     sellers, 
     descriptions,
     brands,
+    statuses,
     filters, 
     onFilterChange,
     onClearFilters, 
@@ -32,8 +34,8 @@ export function FiltersGroup({
 }: FiltersGroupProps) {
     if (loading) {
         return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[...Array(5)].map((_, i) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[...Array(6)].map((_, i) => (
                     <div key={i} className="space-y-2">
                         <Skeleton className="h-4 w-20" />
                         <Skeleton className="h-10 w-full" />
@@ -47,7 +49,7 @@ export function FiltersGroup({
     }
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
         <div>
             <Label>EAN</Label>
             <SearchableSelect
@@ -93,9 +95,20 @@ export function FiltersGroup({
             onChange={(value) => onFilterChange('seller', value)}
             />
         </div>
-        <Button onClick={onClearFilters} variant="outline" className="w-full">
-            Limpar Filtros
-        </Button>
+         <div>
+            <Label>Status</Label>
+            <SearchableSelect
+            placeholder="Filtrar por Status..."
+            options={statuses.map(status => ({ value: status, label: status }))}
+            selectedValues={filters.status}
+            onChange={(value) => onFilterChange('status', value)}
+            />
+        </div>
+        <div className="col-start-1 md:col-start-auto lg:col-start-4">
+            <Button onClick={onClearFilters} variant="outline" className="w-full">
+                Limpar Filtros
+            </Button>
+        </div>
     </div>
   );
 }

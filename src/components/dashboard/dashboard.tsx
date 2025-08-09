@@ -39,6 +39,8 @@ function adaptApiData(apiProduct: any): Product {
     url: isValidHttpUrl(apiProduct.url) ? apiProduct.url : null,
     image: imageUrl,
     updated_at: apiProduct.data_hora,
+    status: apiProduct.status,
+    change_price: apiProduct.change_price,
   };
 }
 
@@ -48,6 +50,7 @@ export type Filters = {
   seller: string[];
   description: string[];
   brand: string[];
+  status: string[];
 };
 
 
@@ -62,6 +65,7 @@ function DashboardContent() {
     seller: [],
     description: [],
     brand: [],
+    status: [],
   });
 
   useEffect(() => {
@@ -132,6 +136,7 @@ function DashboardContent() {
   const uniqueSellers = useMemo(() => [...Array.from(new Set(products.map(p => p.seller).filter(Boolean).sort()))], [products]);
   const uniqueDescriptions = useMemo(() => [...Array.from(new Set(products.map(p => p.name).filter(Boolean).sort()))], [products]);
   const uniqueBrands = useMemo(() => [...Array.from(new Set(products.map(p => p.brand).filter(Boolean).sort()))], [products]);
+  const uniqueStatuses = useMemo(() => [...Array.from(new Set(products.map(p => p.status).filter(Boolean).sort()))], [products]);
 
   // Set default comparison marketplace once data is loaded
   useEffect(() => {
@@ -148,8 +153,9 @@ function DashboardContent() {
         const sellerMatch = filters.seller.length === 0 || (p.seller && filters.seller.includes(p.seller));
         const descriptionMatch = filters.description.length === 0 || filters.description.includes(p.name);
         const brandMatch = filters.brand.length === 0 || (p.brand && filters.brand.includes(p.brand));
+        const statusMatch = filters.status.length === 0 || (p.status && filters.status.includes(p.status));
 
-        return eanMatch && marketplaceMatch && sellerMatch && descriptionMatch && brandMatch;
+        return eanMatch && marketplaceMatch && sellerMatch && descriptionMatch && brandMatch && statusMatch;
     });
   }, [products, filters]);
 
@@ -174,6 +180,7 @@ function DashboardContent() {
         seller: [],
         description: [],
         brand: [],
+        status: [],
     });
   };
 
@@ -228,6 +235,7 @@ function DashboardContent() {
                                     sellers={uniqueSellers}
                                     descriptions={uniqueDescriptions}
                                     brands={uniqueBrands}
+                                    statuses={uniqueStatuses}
                                     filters={filters}
                                     onFilterChange={handleFilterChange}
                                     onClearFilters={clearFilters}
