@@ -10,12 +10,12 @@ import { ArrowDownRight, ArrowUpRight, Scale, ShoppingCart } from 'lucide-react'
 import { Badge } from '../ui/badge';
 
 interface ComparativeAnalysisProps {
-  allProducts: Product[];
+  filteredProducts: Product[];
   loading: boolean;
   selectedMarketplace: string;
 }
 
-export function ComparativeAnalysis({ allProducts, loading, selectedMarketplace }: ComparativeAnalysisProps) {
+export function ComparativeAnalysis({ filteredProducts, loading, selectedMarketplace }: ComparativeAnalysisProps) {
   const analysis = useMemo(() => {
     if (!selectedMarketplace) {
       return {
@@ -25,9 +25,10 @@ export function ComparativeAnalysis({ allProducts, loading, selectedMarketplace 
         moreExpensiveCount: 0,
       };
     }
-
-    const marketplaceProducts = allProducts.filter(p => p.marketplace === selectedMarketplace);
-    const otherProducts = allProducts.filter(p => p.marketplace !== selectedMarketplace);
+    
+    // Base calculations on filtered products
+    const marketplaceProducts = filteredProducts.filter(p => p.marketplace === selectedMarketplace);
+    const otherProducts = filteredProducts.filter(p => p.marketplace !== selectedMarketplace);
 
     const marketplaceEans = new Set(marketplaceProducts.map(p => p.ean));
     const otherEans = new Set(otherProducts.map(p => p.ean));
@@ -58,7 +59,7 @@ export function ComparativeAnalysis({ allProducts, loading, selectedMarketplace 
       cheaperCount,
       moreExpensiveCount,
     };
-  }, [allProducts, selectedMarketplace]);
+  }, [filteredProducts, selectedMarketplace]);
 
   if (loading) {
     return (
@@ -117,7 +118,7 @@ export function ComparativeAnalysis({ allProducts, loading, selectedMarketplace 
             </CardHeader>
             <CardContent>
                 <div className="text-2xl font-bold">{analysis.totalMarketplaceProducts}</div>
-                <p className="text-xs text-muted-foreground">Total de produtos encontrados</p>
+                <p className="text-xs text-muted-foreground">Total de produtos (considerando filtros)</p>
             </CardContent>
         </Card>
         <Card>

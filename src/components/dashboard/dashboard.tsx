@@ -222,7 +222,7 @@ function DashboardContent() {
                                 </div>
                             </div>
                         </Card>
-                        <ComparativeAnalysis allProducts={products} loading={loading} selectedMarketplace={comparisonMarketplace} />
+                        <ComparativeAnalysis filteredProducts={filteredProducts} loading={loading} selectedMarketplace={comparisonMarketplace} />
                         
                         <Card>
                             <CardHeader>
@@ -258,10 +258,10 @@ function DashboardContent() {
                     </div>
                 </TabsContent>
                 <TabsContent value="granular" className="mt-0 p-4 md:p-6 flex flex-col">
-                    <PriceComparisonTable allProducts={products} loading={loading} />
+                    <PriceComparisonTable allProducts={filteredProducts} loading={loading} />
                 </TabsContent>
                 <TabsContent value="seller" className="mt-0 p-4 md:p-6 flex flex-col">
-                    <SellerComparisonTable allProducts={products} loading={loading} />
+                    <SellerComparisonTable allProducts={filteredProducts} loading={loading} />
                 </TabsContent>
                 <TabsContent value="geral" className="mt-0 p-4 md:p-6">
                     <OverallPriceAnalysis allProducts={filteredProducts} loading={loading} />

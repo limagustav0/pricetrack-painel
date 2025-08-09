@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import type { Product } from '@/types';
@@ -14,7 +15,7 @@ import { SearchX, TrendingUp } from 'lucide-react';
 import { SearchableSelect } from './searchable-select';
 
 interface SellerComparisonTableProps {
-  allProducts: Product[];
+  allProducts: Product[]; // Now receives filtered products
   loading: boolean;
 }
 
@@ -35,6 +36,7 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
   const [selectedMarketplaces, setSelectedMarketplaces] = useState<string[]>([]);
   
   const { groupedSellers, uniqueMarketplaces, sellerOptions } = useMemo(() => {
+    // Note: uniqueMarketplaces here are derived from the *filtered* product list
     const marketplaces = [...new Set(allProducts.map(p => p.marketplace).filter(Boolean))].sort();
 
     const sellersData = allProducts.reduce((acc, product) => {
@@ -58,6 +60,9 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
             if (isValidImageUrl(product.image)) {
                 image = product.image!;
             } else {
+                 // It's tricky to get an image from the original full list here without passing it down.
+                 // We'll rely on the filtered list. If no valid image is present for this EAN in the filtered list,
+                 // it will fall back to the placeholder.
                  const sameEanProducts = allProducts.filter(p => p.ean === product.ean);
                  const validImageProduct = sameEanProducts.find(p => isValidImageUrl(p.image));
                  if (validImageProduct) {
@@ -150,7 +155,7 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
       <CardHeader>
         <CardTitle>Análise por Vendedor</CardTitle>
         <CardDescription>
-          Visualize e compare os preços de cada produto por vendedor nos diferentes marketplaces.
+          Visualize e compare os preços de cada produto por vendedor nos diferentes marketplaces. Os dados aqui refletem os filtros globais aplicados.
         </CardDescription>
       </CardHeader>
       <CardContent>

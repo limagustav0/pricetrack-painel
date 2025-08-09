@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import type { Product } from '@/types';
@@ -14,7 +15,7 @@ import { TrendingUp, ChevronsUpDown } from 'lucide-react';
 import { Button } from '../ui/button';
 
 interface PriceComparisonTableProps {
-  allProducts: Product[];
+  allProducts: Product[]; // Now receives filtered products
   loading: boolean;
 }
 
@@ -39,19 +40,9 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
       if (!product.ean) return acc;
       
       if (!acc[product.ean]) {
-        const productsForEan = allProducts.filter(p => p.ean === product.ean);
-        const epocaProduct = productsForEan.find(p => p.marketplace === 'Época Cosméticos' && isValidImageUrl(p.image));
-        const belezaProduct = productsForEan.find(p => p.marketplace === 'Beleza na Web' && isValidImageUrl(p.image));
-        const firstValidImageProduct = productsForEan.find(p => isValidImageUrl(p.image));
-
-        let image = 'https://placehold.co/100x100.png';
-        if (epocaProduct) {
-            image = epocaProduct.image!;
-        } else if (belezaProduct) {
-            image = belezaProduct.image!;
-        } else if (firstValidImageProduct) {
-            image = firstValidImageProduct.image!;
-        }
+        // Find best image for the EAN from the original (or at least larger) dataset if possible,
+        // but it's safer to just rely on the current product or a fallback
+        const image = isValidImageUrl(product.image) ? product.image! : 'https://placehold.co/100x100.png';
 
         acc[product.ean] = {
             ean: product.ean,
@@ -61,6 +52,12 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
             offers: {},
         };
       }
+      
+      // Update image if a better one is found in the filtered list
+      if (acc[product.ean].image.includes('placehold.co') && isValidImageUrl(product.image)) {
+        acc[product.ean].image = product.image!;
+      }
+
 
       const existingOffer = acc[product.ean].offers[product.marketplace];
       // Keep the lowest price for a given marketplace
@@ -92,15 +89,24 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
       products = products.filter(p => selectedEans.includes(p.ean));
     }
     
-    const completeProducts = products.filter(p => Object.keys(p.offers).length === uniqueMarketplaces.length);
-    const incompleteProducts = products.filter(p => Object.keys(p.offers).length !== uniqueMarketplaces.length);
+    // Sort products: those in all visible marketplaces first
+    const visibleMarketplaceCount = visibleMarketplaces.length;
+    products.sort((a, b) => {
+        const aCount = Object.keys(a.offers).filter(m => visibleMarketplaces.includes(m)).length;
+        const bCount = Object.keys(b.offers).filter(m => visibleMarketplaces.includes(m)).length;
+        return bCount - aCount;
+    });
+
+    const completeProducts = products.filter(p => Object.keys(p.offers).filter(m => visibleMarketplaces.includes(m)).length === visibleMarketplaceCount);
+    const incompleteProducts = products.filter(p => Object.keys(p.offers).filter(m => visibleMarketplaces.includes(m)).length !== visibleMarketplaceCount);
+
 
     if (showIncomplete) {
-        return [...completeProducts, ...incompleteProducts];
+        return products; // Return all sorted products
     }
     return completeProducts;
 
-  }, [groupedProducts, selectedEans, uniqueMarketplaces.length, showIncomplete]);
+  }, [groupedProducts, selectedEans, showIncomplete, visibleMarketplaces]);
 
   const visibleMarketplaces = useMemo(() => {
     if (selectedMarketplaces.length === 0) return uniqueMarketplaces;
@@ -109,8 +115,8 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
 
   const incompleteProductsCount = useMemo(() => {
       let products = selectedEans.length > 0 ? groupedProducts.filter(p => selectedEans.includes(p.ean)) : groupedProducts;
-      return products.filter(p => Object.keys(p.offers).length !== uniqueMarketplaces.length).length;
-  }, [groupedProducts, selectedEans, uniqueMarketplaces.length]);
+      return products.filter(p => Object.keys(p.offers).filter(m => visibleMarketplaces.includes(m)).length !== visibleMarketplaces.length).length;
+  }, [groupedProducts, selectedEans, visibleMarketplaces]);
 
 
   if (loading) {
@@ -238,12 +244,22 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
                     )
                 })}
 
-                {incompleteProductsCount > 0 && (
+                {incompleteProductsCount > 0 && !showIncomplete && (
                     <TableRow>
                         <TableCell colSpan={visibleMarketplaces.length + 1} className="text-center">
-                            <Button variant="ghost" onClick={() => setShowIncomplete(prev => !prev)} className="w-full">
+                            <Button variant="ghost" onClick={() => setShowIncomplete(true)} className="w-full">
                                 <ChevronsUpDown className="mr-2 h-4 w-4" />
-                                {showIncomplete ? 'Recolher' : `Expandir para ver ${incompleteProductsCount} produto(s) incompletos`}
+                                {`Expandir para ver ${incompleteProductsCount} produto(s) incompletos`}
+                            </Button>
+                        </TableCell>
+                    </TableRow>
+                )}
+                 {showIncomplete && (
+                    <TableRow>
+                        <TableCell colSpan={visibleMarketplaces.length + 1} className="text-center">
+                            <Button variant="ghost" onClick={() => setShowIncomplete(false)} className="w-full">
+                                <ChevronsUpDown className="mr-2 h-4 w-4" />
+                                Recolher produtos incompletos
                             </Button>
                         </TableCell>
                     </TableRow>
