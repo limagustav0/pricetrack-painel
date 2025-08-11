@@ -193,12 +193,6 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                                 </p>
                             )}
                             <div className="flex items-center gap-2 flex-wrap justify-end mt-1">
-                                {firstProduct.status && (
-                                    <Badge variant={firstProduct.status.toLowerCase() === 'ativo' ? 'default' : 'destructive'} className="capitalize flex items-center gap-1">
-                                        {firstProduct.status.toLowerCase() === 'ativo' ? <Shield className="h-3 w-3" /> : <ShieldOff className="h-3 w-3" />}
-                                        {firstProduct.status}
-                                    </Badge>
-                                )}
                                 {productGroup.length > 1 && (
                                     <Badge variant="secondary">Variação: {formatCurrency(minPrice)} - {formatCurrency(maxPrice)}</Badge>
                                 )}
