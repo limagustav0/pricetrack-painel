@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import type { Product } from '@/types';
@@ -8,10 +7,10 @@ import { useMemo, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatCurrency, isValidImageUrl } from '@/lib/utils';
+import { formatCurrency, isValidImageUrl, isValidHttpUrl } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { SearchableSelect } from './searchable-select';
-import { TrendingUp, ChevronsUpDown } from 'lucide-react';
+import { TrendingUp, ChevronsUpDown, ExternalLink } from 'lucide-react';
 import { Button } from '../ui/button';
 
 interface PriceComparisonTableProps {
@@ -24,7 +23,12 @@ interface GroupedProduct {
     name: string;
     brand: string | null;
     image: string;
-    offers: Record<string, { price: number; seller: string; change_price: number | null; }>;
+    offers: Record<string, { 
+        price: number; 
+        seller: string; 
+        url: string | null; 
+        change_price: number | null; 
+    }>;
 }
 
 
@@ -40,8 +44,6 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
       if (!product.ean) return acc;
       
       if (!acc[product.ean]) {
-        // Find best image for the EAN from the original (or at least larger) dataset if possible,
-        // but it's safer to just rely on the current product or a fallback
         const image = isValidImageUrl(product.image) ? product.image! : 'https://placehold.co/100x100.png';
 
         acc[product.ean] = {
@@ -53,18 +55,16 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
         };
       }
       
-      // Update image if a better one is found in the filtered list
       if (acc[product.ean].image.includes('placehold.co') && isValidImageUrl(product.image)) {
         acc[product.ean].image = product.image!;
       }
 
-
       const existingOffer = acc[product.ean].offers[product.marketplace];
-      // Keep the lowest price for a given marketplace
       if (!existingOffer || product.price < existingOffer.price) {
           acc[product.ean].offers[product.marketplace] = {
               price: product.price,
               seller: product.seller,
+              url: product.url,
               change_price: product.change_price,
           };
       }
@@ -81,7 +81,7 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
   const productOptions = useMemo(() => {
     return groupedProducts.map(p => ({ value: p.ean, label: `${p.name} (${p.ean})` })).sort((a,b) => a.label.localeCompare(b.label));
   }, [groupedProducts]);
-
+  
   const visibleMarketplaces = useMemo(() => {
     if (selectedMarketplaces.length === 0) return uniqueMarketplaces;
     return uniqueMarketplaces.filter(m => selectedMarketplaces.includes(m));
@@ -94,7 +94,6 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
       products = products.filter(p => selectedEans.includes(p.ean));
     }
     
-    // Sort products: those in all visible marketplaces first
     const visibleMarketplaceCount = visibleMarketplaces.length;
     products.sort((a, b) => {
         const aCount = Object.keys(a.offers).filter(m => visibleMarketplaces.includes(m)).length;
@@ -103,8 +102,6 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
     });
 
     const completeProducts = products.filter(p => Object.keys(p.offers).filter(m => visibleMarketplaces.includes(m)).length === visibleMarketplaceCount);
-    const incompleteProducts = products.filter(p => Object.keys(p.offers).filter(m => visibleMarketplaces.includes(m)).length !== visibleMarketplaceCount);
-
 
     if (showIncomplete) {
         return products; // Return all sorted products
@@ -157,7 +154,7 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
           Visualize os preços de cada produto lado a lado nos diferentes marketplaces. Produtos presentes em todos os marketplaces são exibidos primeiro.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex flex-col flex-1">
         <div className="flex flex-col md:flex-row gap-4 mb-4">
             <div className="flex-1 min-w-0">
                 <SearchableSelect
@@ -177,7 +174,7 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
             </div>
         </div>
 
-        <div className="relative overflow-auto border rounded-lg max-h-[calc(100vh-20rem)]">
+        <div className="relative overflow-auto border rounded-lg flex-1">
             <Table>
             <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
@@ -232,7 +229,16 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
                                                         {offer.change_price} alteraç{offer.change_price === 1 ? 'ão' : 'ões'}
                                                     </p>
                                                 )}
-                                                {isMinPrice && prices.length > 1 && <Badge variant="secondary" className="mt-1">Melhor Preço</Badge>}
+                                                {isMinPrice && prices.length > 1 && (
+                                                    <div className="flex items-center justify-end gap-2 mt-1">
+                                                        <Badge variant="secondary">Melhor Preço</Badge>
+                                                        <Button asChild variant="ghost" size="icon" className="h-5 w-5" disabled={!isValidHttpUrl(offer.url)}>
+                                                            <a href={offer.url!} target="_blank" rel="noopener noreferrer" aria-label="Ver produto">
+                                                                <ExternalLink className="h-4 w-4"/>
+                                                            </a>
+                                                        </Button>
+                                                    </div>
+                                                )}
                                             </div>
                                         ) : (
                                             <span className="text-muted-foreground">-</span>
@@ -282,3 +288,5 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
     </Card>
   );
 }
+
+    
