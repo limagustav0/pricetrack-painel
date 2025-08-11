@@ -82,6 +82,11 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
     return groupedProducts.map(p => ({ value: p.ean, label: `${p.name} (${p.ean})` })).sort((a,b) => a.label.localeCompare(b.label));
   }, [groupedProducts]);
 
+  const visibleMarketplaces = useMemo(() => {
+    if (selectedMarketplaces.length === 0) return uniqueMarketplaces;
+    return uniqueMarketplaces.filter(m => selectedMarketplaces.includes(m));
+  }, [uniqueMarketplaces, selectedMarketplaces]);
+
   const filteredAndSortedProducts = useMemo(() => {
     let products = groupedProducts;
 
@@ -107,11 +112,6 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
     return completeProducts;
 
   }, [groupedProducts, selectedEans, showIncomplete, visibleMarketplaces]);
-
-  const visibleMarketplaces = useMemo(() => {
-    if (selectedMarketplaces.length === 0) return uniqueMarketplaces;
-    return uniqueMarketplaces.filter(m => selectedMarketplaces.includes(m));
-  }, [uniqueMarketplaces, selectedMarketplaces]);
 
   const incompleteProductsCount = useMemo(() => {
       let products = selectedEans.length > 0 ? groupedProducts.filter(p => selectedEans.includes(p.ean)) : groupedProducts;
