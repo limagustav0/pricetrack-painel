@@ -225,7 +225,6 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                                                 <TableHeader>
                                                     <TableRow>
                                                         <TableHead>Loja (Seller)</TableHead>
-                                                        <TableHead>Status</TableHead>
                                                         <TableHead className="text-right">Preço</TableHead>
                                                         <TableHead>Alterações</TableHead>
                                                         <TableHead>Última Atualização</TableHead>
@@ -236,13 +235,6 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                                                     {offers.sort((a,b) => a.price - b.price).map((product, index) => (
                                                     <TableRow key={`${product.id}-${index}`}>
                                                         <TableCell>{product.seller}</TableCell>
-                                                         <TableCell>
-                                                            {product.status ? (
-                                                                <Badge variant={product.status.toLowerCase() === 'ativo' ? 'secondary' : 'destructive'} className="capitalize">
-                                                                    {product.status}
-                                                                </Badge>
-                                                            ) : '-'}
-                                                        </TableCell>
                                                         <TableCell className={`font-bold text-right ${product.price === minPrice ? 'text-primary' : 'text-foreground'}`}>
                                                             {formatCurrency(product.price)}
                                                         </TableCell>
