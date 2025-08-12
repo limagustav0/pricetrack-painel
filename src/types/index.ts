@@ -15,3 +15,12 @@ export interface Product {
   status: string | null;
   change_price: number | null;
 }
+
+export interface UrlInfo {
+  ean: string;
+  marketplace: string;
+  url: string;
+  id?: number;
+  created_at?: string;
+  updated_at?: string;
+}

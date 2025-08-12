@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
-import type { Product } from '@/types';
+import type { Product, UrlInfo } from '@/types';
 import { AlertCircle } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -19,6 +19,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { isValidHttpUrl } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Card, CardContent, CardHeader } from '../ui/card';
+import { UrlManagementTable } from './url-management-table';
 
 
 // Helper to adapt the new API response to the existing Product type
@@ -56,6 +57,7 @@ export type Filters = {
 
 function DashboardContent() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [urls, setUrls] = useState<UrlInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [comparisonMarketplace, setComparisonMarketplace] = useState<string>("");
@@ -96,6 +98,7 @@ function DashboardContent() {
 
         const urlMap = new Map<string, string>();
         if (Array.isArray(urlsData)) {
+            setUrls(urlsData);
             for (const item of urlsData) {
                 if(item.ean && item.marketplace && item.url && isValidHttpUrl(item.url)) {
                     const key = `${item.ean}-${item.marketplace}`;
@@ -196,11 +199,12 @@ function DashboardContent() {
             </header>
             <Tabs defaultValue="overview" className="w-full flex flex-col flex-1">
                 <div className="px-4 md:px-6 pt-4">
-                     <TabsList className="w-full grid grid-cols-1 md:grid-cols-4 max-w-2xl">
+                     <TabsList className="w-full grid grid-cols-1 md:grid-cols-5 max-w-2xl">
                         <TabsTrigger value="overview">Visão Geral</TabsTrigger>
                         <TabsTrigger value="granular">Análise por Marketplace</TabsTrigger>
                         <TabsTrigger value="seller">Análise por Vendedor</TabsTrigger>
                          <TabsTrigger value="geral">Análise Geral</TabsTrigger>
+                         <TabsTrigger value="urls">Gerenciar URLs</TabsTrigger>
                     </TabsList>
                 </div>
                 <TabsContent value="overview" className="mt-0 p-4 md:p-6 overflow-y-auto">
@@ -265,6 +269,9 @@ function DashboardContent() {
                 </TabsContent>
                 <TabsContent value="geral" className="mt-0 p-4 md:p-6">
                     <OverallPriceAnalysis allProducts={filteredProducts} loading={loading} />
+                </TabsContent>
+                <TabsContent value="urls" className="mt-0 p-4 md:p-6 flex flex-col">
+                    <UrlManagementTable urls={urls} loading={loading} />
                 </TabsContent>
             </Tabs>
         </div>
