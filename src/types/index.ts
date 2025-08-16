@@ -1,4 +1,5 @@
 
+
 export interface Product {
   // Keeping some of the old fields for compatibility, but adapting to the new structure
   id: string; // Using sku as id
@@ -17,9 +18,11 @@ export interface Product {
 }
 
 export interface UrlInfo {
+  ean_key: string;
   ean: string;
   marketplace: string;
   url: string;
+  is_active: boolean;
   id?: number;
   created_at?: string;
   updated_at?: string;

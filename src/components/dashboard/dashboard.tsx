@@ -98,8 +98,15 @@ function DashboardContent() {
 
         const urlMap = new Map<string, string>();
         if (Array.isArray(urlsData)) {
-            setUrls(urlsData);
-            for (const item of urlsData) {
+            // Add is_active and ean_key to each URL object
+            const processedUrls = urlsData.map(item => ({
+                ...item,
+                is_active: item.is_active !== undefined ? item.is_active : true, // Default to true if not present
+                ean_key: item.ean_key || `${item.ean}-${item.marketplace}` // Create a key if not present
+            }));
+            setUrls(processedUrls);
+
+            for (const item of processedUrls) {
                 if(item.ean && item.marketplace && item.url && isValidHttpUrl(item.url)) {
                     const key = `${item.ean}-${item.marketplace}`;
                     urlMap.set(key, item.url);
@@ -110,13 +117,22 @@ function DashboardContent() {
         const adaptedProducts = results.map(adaptApiData);
         
         const mergedProducts = adaptedProducts.map(product => {
+            const sameEanProducts = adaptedProducts.filter(p => p.ean === product.ean && isValidImageUrl(p.image));
+            const imageProduct = sameEanProducts.find(p => p.marketplace === "Época Cosméticos") || sameEanProducts[0];
+            
+            const finalProduct = { ...product };
+
+            if (!isValidImageUrl(finalProduct.image) && imageProduct) {
+                finalProduct.image = imageProduct.image;
+            }
+
             if (!isValidHttpUrl(product.url) && product.ean && product.marketplace) {
                 const key = `${product.ean}-${product.marketplace}`;
                 if (urlMap.has(key)) {
-                    return { ...product, url: urlMap.get(key)! };
+                    finalProduct.url = urlMap.get(key)!;
                 }
             }
-            return product;
+            return finalProduct;
         });
 
         setProducts(mergedProducts);
@@ -271,7 +287,7 @@ function DashboardContent() {
                     <OverallPriceAnalysis allProducts={filteredProducts} loading={loading} />
                 </TabsContent>
                 <TabsContent value="urls" className="mt-0 p-4 md:p-6 flex flex-col">
-                    <UrlManagementTable urls={urls} loading={loading} />
+                    <UrlManagementTable urls={urls} setUrls={setUrls} loading={loading} />
                 </TabsContent>
             </Tabs>
         </div>
@@ -286,5 +302,3 @@ export function Dashboard() {
         </SidebarProvider>
     )
 }
-
-    

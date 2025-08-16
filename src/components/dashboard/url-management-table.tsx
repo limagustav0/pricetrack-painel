@@ -12,13 +12,15 @@ import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
 import { useToast } from "@/hooks/use-toast";
 import { cn, isValidHttpUrl } from '@/lib/utils';
+import { Switch } from '../ui/switch';
 
 interface UrlManagementTableProps {
   urls: UrlInfo[];
+  setUrls: React.Dispatch<React.SetStateAction<UrlInfo[]>>;
   loading: boolean;
 }
 
-export function UrlManagementTable({ urls, loading }: UrlManagementTableProps) {
+export function UrlManagementTable({ urls, setUrls, loading }: UrlManagementTableProps) {
   const [filter, setFilter] = useState('');
   const { toast } = useToast();
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
@@ -48,6 +50,46 @@ export function UrlManagementTable({ urls, loading }: UrlManagementTableProps) {
       setTimeout(() => setCopiedEan(null), 2000);
     }
   };
+
+  const handleToggle = async (eanKey: string, currentStatus: boolean) => {
+    const originalUrls = [...urls];
+    const newStatus = !currentStatus;
+
+    // Optimistic update
+    setUrls(prevUrls =>
+      prevUrls.map(url =>
+        url.ean_key === eanKey ? { ...url, is_active: newStatus } : url
+      )
+    );
+
+    try {
+      const response = await fetch('/api/urls/update_is_active', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify([{ ean_key: eanKey, is_active: newStatus }]),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Falha ao atualizar o status. Status: ${response.status}`);
+      }
+
+      toast({
+        title: 'Status atualizado!',
+        description: `A URL foi marcada como ${newStatus ? 'ativa' : 'inativa'}.`,
+      });
+    } catch (error) {
+      // Revert on error
+      setUrls(originalUrls);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao atualizar',
+        description: error instanceof Error ? error.message : 'Não foi possível alterar o status da URL.',
+      });
+    }
+  };
+
 
   if (loading) {
     return (
@@ -99,13 +141,14 @@ export function UrlManagementTable({ urls, loading }: UrlManagementTableProps) {
                 <TableHead>EAN</TableHead>
                 <TableHead>Marketplace</TableHead>
                 <TableHead>URL</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredUrls.length > 0 ? (
-                filteredUrls.map((item, index) => (
-                  <TableRow key={`${item.ean}-${item.marketplace}-${index}`}>
+                filteredUrls.map((item) => (
+                  <TableRow key={item.ean_key}>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <span>{item.ean}</span>
@@ -154,18 +197,30 @@ export function UrlManagementTable({ urls, loading }: UrlManagementTableProps) {
                         </Button>
                       </div>
                     </TableCell>
+                    <TableCell>
+                        <Badge variant={item.is_active ? 'default' : 'outline'} className={item.is_active ? 'bg-green-500' : ''}>
+                            {item.is_active ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                    </TableCell>
                     <TableCell className="text-right">
-                      <Button asChild variant="ghost" size="icon" disabled={!isValidHttpUrl(item.url)}>
-                        <a href={item.url} target="_blank" rel="noopener noreferrer" aria-label="Abrir link">
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      </Button>
+                       <div className="flex items-center justify-end gap-2">
+                            <Switch
+                                checked={item.is_active}
+                                onCheckedChange={() => handleToggle(item.ean_key, item.is_active)}
+                                aria-label={`Ativar ou desativar URL para ${item.ean}`}
+                            />
+                            <Button asChild variant="ghost" size="icon" disabled={!isValidHttpUrl(item.url)}>
+                                <a href={item.url} target="_blank" rel="noopener noreferrer" aria-label="Abrir link">
+                                <ExternalLink className="h-4 w-4" />
+                                </a>
+                            </Button>
+                       </div>
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                     Nenhuma URL encontrada com os filtros aplicados.
                   </TableCell>
                 </TableRow>
