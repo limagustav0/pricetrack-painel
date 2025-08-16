@@ -42,6 +42,8 @@ function adaptApiData(apiProduct: any): Product {
     updated_at: apiProduct.data_hora,
     status: apiProduct.status,
     change_price: apiProduct.change_price,
+    is_active: true, // Default value, will be updated
+    ean_key: `${apiProduct.ean}-${apiProduct.marketplace}`, // Default value, will be updated
   };
 }
 
@@ -95,21 +97,20 @@ function DashboardContent() {
         if (!Array.isArray(results)) {
             throw new Error("O formato dos dados de produtos recebidos da API não é o esperado.");
         }
-
-        const urlMap = new Map<string, string>();
+        
+        const urlMap = new Map<string, UrlInfo>();
         if (Array.isArray(urlsData)) {
-            // Add is_active and ean_key to each URL object
             const processedUrls = urlsData.map(item => ({
                 ...item,
-                is_active: item.is_active !== undefined ? item.is_active : true, // Default to true if not present
-                ean_key: item.ean_key || `${item.ean}-${item.marketplace}` // Create a key if not present
+                is_active: item.is_active !== undefined ? item.is_active : true,
+                ean_key: item.ean_key || `${item.ean}-${item.marketplace}`
             }));
             setUrls(processedUrls);
 
             for (const item of processedUrls) {
-                if(item.ean && item.marketplace && item.url && isValidHttpUrl(item.url)) {
+                if(item.ean && item.marketplace) {
                     const key = `${item.ean}-${item.marketplace}`;
-                    urlMap.set(key, item.url);
+                    urlMap.set(key, item);
                 }
             }
         }
@@ -126,12 +127,13 @@ function DashboardContent() {
                 finalProduct.image = imageProduct.image;
             }
 
-            if (!isValidHttpUrl(product.url) && product.ean && product.marketplace) {
-                const key = `${product.ean}-${product.marketplace}`;
-                if (urlMap.has(key)) {
-                    finalProduct.url = urlMap.get(key)!;
-                }
+            const urlInfo = urlMap.get(finalProduct.ean_key);
+            if (urlInfo) {
+                finalProduct.url = isValidHttpUrl(urlInfo.url) ? urlInfo.url : finalProduct.url;
+                finalProduct.is_active = urlInfo.is_active;
+                finalProduct.ean_key = urlInfo.ean_key;
             }
+
             return finalProduct;
         });
 
@@ -203,6 +205,14 @@ function DashboardContent() {
     });
   };
 
+  const updateProductStatus = (eanKey: string, newStatus: boolean) => {
+      setProducts(prevProducts => 
+          prevProducts.map(p => 
+              p.ean_key === eanKey ? { ...p, is_active: newStatus } : p
+          )
+      );
+  };
+
   return (
     <div className="flex h-screen bg-gray-100">
         <Toaster />
@@ -272,13 +282,13 @@ function DashboardContent() {
                                     <AlertDescription>{error}</AlertDescription>
                                 </Alert>
                             ) : (
-                                <ProductAccordion products={filteredProducts} loading={loading} />
+                                <ProductAccordion products={filteredProducts} loading={loading} onStatusChange={updateProductStatus} />
                             )}
                         </div>
                     </div>
                 </TabsContent>
                 <TabsContent value="granular" className="mt-0 p-4 md:p-6 flex flex-col">
-                    <PriceComparisonTable allProducts={filteredProducts} loading={loading} />
+                    <PriceComparisonTable allProducts={filteredProducts} loading={loading} onStatusChange={updateProductStatus} />
                 </TabsContent>
                 <TabsContent value="seller" className="mt-0 p-4 md:p-6 flex flex-col">
                     <SellerComparisonTable allProducts={filteredProducts} loading={loading} />
@@ -302,3 +312,5 @@ export function Dashboard() {
         </SidebarProvider>
     )
 }
+
+    

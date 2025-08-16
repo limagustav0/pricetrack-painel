@@ -15,6 +15,8 @@ export interface Product {
   updated_at: string; // from 'data_hora'
   status: string | null;
   change_price: number | null;
+  is_active: boolean;
+  ean_key: string;
 }
 
 export interface UrlInfo {
@@ -27,3 +29,5 @@ export interface UrlInfo {
   created_at?: string;
   updated_at?: string;
 }
+
+    
