@@ -52,7 +52,7 @@ const nextConfig: NextConfig = {
       },
        {
         source: '/api/urls/update_is_active',
-        destination: 'http://201.23.64.234:8000/api/urls/update_is_active',
+        destination: 'http://201.23.64.234:8000/api/urls/update_is_active/',
       },
     ];
   },
