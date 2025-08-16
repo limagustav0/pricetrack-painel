@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PriceComparisonTable } from './price-comparison-table';
 import { SellerComparisonTable } from './seller-comparison-table';
 import { Toaster } from '@/components/ui/toaster';
-import { isValidHttpUrl } from '@/lib/utils';
+import { isValidHttpUrl, isValidImageUrl } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Card, CardContent, CardHeader } from '../ui/card';
 import { UrlManagementTable } from './url-management-table';
