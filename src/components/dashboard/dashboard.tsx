@@ -225,7 +225,7 @@ function DashboardContent() {
             </header>
             <Tabs defaultValue="overview" className="w-full flex flex-col flex-1">
                 <div className="px-4 md:px-6 pt-4">
-                     <TabsList className="w-full grid grid-cols-1 md:grid-cols-5 max-w-2xl">
+                     <TabsList className="w-full flex-wrap h-auto justify-start max-w-none md:max-w-2xl gap-2">
                         <TabsTrigger value="overview">Visão Geral</TabsTrigger>
                         <TabsTrigger value="granular">Análise por Marketplace</TabsTrigger>
                         <TabsTrigger value="seller">Análise por Vendedor</TabsTrigger>
