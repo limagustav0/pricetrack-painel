@@ -72,7 +72,8 @@ export function UrlManagementTable({ urls, setUrls, loading }: UrlManagementTabl
       });
 
       if (!response.ok) {
-        throw new Error(`Falha ao atualizar o status. Status: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `Falha ao atualizar o status. Status: ${response.status}`);
       }
 
       toast({
