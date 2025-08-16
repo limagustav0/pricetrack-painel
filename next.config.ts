@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -49,6 +50,10 @@ const nextConfig: NextConfig = {
       {
         source: '/api/url-data',
         destination: 'http://201.23.64.234:8000/api/urls/',
+      },
+       {
+        source: '/api/urls/update_is_active',
+        destination: 'http://201.23.64.234:8000/api/urls/update_is_active',
       },
     ];
   },
