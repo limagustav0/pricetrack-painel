@@ -12,13 +12,10 @@ import { Badge } from '@/components/ui/badge';
 import { SearchableSelect } from './searchable-select';
 import { TrendingUp, ChevronsUpDown, ExternalLink } from 'lucide-react';
 import { Button } from '../ui/button';
-import { Switch } from '../ui/switch';
-import { useToast } from '@/hooks/use-toast';
 
 interface PriceComparisonTableProps {
   allProducts: Product[];
   loading: boolean;
-  onStatusChange: (eanKey: string, newStatus: boolean) => void;
 }
 
 interface GroupedProduct {
@@ -31,17 +28,14 @@ interface GroupedProduct {
         seller: string;
         url: string | null;
         change_price: number | null;
-        is_active: boolean;
-        ean_key: string;
     }>;
 }
 
 
-export function PriceComparisonTable({ allProducts, loading, onStatusChange }: PriceComparisonTableProps) {
+export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTableProps) {
   const [selectedEans, setSelectedEans] = useState<string[]>([]);
   const [selectedMarketplaces, setSelectedMarketplaces] = useState<string[]>([]);
   const [showIncomplete, setShowIncomplete] = useState(false);
-  const { toast } = useToast();
 
   const { groupedProducts, uniqueMarketplaces } = useMemo(() => {
     const marketplaces = [...new Set(allProducts.map(p => p.marketplace).filter(Boolean))].sort();
@@ -72,8 +66,6 @@ export function PriceComparisonTable({ allProducts, loading, onStatusChange }: P
               seller: product.seller,
               url: product.url,
               change_price: product.change_price,
-              is_active: product.is_active,
-              ean_key: product.ean_key,
           };
       }
 
@@ -90,36 +82,6 @@ export function PriceComparisonTable({ allProducts, loading, onStatusChange }: P
     if (selectedMarketplaces.length === 0) return uniqueMarketplaces;
     return uniqueMarketplaces.filter(m => selectedMarketplaces.includes(m));
   }, [uniqueMarketplaces, selectedMarketplaces]);
-
-  const handleToggle = async (eanKey: string, currentStatus: boolean) => {
-    const newStatus = !currentStatus;
-    
-    // Optimistic update in parent
-    onStatusChange(eanKey, newStatus);
-
-    try {
-      const response = await fetch('/api/urls/update_is_active', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify([{ ean_key: eanKey, is_active: newStatus }]),
-      });
-
-      if (!response.ok) throw new Error('Falha ao atualizar o status.');
-
-      toast({
-        title: 'Status atualizado!',
-        description: `A URL foi marcada como ${newStatus ? 'ativa' : 'inativa'}.`,
-      });
-    } catch (error) {
-      // Revert on error
-      onStatusChange(eanKey, currentStatus);
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao atualizar',
-        description: 'Não foi possível alterar o status da URL.',
-      });
-    }
-  };
 
   const filteredAndSortedProducts = useMemo(() => {
     let products = groupedProducts;
@@ -261,11 +223,6 @@ export function PriceComparisonTable({ allProducts, loading, onStatusChange }: P
                                                     <p className={`font-bold ${isMinPrice ? 'text-primary' : ''}`}>
                                                         {formatCurrency(offer.price)}
                                                     </p>
-                                                     <Switch
-                                                        checked={offer.is_active}
-                                                        onCheckedChange={() => handleToggle(offer.ean_key, offer.is_active)}
-                                                        className="h-5 w-9 data-[state=checked]:bg-green-500"
-                                                    />
                                                     <Button asChild variant="ghost" size="icon" className="h-5 w-5" disabled={!isValidHttpUrl(offer.url)}>
                                                         <a href={offer.url!} target="_blank" rel="noopener noreferrer" aria-label="Ver produto">
                                                             <ExternalLink className="h-4 w-4"/>
@@ -283,9 +240,6 @@ export function PriceComparisonTable({ allProducts, loading, onStatusChange }: P
                                                     {isMinPrice && prices.length > 1 && (
                                                         <Badge variant="secondary">Melhor Preço</Badge>
                                                     )}
-                                                     <Badge variant={offer.is_active ? 'default' : 'outline'} className={offer.is_active ? 'bg-green-500' : ''}>
-                                                        {offer.is_active ? 'Ativo' : 'Inativo'}
-                                                    </Badge>
                                                 </div>
                                             </div>
                                         ) : (
@@ -336,5 +290,3 @@ export function PriceComparisonTable({ allProducts, loading, onStatusChange }: P
     </Card>
   );
 }
-
-    
