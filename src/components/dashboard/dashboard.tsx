@@ -5,6 +5,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { Product, UrlInfo } from '@/types';
 import { AlertCircle, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { FiltersGroup } from './filters-group';
@@ -241,30 +242,24 @@ function DashboardContent() {
   };
     
   const handleExport = () => {
-    const header = ['EAN', 'Descrição', 'Marca', 'Marketplace', 'Vendedor', 'Preço', 'URL', 'Status', 'Ativo'];
-    const rows = filteredProducts.map(p => [
-        `"${p.ean}"`, // Encapsulate EAN in quotes for CSV
-        `"${p.name.replace(/"/g, '""')}"`,
-        `"${(p.brand || '').replace(/"/g, '""')}"`,
-        `"${p.marketplace.replace(/"/g, '""')}"`,
-        `"${p.seller.replace(/"/g, '""')}"`,
-        p.price.toString().replace('.', ','), // Use comma for decimal separator
-        `"${p.url || ''}"`,
-        `"${p.status || ''}"`,
-        p.is_active ? 'Sim' : 'Não'
-    ].join(';')); // Use semicolon as separator
+    const dataToExport = filteredProducts.map(p => ({
+        EAN: p.ean,
+        Descrição: p.name,
+        Marca: p.brand || '',
+        Marketplace: p.marketplace,
+        Vendedor: p.seller,
+        Preço: p.price,
+        URL: p.url || '',
+        Status: p.status || '',
+        Ativo: p.is_active ? 'Sim' : 'Não'
+    }));
 
-    const csvContent = "data:text/csv;charset=utf-8," 
-        + [header.join(';'), ...rows].join("\n");
-        
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Produtos");
+
     const date = new Date().toISOString().slice(0,10);
-    link.setAttribute("download", `produtos_exportados_${date}.csv`);
-    document.body.appendChild(link); 
-    link.click();
-    document.body.removeChild(link);
+    XLSX.writeFile(workbook, `produtos_exportados_${date}.xlsx`);
   };
 
 

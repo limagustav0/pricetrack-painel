@@ -114,7 +114,7 @@ export function FiltersGroup({
             </Button>
             <Button onClick={onExport} variant="secondary" className="w-full md:w-auto">
                 <Download className="mr-2 h-4 w-4" />
-                Exportar CSV
+                Exportar XLSX
             </Button>
         </div>
     </div>
