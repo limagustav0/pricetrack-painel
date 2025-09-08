@@ -20,6 +20,8 @@ import { isValidHttpUrl, isValidImageUrl } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Card, CardContent, CardHeader } from '../ui/card';
 import { UrlManagementTable } from './url-management-table';
+import { Label } from '../ui/label';
+import { Switch } from '../ui/switch';
 
 
 // Helper to adapt the new API response to the existing Product type
@@ -63,6 +65,7 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [comparisonMarketplace, setComparisonMarketplace] = useState<string>("");
+  const [showOnlyWithCompetitors, setShowOnlyWithCompetitors] = useState(false);
   const [filters, setFilters] = useState<Filters>({
     ean: [],
     marketplace: [],
@@ -168,7 +171,25 @@ function DashboardContent() {
   }, [uniqueMarketplaces, comparisonMarketplace]);
 
   const filteredProducts = useMemo(() => {
-    return products.filter(p => {
+    let productsToFilter = products;
+
+    if (showOnlyWithCompetitors) {
+        const eanMarketplaceCount = products.reduce((acc, p) => {
+            if (p.ean) {
+                if (!acc[p.ean]) {
+                    acc[p.ean] = new Set();
+                }
+                acc[p.ean].add(p.marketplace);
+            }
+            return acc;
+        }, {} as Record<string, Set<string>>);
+
+        const eansWithCompetitors = Object.keys(eanMarketplaceCount).filter(ean => eanMarketplaceCount[ean].size > 1);
+        productsToFilter = products.filter(p => p.ean && eansWithCompetitors.includes(p.ean));
+    }
+
+
+    return productsToFilter.filter(p => {
         const eanMatch = filters.ean.length === 0 || (p.ean && filters.ean.includes(p.ean));
         const marketplaceMatch = filters.marketplace.length === 0 || (p.marketplace && filters.marketplace.includes(p.marketplace));
         const sellerMatch = filters.seller.length === 0 || (p.seller && filters.seller.includes(p.seller));
@@ -178,7 +199,7 @@ function DashboardContent() {
 
         return eanMatch && marketplaceMatch && sellerMatch && descriptionMatch && brandMatch && statusMatch;
     });
-  }, [products, filters]);
+  }, [products, filters, showOnlyWithCompetitors]);
 
   const handleFilterChange = (filterName: keyof Filters, value: string) => {
     setFilters(prev => {
@@ -203,6 +224,7 @@ function DashboardContent() {
         brand: [],
         status: [],
     });
+    setShowOnlyWithCompetitors(false);
   };
 
   const updateProductStatus = (eanKey: string, newStatus: boolean) => {
@@ -210,6 +232,11 @@ function DashboardContent() {
           prevProducts.map(p => 
               p.ean_key === eanKey ? { ...p, is_active: newStatus } : p
           )
+      );
+      setUrls(prevUrls =>
+        prevUrls.map(u =>
+            u.ean_key === eanKey ? { ...u, is_active: newStatus } : u
+        )
       );
   };
 
@@ -256,7 +283,18 @@ function DashboardContent() {
                         
                         <Card>
                             <CardHeader>
-                                <h2 className="text-lg font-semibold">Filtros de Produtos</h2>
+                                <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                                     <h2 className="text-lg font-semibold">Filtros de Produtos</h2>
+                                      <div className="flex items-center space-x-2">
+                                        <Switch
+                                            id="competitors-only"
+                                            checked={showOnlyWithCompetitors}
+                                            onCheckedChange={setShowOnlyWithCompetitors}
+                                            disabled={loading}
+                                        />
+                                        <Label htmlFor="competitors-only" className="text-sm">Mostrar apenas produtos com concorrentes</Label>
+                                    </div>
+                                </div>
                             </CardHeader>
                             <CardContent>
                                 <FiltersGroup
@@ -282,13 +320,13 @@ function DashboardContent() {
                                     <AlertDescription>{error}</AlertDescription>
                                 </Alert>
                             ) : (
-                                <ProductAccordion products={filteredProducts} loading={loading} onStatusChange={updateProductStatus} />
+                                <ProductAccordion products={filteredProducts} loading={loading} />
                             )}
                         </div>
                     </div>
                 </TabsContent>
                 <TabsContent value="granular" className="mt-0 p-4 md:p-6 flex flex-col">
-                    <PriceComparisonTable allProducts={filteredProducts} loading={loading} onStatusChange={updateProductStatus} />
+                    <PriceComparisonTable allProducts={filteredProducts} loading={loading} />
                 </TabsContent>
                 <TabsContent value="seller" className="mt-0 p-4 md:p-6 flex flex-col">
                     <SellerComparisonTable allProducts={filteredProducts} loading={loading} />

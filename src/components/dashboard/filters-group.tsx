@@ -104,8 +104,8 @@ export function FiltersGroup({
             onChange={(value) => onFilterChange('status', value)}
             />
         </div>
-        <div className="col-start-1 md:col-start-auto lg:col-start-4">
-            <Button onClick={onClearFilters} variant="outline" className="w-full">
+        <div className="col-span-full flex justify-end">
+            <Button onClick={onClearFilters} variant="outline" className="w-full md:w-auto">
                 Limpar Filtros
             </Button>
         </div>

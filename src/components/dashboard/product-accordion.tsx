@@ -21,10 +21,9 @@ import { buttonVariants } from '@/components/ui/button';
 interface ProductAccordionProps {
   products: Product[];
   loading: boolean;
-  onStatusChange: (eanKey: string, newStatus: boolean) => void;
 }
 
-export function ProductAccordion({ products, loading, onStatusChange }: ProductAccordionProps) {
+export function ProductAccordion({ products, loading }: ProductAccordionProps) {
   const groupedProducts = useMemo(() => {
     return products.reduce((acc, product) => {
       const key = product.ean || product.id;
