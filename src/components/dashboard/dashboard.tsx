@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import type { Product, UrlInfo } from '@/types';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Download } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { FiltersGroup } from './filters-group';
@@ -239,6 +239,34 @@ function DashboardContent() {
         )
       );
   };
+    
+  const handleExport = () => {
+    const header = ['EAN', 'Descrição', 'Marca', 'Marketplace', 'Vendedor', 'Preço', 'URL', 'Status', 'Ativo'];
+    const rows = filteredProducts.map(p => [
+        `"${p.ean}"`, // Encapsulate EAN in quotes for CSV
+        `"${p.name.replace(/"/g, '""')}"`,
+        `"${(p.brand || '').replace(/"/g, '""')}"`,
+        `"${p.marketplace.replace(/"/g, '""')}"`,
+        `"${p.seller.replace(/"/g, '""')}"`,
+        p.price.toString().replace('.', ','), // Use comma for decimal separator
+        `"${p.url || ''}"`,
+        `"${p.status || ''}"`,
+        p.is_active ? 'Sim' : 'Não'
+    ].join(';')); // Use semicolon as separator
+
+    const csvContent = "data:text/csv;charset=utf-8," 
+        + [header.join(';'), ...rows].join("\n");
+        
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    const date = new Date().toISOString().slice(0,10);
+    link.setAttribute("download", `produtos_exportados_${date}.csv`);
+    document.body.appendChild(link); 
+    link.click();
+    document.body.removeChild(link);
+  };
+
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -307,6 +335,7 @@ function DashboardContent() {
                                     filters={filters}
                                     onFilterChange={handleFilterChange}
                                     onClearFilters={clearFilters}
+                                    onExport={handleExport}
                                     loading={loading}
                                 />
                             </CardContent>
@@ -320,13 +349,13 @@ function DashboardContent() {
                                     <AlertDescription>{error}</AlertDescription>
                                 </Alert>
                             ) : (
-                                <ProductAccordion products={filteredProducts} loading={loading} />
+                                <ProductAccordion products={filteredProducts} loading={loading} onStatusChange={updateProductStatus} />
                             )}
                         </div>
                     </div>
                 </TabsContent>
                 <TabsContent value="granular" className="mt-0 p-4 md:p-6 flex flex-col">
-                    <PriceComparisonTable allProducts={filteredProducts} loading={loading} />
+                    <PriceComparisonTable allProducts={filteredProducts} loading={loading} onStatusChange={updateProductStatus} />
                 </TabsContent>
                 <TabsContent value="seller" className="mt-0 p-4 md:p-6 flex flex-col">
                     <SellerComparisonTable allProducts={filteredProducts} loading={loading} />
@@ -350,5 +379,3 @@ export function Dashboard() {
         </SidebarProvider>
     )
 }
-
-    

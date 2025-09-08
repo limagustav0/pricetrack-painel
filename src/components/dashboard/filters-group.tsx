@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SearchableSelect } from "./searchable-select";
 import { Label } from "@/components/ui/label";
 import type { Filters } from "./dashboard";
+import { Download } from "lucide-react";
 
 interface FiltersGroupProps {
   eans: string[];
@@ -17,6 +18,7 @@ interface FiltersGroupProps {
   filters: Filters;
   onFilterChange: (filterName: keyof Filters, value: string) => void;
   onClearFilters: () => void;
+  onExport: () => void;
   loading: boolean;
 }
 
@@ -29,7 +31,8 @@ export function FiltersGroup({
     statuses,
     filters, 
     onFilterChange,
-    onClearFilters, 
+    onClearFilters,
+    onExport,
     loading 
 }: FiltersGroupProps) {
     if (loading) {
@@ -41,8 +44,9 @@ export function FiltersGroup({
                         <Skeleton className="h-10 w-full" />
                     </div>
                 ))}
-                <div className="flex items-end">
-                    <Skeleton className="h-10 w-full" />
+                <div className="flex items-end col-span-full gap-2">
+                    <Skeleton className="h-10 w-32" />
+                    <Skeleton className="h-10 w-32" />
                 </div>
             </div>
         );
@@ -104,9 +108,13 @@ export function FiltersGroup({
             onChange={(value) => onFilterChange('status', value)}
             />
         </div>
-        <div className="col-span-full flex justify-end">
+        <div className="col-span-full flex flex-col md:flex-row justify-end gap-2">
             <Button onClick={onClearFilters} variant="outline" className="w-full md:w-auto">
                 Limpar Filtros
+            </Button>
+            <Button onClick={onExport} variant="secondary" className="w-full md:w-auto">
+                <Download className="mr-2 h-4 w-4" />
+                Exportar CSV
             </Button>
         </div>
     </div>
