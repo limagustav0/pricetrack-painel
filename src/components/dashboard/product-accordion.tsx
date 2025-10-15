@@ -16,7 +16,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from "@/hooks/use-toast";
 import { buttonVariants } from '@/components/ui/button';
-import { Switch } from '../ui/switch';
 
 
 interface ProductAccordionProps {
@@ -88,43 +87,6 @@ function ProductAccordionItem({ ean, productGroup, onStatusChange }: { ean: stri
     const { toast } = useToast();
     const [isCopied, setIsCopied] = useState(false);
     
-    const handleToggle = async (eanKey: string, currentStatus: boolean) => {
-        const originalStatus = currentStatus;
-        const newStatus = !currentStatus;
-
-        // Optimistic update
-        onStatusChange(eanKey, newStatus);
-        
-        try {
-          const response = await fetch('/api/urls/update_is_active', {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify([{ ean_key: eanKey, is_active: newStatus }]),
-          });
-    
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || `Falha ao atualizar o status. Status: ${response.status}`);
-          }
-    
-          toast({
-            title: 'Status atualizado!',
-            description: `A URL foi marcada como ${newStatus ? 'ativa' : 'inativa'}.`,
-          });
-        } catch (error) {
-          // Revert on error
-          onStatusChange(eanKey, originalStatus);
-          toast({
-            variant: 'destructive',
-            title: 'Erro ao atualizar',
-            description: error instanceof Error ? error.message : 'Não foi possível alterar o status da URL.',
-          });
-        }
-      };
-
-
     const { firstProduct, imageSrc } = useMemo(() => {
         const epocaProduct = productGroup.find(p => p.marketplace === 'Época Cosméticos' && isValidImageUrl(p.image));
         const belezaProduct = productGroup.find(p => p.marketplace === 'Beleza na Web' && isValidImageUrl(p.image));
@@ -273,7 +235,6 @@ function ProductAccordionItem({ ean, productGroup, onStatusChange }: { ean: stri
                                                         <TableHead className="text-right">Preço</TableHead>
                                                         <TableHead>Alterações</TableHead>
                                                         <TableHead>Última Atualização</TableHead>
-                                                        <TableHead>Status</TableHead>
                                                         <TableHead></TableHead>
                                                     </TableRow>
                                                 </TableHeader>
@@ -289,18 +250,6 @@ function ProductAccordionItem({ ean, productGroup, onStatusChange }: { ean: stri
                                                         </TableCell>
                                                         <TableCell className="text-muted-foreground text-sm">
                                                             {product.updated_at ? formatDistanceToNow(new Date(product.updated_at), { addSuffix: true, locale: ptBR }) : '-'}
-                                                        </TableCell>
-                                                         <TableCell>
-                                                            <div className="flex items-center gap-2">
-                                                                <Badge variant={product.is_active ? 'default' : 'outline'} className={cn(product.is_active ? 'bg-green-500 hover:bg-green-600' : 'bg-destructive hover:bg-destructive/90', "text-white")}>
-                                                                    {product.is_active ? 'Ativo' : 'Inativo'}
-                                                                </Badge>
-                                                                <Switch
-                                                                    checked={product.is_active}
-                                                                    onCheckedChange={() => handleToggle(product.ean_key, product.is_active)}
-                                                                    aria-label={`Ativar ou desativar URL para ${product.ean}`}
-                                                                />
-                                                            </div>
                                                         </TableCell>
                                                         <TableCell className="text-right">
                                                             <Button asChild variant="ghost" size="icon" disabled={!product.url}>
