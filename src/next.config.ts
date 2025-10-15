@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -44,7 +45,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/price-data',
-        destination: 'http://201.23.64.234:8000/api/products/',
+        destination: 'http://localhost:8000/api/products/',
       },
       {
         source: '/api/url-data',
