@@ -12,9 +12,6 @@ import { Badge } from '@/components/ui/badge';
 import { SearchableSelect } from './searchable-select';
 import { TrendingUp, ChevronsUpDown, ExternalLink } from 'lucide-react';
 import { Button } from '../ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { Switch } from '../ui/switch';
-
 
 interface PriceComparisonTableProps {
   allProducts: Product[];
@@ -38,48 +35,10 @@ interface GroupedProduct {
 }
 
 
-export function PriceComparisonTable({ allProducts, loading, onStatusChange }: PriceComparisonTableProps) {
+export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTableProps) {
   const [selectedEans, setSelectedEans] = useState<string[]>([]);
   const [selectedMarketplaces, setSelectedMarketplaces] = useState<string[]>([]);
   const [showIncomplete, setShowIncomplete] = useState(false);
-  const { toast } = useToast();
-
-  const handleToggle = async (eanKey: string, currentStatus: boolean) => {
-    const originalStatus = currentStatus;
-    const newStatus = !currentStatus;
-
-    // Optimistic update
-    onStatusChange(eanKey, newStatus);
-    
-    try {
-      const response = await fetch('/api/urls/update_is_active', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify([{ ean_key: eanKey, is_active: newStatus }]),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || `Falha ao atualizar o status. Status: ${response.status}`);
-      }
-
-      toast({
-        title: 'Status atualizado!',
-        description: `A URL foi marcada como ${newStatus ? 'ativa' : 'inativa'}.`,
-      });
-    } catch (error) {
-      // Revert on error
-      onStatusChange(eanKey, originalStatus);
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao atualizar',
-        description: error instanceof Error ? error.message : 'Não foi possível alterar o status da URL.',
-      });
-    }
-  };
-
 
   const { groupedProducts, uniqueMarketplaces } = useMemo(() => {
     const marketplaces = [...new Set(allProducts.map(p => p.marketplace).filter(Boolean))].sort();
@@ -286,16 +245,6 @@ export function PriceComparisonTable({ allProducts, loading, onStatusChange }: P
                                                     {isMinPrice && prices.length > 1 && (
                                                         <Badge variant="secondary">Melhor Preço</Badge>
                                                     )}
-                                                </div>
-                                                <div className="flex items-center justify-end gap-2 mt-2">
-                                                    <Badge variant={offer.is_active ? 'default' : 'outline'} className={cn(offer.is_active ? 'bg-green-500 hover:bg-green-600' : 'bg-destructive hover:bg-destructive/90', "text-white")}>
-                                                        {offer.is_active ? 'Ativo' : 'Inativo'}
-                                                    </Badge>
-                                                    <Switch
-                                                        checked={offer.is_active}
-                                                        onCheckedChange={() => handleToggle(offer.ean_key, offer.is_active)}
-                                                        aria-label={`Ativar ou desativar URL para ${product.ean}`}
-                                                    />
                                                 </div>
                                             </div>
                                         ) : (
