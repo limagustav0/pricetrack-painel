@@ -49,11 +49,11 @@ const nextConfig: NextConfig = {
       },
       {
         source: '/api/url-data',
-        destination: 'http://201.23.64.234:8000/api/urls/',
+        destination: 'http://localhost:8000/api/urls/',
       },
        {
         source: '/api/urls/update_is_active',
-        destination: 'http://201.23.64.234:8000/api/urls/update_is_active',
+        destination: 'http://localhost:8000/api/urls/update_is_active',
       },
     ];
   },
