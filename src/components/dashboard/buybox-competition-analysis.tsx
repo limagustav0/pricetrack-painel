@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, isValidImageUrl, isValidHttpUrl } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '../ui/button';
-import { ExternalLink, CheckCircle, XCircle, Download, Trophy, ShoppingCart, BarChart, AlertTriangle } from 'lucide-react';
+import { ExternalLink, CheckCircle, XCircle, Download, Trophy, ShoppingCart, BarChart, AlertTriangle, Crown } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
@@ -96,19 +96,46 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
   };
 
 
-  const { buyboxData, charts, kpis } = useMemo(() => {
+  const { buyboxData, charts, kpis, topSellers } = useMemo(() => {
     const initialResult = {
         buyboxData: { winning: [], losing: [] },
         charts: { winsByMarketplace: [], lossesByMarketplace: [] },
-        kpis: { totalOffered: 0, winningCount: 0, losingCount: 0 }
+        kpis: { totalOffered: 0, winningCount: 0, losingCount: 0 },
+        topSellers: []
     };
 
-    if (selectedSellers.length === 0) return initialResult;
-    
     const filteredByMarketplace = selectedMarketplaces.length > 0 
         ? allProducts.filter(p => selectedMarketplaces.includes(p.marketplace))
         : allProducts;
+        
+    // Overall Top Sellers Calculation (using all products, ignoring filters for a global view)
+    const allProductsByEan = allProducts.reduce((acc, product) => {
+      if (!product.ean) return acc;
+      if (!acc[product.ean]) acc[product.ean] = [];
+      acc[product.ean].push(product);
+      return acc;
+    }, {} as Record<string, Product[]>);
 
+    const winnerCounts: Record<string, { name: string, count: number }> = {};
+    for (const ean in allProductsByEan) {
+        const products = allProductsByEan[ean];
+        if (products.length > 0) {
+            const winner = products.sort((a,b) => a.price - b.price)[0];
+            if (winner && winner.key_loja) {
+                if (!winnerCounts[winner.key_loja]) {
+                    winnerCounts[winner.key_loja] = { name: winner.seller, count: 0 };
+                }
+                winnerCounts[winner.key_loja].count++;
+            }
+        }
+    }
+    const calculatedTopSellers = Object.values(winnerCounts).sort((a, b) => b.count - a.count).slice(0, 5);
+
+
+    if (selectedSellers.length === 0) {
+        return { ...initialResult, topSellers: calculatedTopSellers };
+    }
+    
     const productsByEan = filteredByMarketplace.reduce((acc, product) => {
       if (!product.ean) return acc;
       if (!acc[product.ean]) acc[product.ean] = [];
@@ -208,7 +235,8 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
             totalOffered: totalOffered,
             winningCount: winningData.length,
             losingCount: losingData.length,
-        }
+        },
+        topSellers: calculatedTopSellers
     };
   }, [allProducts, selectedSellers, selectedMarketplaces]);
 
@@ -366,7 +394,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
             </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card>
                 <CardHeader>
                     <CardTitle>Buybox Ganhos por Marketplace</CardTitle>
@@ -443,6 +471,43 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                             <Trophy className="h-10 w-10 mb-2"/>
                             <p className="font-semibold">Nenhum Buybox perdido.</p>
                              <p className="text-sm">Parece que você está ganhando todos!</p>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Crown className="text-amber-500" />
+                        Top 5 Vendedores no Buybox
+                    </CardTitle>
+                    <CardDescription>Vendedores que mais ganham o Buybox no geral.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {loading ? (
+                        <div className="space-y-2">
+                            {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
+                        </div>
+                    ) : topSellers.length > 0 ? (
+                         <Table>
+                            <TableHeader>
+                                <TableRow>
+                                <TableHead>Loja (Vendedor)</TableHead>
+                                <TableHead className="text-right">Buyboxes Ganhos</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {topSellers.map((seller, index) => (
+                                <TableRow key={seller.name}>
+                                    <TableCell className="font-medium">{seller.name}</TableCell>
+                                    <TableCell className="text-right font-bold">{seller.count}</TableCell>
+                                </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    ) : (
+                        <div className="h-full flex items-center justify-center text-muted-foreground">
+                           <p>Nenhum dado de vendedor para exibir.</p>
                         </div>
                     )}
                 </CardContent>
@@ -629,5 +694,3 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     </div>
   );
 }
-
-    
