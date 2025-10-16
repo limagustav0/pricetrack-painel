@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, isValidImageUrl, isValidHttpUrl, cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '../ui/button';
-import { ExternalLink, CheckCircle, XCircle, Download, Trophy, ShoppingCart, BarChart, AlertTriangle, Crown } from 'lucide-react';
+import { ExternalLink, CheckCircle, XCircle, Download, ShoppingCart, BarChart, AlertTriangle, Crown } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
@@ -146,16 +146,16 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     const result: BuyboxAnalysis[] = [];
 
     for (const ean in productsByEan) {
-        const products = productsByEan[ean];
-        if (products.length === 0) continue;
+        const productsInEan = productsByEan[ean];
+        if (productsInEan.length === 0) continue;
 
-        const sortedByPrice = [...products].sort((a, b) => a.price - b.price);
-        const winner = sortedByPrice[0];
+        const sortedByPrice = [...productsInEan].sort((a, b) => a.price - b.price);
+        const overallWinner = sortedByPrice[0];
         
-        const myOffers = products.filter(p => selectedSellers.includes(p.key_loja!));
+        const myOffers = productsInEan.filter(p => selectedSellers.includes(p.key_loja!));
         const myBestOfferProduct = myOffers.sort((a, b) => a.price - b.price)[0];
 
-        const imageProduct = products.find(p => isValidImageUrl(p.image)) || products[0];
+        const imageProduct = productsInEan.find(p => isValidImageUrl(p.image)) || productsInEan[0];
 
         let status: 'winning' | 'losing' | 'no_offer';
         let priceDifference = 0;
@@ -163,22 +163,25 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
 
         if (!myBestOfferProduct) {
             status = 'no_offer';
-        } else if (myBestOfferProduct.key_loja === winner.key_loja && myBestOfferProduct.marketplace === winner.marketplace) {
+        } else if (myBestOfferProduct.id === overallWinner.id) {
             status = 'winning';
-            if (sortedByPrice.length > 1) {
-                const next = sortedByPrice[1];
-                priceDifference = next.price - myBestOfferProduct.price;
-                nextCompetitor = { seller: next.seller, marketplace: next.marketplace, price: next.price, url: next.url };
+            const marketplaceCompetitors = productsInEan.filter(p => p.marketplace === myBestOfferProduct.marketplace && p.id !== myBestOfferProduct.id);
+            const sortedMarketplaceCompetitors = marketplaceCompetitors.sort((a, b) => a.price - b.price);
+
+            if (sortedMarketplaceCompetitors.length > 0) {
+                const nextInMarketplace = sortedMarketplaceCompetitors[0];
+                priceDifference = nextInMarketplace.price - myBestOfferProduct.price;
+                nextCompetitor = { seller: nextInMarketplace.seller, marketplace: nextInMarketplace.marketplace, price: nextInMarketplace.price, url: nextInMarketplace.url };
             }
         } else {
             status = 'losing';
-            priceDifference = myBestOfferProduct.price - winner.price;
+            priceDifference = myBestOfferProduct.price - overallWinner.price;
         }
 
         result.push({
             ean: ean,
-            name: products[0].name,
-            brand: products[0].brand,
+            name: productsInEan[0].name,
+            brand: productsInEan[0].brand,
             image: imageProduct.image || 'https://placehold.co/100x100.png',
             myBestOffer: myBestOfferProduct ? {
                 seller: myBestOfferProduct.seller,
@@ -188,11 +191,11 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                 updated_at: myBestOfferProduct.updated_at
             } : undefined,
             winner: {
-                seller: winner.seller,
-                marketplace: winner.marketplace,
-                price: winner.price,
-                url: winner.url,
-                updated_at: winner.updated_at
+                seller: overallWinner.seller,
+                marketplace: overallWinner.marketplace,
+                price: overallWinner.price,
+                url: overallWinner.url,
+                updated_at: overallWinner.updated_at
             },
             nextCompetitor,
             status,
@@ -468,7 +471,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                         </ResponsiveContainer>
                     ) : (
                         <div className="h-64 flex flex-col items-center justify-center text-center text-muted-foreground">
-                            <Trophy className="h-10 w-10 mb-2"/>
+                            <Crown className="h-10 w-10 mb-2"/>
                             <p className="font-semibold">Nenhum Buybox perdido.</p>
                              <p className="text-sm">Parece que você está ganhando todos!</p>
                         </div>
@@ -657,20 +660,17 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                                         <Badge variant="outline">{item.myBestOffer!.marketplace}</Badge>
                                     </TableCell>
                                     <TableCell>
-                                        <div className='flex items-center gap-2'>
-                                            <Trophy className="h-5 w-5 text-amber-500" />
-                                            <div>
-                                                <div className="flex items-center gap-2">
-                                                    <p className="font-bold text-lg text-primary">{formatCurrency(item.winner.price)}</p>
-                                                    <Button asChild variant="ghost" size="icon" className="h-5 w-5" disabled={!isValidHttpUrl(item.winner.url)}>
-                                                        <a href={item.winner.url!} target="_blank" rel="noopener noreferrer" aria-label="Ver oferta vencedora">
-                                                            <ExternalLink className="h-4 w-4"/>
-                                                        </a>
-                                                    </Button>
-                                                </div>
-                                                <p className="text-sm font-semibold">{item.winner.seller}</p>
-                                                <Badge variant="secondary">{item.winner.marketplace}</Badge>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <p className="font-bold text-lg text-primary">{formatCurrency(item.winner.price)}</p>
+                                                <Button asChild variant="ghost" size="icon" className="h-5 w-5" disabled={!isValidHttpUrl(item.winner.url)}>
+                                                    <a href={item.winner.url!} target="_blank" rel="noopener noreferrer" aria-label="Ver oferta vencedora">
+                                                        <ExternalLink className="h-4 w-4"/>
+                                                    </a>
+                                                </Button>
                                             </div>
+                                            <p className="text-sm font-semibold">{item.winner.seller}</p>
+                                            <Badge variant="secondary">{item.winner.marketplace}</Badge>
                                         </div>
                                     </TableCell>
                                      <TableCell>
