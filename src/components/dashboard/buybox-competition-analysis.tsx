@@ -7,7 +7,7 @@ import { useMemo, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatCurrency, isValidImageUrl, isValidHttpUrl } from '@/lib/utils';
+import { formatCurrency, isValidImageUrl, isValidHttpUrl, cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '../ui/button';
 import { ExternalLink, CheckCircle, XCircle, Download, Trophy, ShoppingCart, BarChart, AlertTriangle, Crown } from 'lucide-react';
@@ -585,7 +585,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                                         ) : <p className="text-muted-foreground">-</p>}
                                     </TableCell>
                                     <TableCell>
-                                        <p className="font-semibold text-green-600">
+                                        <p className={cn("font-semibold", item.priceDifference > 0 ? "text-green-600" : "text-muted-foreground")}>
                                             {item.priceDifference > 0 ? `Ganhando por ${formatCurrency(item.priceDifference)}` : 'Preço igual'}
                                         </p>
                                     </TableCell>
@@ -694,3 +694,5 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     </div>
   );
 }
+
+    
