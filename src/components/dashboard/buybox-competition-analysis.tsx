@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, isValidImageUrl, isValidHttpUrl } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '../ui/button';
-import { ExternalLink, CheckCircle, XCircle, Download, Trophy } from 'lucide-react';
+import { ExternalLink, CheckCircle, XCircle, Download, Trophy, ShoppingCart, BarChart, AlertTriangle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -97,8 +97,14 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
   };
 
 
-  const { buyboxData, chartData } = useMemo(() => {
-    if (!selectedSeller) return { buyboxData: { winning: [], losing: [] }, chartData: [] };
+  const { buyboxData, chartData, kpis } = useMemo(() => {
+    const initialResult = {
+        buyboxData: { winning: [], losing: [] },
+        chartData: [],
+        kpis: { totalOffered: 0, winningCount: 0, losingCount: 0 }
+    };
+
+    if (!selectedSeller) return initialResult;
     
     const filteredByMarketplace = selectedMarketplaces.length > 0 
         ? allProducts.filter(p => selectedMarketplaces.includes(p.marketplace))
@@ -166,6 +172,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     }
     
     const winningData = result.filter(p => p.status === 'winning');
+    const losingData = result.filter(p => p.status === 'losing');
     
     const winsByMarketplace = winningData.reduce((acc, item) => {
         const marketplace = item.myOffer!.marketplace;
@@ -174,13 +181,20 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     }, {} as Record<string, number>);
 
     const newChartData = Object.entries(winsByMarketplace).map(([name, value]) => ({ name, value }));
+    
+    const totalOffered = new Set(filteredByMarketplace.filter(p => p.key_loja === selectedSeller).map(p => p.ean)).size;
 
     return {
         buyboxData: {
             winning: winningData.sort((a,b) => a.name.localeCompare(b.name)),
-            losing: result.filter(p => p.status === 'losing').sort((a,b) => b.priceDifference - a.priceDifference),
+            losing: losingData.sort((a,b) => b.priceDifference - a.priceDifference),
         },
         chartData: newChartData,
+        kpis: {
+            totalOffered: totalOffered,
+            winningCount: winningData.length,
+            losingCount: losingData.length,
+        }
     };
   }, [allProducts, selectedSeller, selectedMarketplaces]);
 
@@ -267,9 +281,9 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card className="lg:col-span-1">
                 <CardHeader>
-                    <CardTitle>Análise de Competição de Buybox</CardTitle>
+                    <CardTitle>Configuração da Análise</CardTitle>
                     <CardDescription>
-                    Selecione um vendedor e marketplace para comparar preços com os vencedores do Buybox.
+                    Selecione um vendedor e marketplaces para analisar a competição.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -287,9 +301,9 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                         </Select>
                     </div>
                     <div>
-                        <Label>Marketplace</Label>
+                        <Label>Filtrar por Marketplace</Label>
                         <SearchableSelect
-                            placeholder="Filtrar por Marketplace..."
+                            placeholder="Todos os Marketplaces"
                             options={uniqueMarketplaces.map(m => ({ value: m, label: m }))}
                             selectedValues={selectedMarketplaces}
                             onChange={handleMarketplaceFilterChange}
@@ -297,46 +311,89 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                     </div>
                 </CardContent>
             </Card>
+
             <Card className="lg:col-span-2">
-                <CardHeader>
-                    <CardTitle>Buybox Ganhos por Marketplace</CardTitle>
-                    <CardDescription>Distribuição de vitórias para <span className="font-bold">{selectedSellerName}</span>, considerando os filtros.</CardDescription>
+                 <CardHeader>
+                    <CardTitle>Análise Consolidada: <span className="text-primary">{selectedSellerName}</span></CardTitle>
+                    <CardDescription>Métricas combinadas para o vendedor selecionado, considerando os filtros.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {loading ? (
-                         <div className="h-64 flex items-center justify-center">
-                            <Skeleton className="h-48 w-48 rounded-full" />
-                         </div>
-                    ) : chartData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={250}>
-                            <PieChart>
-                                <Pie
-                                    data={chartData}
-                                    cx="50%"
-                                    cy="50%"
-                                    labelLine={false}
-                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                                    outerRadius={80}
-                                    fill="#8884d8"
-                                    dataKey="value"
-                                >
-                                    {chartData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <Tooltip formatter={(value) => [`${value} produto(s)`, "Vitórias"]}/>
-                                <Legend />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    ) : (
-                        <div className="h-64 flex items-center justify-center text-muted-foreground">
-                            Nenhum Buybox ganho para os filtros selecionados.
-                        </div>
-                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Card>
+                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Total Produtos Ofertados</CardTitle>
+                                <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">{kpis.totalOffered}</div>
+                                <p className="text-xs text-muted-foreground">SKUs únicos ofertados</p>
+                            </CardContent>
+                        </Card>
+                         <Card>
+                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Buyboxes Ganhos</CardTitle>
+                                <CheckCircle className="h-4 w-4 text-green-500" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">{kpis.winningCount}</div>
+                                <p className="text-xs text-muted-foreground">SKUs com menor preço</p>
+                            </CardContent>
+                        </Card>
+                         <Card>
+                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Buyboxes Perdidos</CardTitle>
+                                <XCircle className="h-4 w-4 text-red-500" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">{kpis.losingCount}</div>
+                                <p className="text-xs text-muted-foreground">SKUs com preço maior que o vencedor</p>
+                            </CardContent>
+                        </Card>
+                    </div>
                 </CardContent>
             </Card>
         </div>
 
+        <Card>
+            <CardHeader>
+                <CardTitle>Buybox Ganhos por Marketplace</CardTitle>
+                <CardDescription>Distribuição de vitórias para <span className="font-bold">{selectedSellerName}</span>, considerando os filtros.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {loading ? (
+                        <div className="h-64 flex items-center justify-center">
+                        <Skeleton className="h-48 w-48 rounded-full" />
+                        </div>
+                ) : chartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={250}>
+                        <PieChart>
+                            <Pie
+                                data={chartData}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                outerRadius={80}
+                                fill="#8884d8"
+                                dataKey="value"
+                            >
+                                {chartData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                            </Pie>
+                            <Tooltip formatter={(value) => [`${value} produto(s)`, "Vitórias"]}/>
+                            <Legend />
+                        </PieChart>
+                    </ResponsiveContainer>
+                ) : (
+                    <div className="h-64 flex flex-col items-center justify-center text-center text-muted-foreground">
+                        <BarChart className="h-10 w-10 mb-2"/>
+                        <p className="font-semibold">Nenhum Buybox ganho para os filtros selecionados.</p>
+                        <p className="text-sm">Tente selecionar outro vendedor ou limpar o filtro de marketplace.</p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
 
         {/* Ganhando Buybox */}
         <Card>
@@ -515,5 +572,3 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     </div>
   );
 }
-
-    
