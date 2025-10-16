@@ -16,6 +16,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { SearchableSelect } from './searchable-select';
+import { Label } from '../ui/label';
 
 
 interface BuyboxCompetitionAnalysisProps {
@@ -60,6 +62,8 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF19AF'
 
 export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompetitionAnalysisProps) {
   const [selectedSeller, setSelectedSeller] = useState('');
+  const [selectedMarketplaces, setSelectedMarketplaces] = useState<string[]>([]);
+
 
   const uniqueSellers = useMemo(() => {
     const sellers = new Map<string, string>();
@@ -71,6 +75,10 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     return Array.from(sellers.entries()).map(([key_loja, sellerName]) => ({ key_loja, sellerName })).sort((a,b) => a.sellerName.localeCompare(b.sellerName));
   }, [allProducts]);
   
+  const uniqueMarketplaces = useMemo(() => {
+    return [...new Set(allProducts.map(p => p.marketplace).filter(Boolean))].sort();
+  }, [allProducts]);
+
   // Set default seller
   useState(() => {
     if (uniqueSellers.length > 0 && !selectedSeller) {
@@ -80,10 +88,23 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     }
   })
 
+  const handleMarketplaceFilterChange = (value: string) => {
+    setSelectedMarketplaces(prev => 
+        prev.includes(value) 
+            ? prev.filter(v => v !== value) 
+            : [...prev, value]
+    );
+  };
+
+
   const { buyboxData, chartData } = useMemo(() => {
     if (!selectedSeller) return { buyboxData: { winning: [], losing: [] }, chartData: [] };
     
-    const productsByEan = allProducts.reduce((acc, product) => {
+    const filteredByMarketplace = selectedMarketplaces.length > 0 
+        ? allProducts.filter(p => selectedMarketplaces.includes(p.marketplace))
+        : allProducts;
+
+    const productsByEan = filteredByMarketplace.reduce((acc, product) => {
       if (!product.ean) return acc;
       if (!acc[product.ean]) acc[product.ean] = [];
       acc[product.ean].push(product);
@@ -161,7 +182,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
         },
         chartData: newChartData,
     };
-  }, [allProducts, selectedSeller]);
+  }, [allProducts, selectedSeller, selectedMarketplaces]);
 
   const handleExport = (data: BuyboxAnalysis[], fileName: string) => {
     const worksheetData = data.map(item => {
@@ -248,14 +269,15 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                 <CardHeader>
                     <CardTitle>Análise de Competição de Buybox</CardTitle>
                     <CardDescription>
-                    Selecione seu vendedor para comparar seus preços com os vencedores do Buybox.
+                    Selecione um vendedor e marketplace para comparar preços com os vencedores do Buybox.
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <div className="max-w-sm">
+                <CardContent className="space-y-4">
+                    <div>
+                        <Label>Vendedor de Referência</Label>
                         <Select value={selectedSeller} onValueChange={setSelectedSeller} disabled={loading}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Selecione um Vendedor de Referência" />
+                                <SelectValue placeholder="Selecione um Vendedor" />
                             </SelectTrigger>
                             <SelectContent>
                                 {uniqueSellers.map(seller => (
@@ -264,12 +286,21 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                             </SelectContent>
                         </Select>
                     </div>
+                    <div>
+                        <Label>Marketplace</Label>
+                        <SearchableSelect
+                            placeholder="Filtrar por Marketplace..."
+                            options={uniqueMarketplaces.map(m => ({ value: m, label: m }))}
+                            selectedValues={selectedMarketplaces}
+                            onChange={handleMarketplaceFilterChange}
+                        />
+                    </div>
                 </CardContent>
             </Card>
             <Card className="lg:col-span-2">
                 <CardHeader>
                     <CardTitle>Buybox Ganhos por Marketplace</CardTitle>
-                    <CardDescription>Distribuição de vitórias para <span className="font-bold">{selectedSellerName}</span>.</CardDescription>
+                    <CardDescription>Distribuição de vitórias para <span className="font-bold">{selectedSellerName}</span>, considerando os filtros.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {loading ? (
@@ -299,7 +330,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                         </ResponsiveContainer>
                     ) : (
                         <div className="h-64 flex items-center justify-center text-muted-foreground">
-                            Nenhum Buybox ganho para este vendedor.
+                            Nenhum Buybox ganho para os filtros selecionados.
                         </div>
                     )}
                 </CardContent>
@@ -484,3 +515,5 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     </div>
   );
 }
+
+    
