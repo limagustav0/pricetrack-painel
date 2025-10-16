@@ -23,6 +23,7 @@ import { Card, CardContent, CardHeader } from '../ui/card';
 import { UrlManagementTable } from './url-management-table';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
+import { BuyboxAnalysisTable } from './buybox-analysis-table';
 
 
 // Helper to adapt the new API response to the existing Product type
@@ -278,6 +279,7 @@ function DashboardContent() {
                      <TabsList className="w-full flex-wrap h-auto justify-start max-w-none md:max-w-2xl gap-2">
                         <TabsTrigger value="overview">Visão Geral</TabsTrigger>
                         <TabsTrigger value="granular">Análise por Marketplace</TabsTrigger>
+                        <TabsTrigger value="buybox">Análise de Buybox</TabsTrigger>
                         <TabsTrigger value="seller">Análise por Vendedor</TabsTrigger>
                          <TabsTrigger value="geral">Análise Geral</TabsTrigger>
                          <TabsTrigger value="urls">Gerenciar URLs</TabsTrigger>
@@ -352,6 +354,9 @@ function DashboardContent() {
                 <TabsContent value="granular" className="mt-0 p-4 md:p-6 flex flex-col">
                     <PriceComparisonTable allProducts={filteredProducts} loading={loading} onStatusChange={updateProductStatus} />
                 </TabsContent>
+                <TabsContent value="buybox" className="mt-0 p-4 md:p-6 flex flex-col">
+                    <BuyboxAnalysisTable allProducts={filteredProducts} loading={loading} />
+                </TabsContent>
                 <TabsContent value="seller" className="mt-0 p-4 md:p-6 flex flex-col">
                     <SellerComparisonTable allProducts={filteredProducts} loading={loading} />
                 </TabsContent>
@@ -374,3 +379,5 @@ export function Dashboard() {
         </SidebarProvider>
     )
 }
+
+    
