@@ -10,11 +10,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, isValidImageUrl, isValidHttpUrl } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '../ui/button';
-import { ExternalLink, CheckCircle, XCircle, Download, Trophy, ArrowRight } from 'lucide-react';
+import { ExternalLink, CheckCircle, XCircle, Download, Trophy } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 
 interface BuyboxCompetitionAnalysisProps {
@@ -55,6 +56,8 @@ interface BuyboxAnalysis {
     priceDifference: number;
 }
 
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF19AF'];
+
 export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompetitionAnalysisProps) {
   const [selectedSeller, setSelectedSeller] = useState('');
 
@@ -77,8 +80,8 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     }
   })
 
-  const buyboxData = useMemo(() => {
-    if (!selectedSeller) return { winning: [], losing: [] };
+  const { buyboxData, chartData } = useMemo(() => {
+    if (!selectedSeller) return { buyboxData: { winning: [], losing: [] }, chartData: [] };
     
     const productsByEan = allProducts.reduce((acc, product) => {
       if (!product.ean) return acc;
@@ -141,9 +144,22 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
         });
     }
     
+    const winningData = result.filter(p => p.status === 'winning');
+    
+    const winsByMarketplace = winningData.reduce((acc, item) => {
+        const marketplace = item.myOffer!.marketplace;
+        acc[marketplace] = (acc[marketplace] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+
+    const newChartData = Object.entries(winsByMarketplace).map(([name, value]) => ({ name, value }));
+
     return {
-        winning: result.filter(p => p.status === 'winning').sort((a,b) => a.name.localeCompare(b.name)),
-        losing: result.filter(p => p.status === 'losing').sort((a,b) => b.priceDifference - a.priceDifference),
+        buyboxData: {
+            winning: winningData.sort((a,b) => a.name.localeCompare(b.name)),
+            losing: result.filter(p => p.status === 'losing').sort((a,b) => b.priceDifference - a.priceDifference),
+        },
+        chartData: newChartData,
     };
   }, [allProducts, selectedSeller]);
 
@@ -227,28 +243,69 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
 
   return (
     <div className="space-y-6">
-        <Card>
-            <CardHeader>
-                <CardTitle>Análise de Competição de Buybox</CardTitle>
-                <CardDescription>
-                  Selecione seu vendedor para comparar seus preços com os vencedores do Buybox em todos os marketplaces.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="max-w-sm">
-                    <Select value={selectedSeller} onValueChange={setSelectedSeller} disabled={loading}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Selecione um Vendedor de Referência" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {uniqueSellers.map(seller => (
-                                <SelectItem key={seller.key_loja} value={seller.key_loja}>{seller.sellerName}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-            </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-1">
+                <CardHeader>
+                    <CardTitle>Análise de Competição de Buybox</CardTitle>
+                    <CardDescription>
+                    Selecione seu vendedor para comparar seus preços com os vencedores do Buybox.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="max-w-sm">
+                        <Select value={selectedSeller} onValueChange={setSelectedSeller} disabled={loading}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecione um Vendedor de Referência" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {uniqueSellers.map(seller => (
+                                    <SelectItem key={seller.key_loja} value={seller.key_loja}>{seller.sellerName}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </CardContent>
+            </Card>
+            <Card className="lg:col-span-2">
+                <CardHeader>
+                    <CardTitle>Buybox Ganhos por Marketplace</CardTitle>
+                    <CardDescription>Distribuição de vitórias para <span className="font-bold">{selectedSellerName}</span>.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {loading ? (
+                         <div className="h-64 flex items-center justify-center">
+                            <Skeleton className="h-48 w-48 rounded-full" />
+                         </div>
+                    ) : chartData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={250}>
+                            <PieChart>
+                                <Pie
+                                    data={chartData}
+                                    cx="50%"
+                                    cy="50%"
+                                    labelLine={false}
+                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                    outerRadius={80}
+                                    fill="#8884d8"
+                                    dataKey="value"
+                                >
+                                    {chartData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip formatter={(value) => [`${value} produto(s)`, "Vitórias"]}/>
+                                <Legend />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="h-64 flex items-center justify-center text-muted-foreground">
+                            Nenhum Buybox ganho para este vendedor.
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+
 
         {/* Ganhando Buybox */}
         <Card>
@@ -324,7 +381,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                                         </p>
                                     </TableCell>
                                     <TableCell className="text-right text-sm text-muted-foreground">
-                                        {formatDistanceToNow(new Date(item.myOffer!.updated_at), { addSuffix: true, locale: ptBR })}
+                                        {item.myOffer?.updated_at ? formatDistanceToNow(new Date(item.myOffer.updated_at), { addSuffix: true, locale: ptBR }) : '-'}
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -412,7 +469,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                                         </p>
                                     </TableCell>
                                     <TableCell className="text-right text-sm text-muted-foreground">
-                                        {formatDistanceToNow(new Date(item.winner.updated_at), { addSuffix: true, locale: ptBR })}
+                                        {item.winner?.updated_at ? formatDistanceToNow(new Date(item.winner.updated_at), { addSuffix: true, locale: ptBR }) : '-'}
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -427,5 +484,3 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     </div>
   );
 }
-
-    
