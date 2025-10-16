@@ -7,7 +7,7 @@ import { useMemo, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatCurrency, isValidImageUrl } from '@/lib/utils';
+import { formatCurrency, isValidImageUrl, isValidHttpUrl } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '../ui/button';
 import { ExternalLink, CheckCircle, XCircle, Download, Trophy, ArrowRight } from 'lucide-react';
@@ -48,6 +48,7 @@ interface BuyboxAnalysis {
         seller: string;
         marketplace: string;
         price: number;
+        url: string | null;
     };
     
     status: 'winning' | 'losing' | 'no_offer';
@@ -108,7 +109,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
             if (sortedByPrice.length > 1) {
                 const next = sortedByPrice[1];
                 priceDifference = next.price - myOffer.price;
-                nextCompetitor = { seller: next.seller, marketplace: next.marketplace, price: next.price };
+                nextCompetitor = { seller: next.seller, marketplace: next.marketplace, price: next.price, url: next.url };
             }
         } else {
             status = 'losing';
@@ -154,10 +155,12 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                 'EAN': item.ean,
                 'Seu Marketplace': item.myOffer?.marketplace,
                 'Seu Preço': item.myOffer?.price,
+                'URL da sua oferta': item.myOffer?.url,
                 'Diferença': item.priceDifference > 0 ? `Ganhando por ${formatCurrency(item.priceDifference)}` : 'Ganhando',
                 'Próximo Concorrente': item.nextCompetitor?.seller,
                 'Marketplace Concorrente': item.nextCompetitor?.marketplace,
                 'Preço Concorrente': item.nextCompetitor?.price,
+                'URL Concorrente': item.nextCompetitor?.url,
                 'Última Verificação': item.myOffer?.updated_at ? new Date(item.myOffer.updated_at).toLocaleString('pt-BR') : '',
             };
         } else { // losing
@@ -166,10 +169,12 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                 'EAN': item.ean,
                 'Seu Marketplace': item.myOffer?.marketplace,
                 'Seu Preço': item.myOffer?.price,
+                'URL da sua oferta': item.myOffer?.url,
                 'Diferença': `Perdendo por ${formatCurrency(item.priceDifference)}`,
                 'Vencedor': item.winner.seller,
                 'Marketplace Vencedor': item.winner.marketplace,
                 'Preço Vencedor': item.winner.price,
+                'URL Vencedor': item.winner.url,
                 'Última Verificação': item.winner?.updated_at ? new Date(item.winner.updated_at).toLocaleString('pt-BR') : '',
             };
         }
@@ -287,13 +292,27 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <p className="font-bold text-lg text-primary">{formatCurrency(item.myOffer!.price)}</p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-bold text-lg text-primary">{formatCurrency(item.myOffer!.price)}</p>
+                                             <Button asChild variant="ghost" size="icon" className="h-5 w-5" disabled={!isValidHttpUrl(item.myOffer!.url)}>
+                                                <a href={item.myOffer!.url!} target="_blank" rel="noopener noreferrer" aria-label="Ver sua oferta">
+                                                    <ExternalLink className="h-4 w-4"/>
+                                                </a>
+                                            </Button>
+                                        </div>
                                         <Badge variant="secondary">{item.myOffer!.marketplace}</Badge>
                                     </TableCell>
                                     <TableCell>
                                         {item.nextCompetitor ? (
                                             <div>
-                                                <p className="font-semibold">{formatCurrency(item.nextCompetitor.price)}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="font-semibold">{formatCurrency(item.nextCompetitor.price)}</p>
+                                                    <Button asChild variant="ghost" size="icon" className="h-5 w-5" disabled={!isValidHttpUrl(item.nextCompetitor.url)}>
+                                                        <a href={item.nextCompetitor.url!} target="_blank" rel="noopener noreferrer" aria-label="Ver oferta do concorrente">
+                                                            <ExternalLink className="h-4 w-4"/>
+                                                        </a>
+                                                    </Button>
+                                                </div>
                                                 <p className="text-sm text-muted-foreground">{item.nextCompetitor.seller}</p>
                                                 <Badge variant="outline">{item.nextCompetitor.marketplace}</Badge>
                                             </div>
@@ -360,14 +379,28 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <p className="font-semibold">{formatCurrency(item.myOffer!.price)}</p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-semibold">{formatCurrency(item.myOffer!.price)}</p>
+                                            <Button asChild variant="ghost" size="icon" className="h-5 w-5" disabled={!isValidHttpUrl(item.myOffer!.url)}>
+                                                <a href={item.myOffer!.url!} target="_blank" rel="noopener noreferrer" aria-label="Ver sua oferta">
+                                                    <ExternalLink className="h-4 w-4"/>
+                                                </a>
+                                            </Button>
+                                        </div>
                                         <Badge variant="outline">{item.myOffer!.marketplace}</Badge>
                                     </TableCell>
                                     <TableCell>
                                         <div className='flex items-center gap-2'>
                                             <Trophy className="h-5 w-5 text-amber-500" />
                                             <div>
-                                                <p className="font-bold text-lg text-primary">{formatCurrency(item.winner.price)}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="font-bold text-lg text-primary">{formatCurrency(item.winner.price)}</p>
+                                                    <Button asChild variant="ghost" size="icon" className="h-5 w-5" disabled={!isValidHttpUrl(item.winner.url)}>
+                                                        <a href={item.winner.url!} target="_blank" rel="noopener noreferrer" aria-label="Ver oferta vencedora">
+                                                            <ExternalLink className="h-4 w-4"/>
+                                                        </a>
+                                                    </Button>
+                                                </div>
                                                 <p className="text-sm font-semibold">{item.winner.seller}</p>
                                                 <Badge variant="secondary">{item.winner.marketplace}</Badge>
                                             </div>
@@ -394,3 +427,5 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     </div>
   );
 }
+
+    
