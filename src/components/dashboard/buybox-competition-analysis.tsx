@@ -11,7 +11,6 @@ import { formatCurrency, isValidImageUrl, isValidHttpUrl } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '../ui/button';
 import { ExternalLink, CheckCircle, XCircle, Download, Trophy, ShoppingCart, BarChart, AlertTriangle } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
@@ -31,7 +30,7 @@ interface BuyboxAnalysis {
     brand: string | null;
     image: string;
     
-    myOffer?: {
+    myBestOffer?: {
         seller: string;
         marketplace: string;
         price: number;
@@ -59,11 +58,12 @@ interface BuyboxAnalysis {
 }
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF19AF'];
+const COLORS_COMPETITORS = ['#FF8042', '#FFBB28', '#FF4281', '#19AFFF', '#8D19FF', '#FF1919'];
+
 
 export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompetitionAnalysisProps) {
-  const [selectedSeller, setSelectedSeller] = useState('');
+  const [selectedSellers, setSelectedSellers] = useState<string[]>([]);
   const [selectedMarketplaces, setSelectedMarketplaces] = useState<string[]>([]);
-
 
   const uniqueSellers = useMemo(() => {
     const sellers = new Map<string, string>();
@@ -72,21 +72,20 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
             sellers.set(p.key_loja, p.seller);
         }
     });
-    return Array.from(sellers.entries()).map(([key_loja, sellerName]) => ({ key_loja, sellerName })).sort((a,b) => a.sellerName.localeCompare(b.sellerName));
+    return Array.from(sellers.entries()).map(([key_loja, sellerName]) => ({ value: key_loja, label: sellerName })).sort((a,b) => a.label.localeCompare(b.label));
   }, [allProducts]);
   
   const uniqueMarketplaces = useMemo(() => {
     return [...new Set(allProducts.map(p => p.marketplace).filter(Boolean))].sort();
   }, [allProducts]);
 
-  // Set default seller
-  useState(() => {
-    if (uniqueSellers.length > 0 && !selectedSeller) {
-        // A simple heuristic to find a potential 'main' seller
-        const hairpro = uniqueSellers.find(s => s.sellerName.toLowerCase().includes('hairpro'));
-        setSelectedSeller(hairpro?.key_loja || uniqueSellers[0].key_loja);
-    }
-  })
+  const handleSellerFilterChange = (value: string) => {
+    setSelectedSellers(prev => 
+        prev.includes(value) 
+            ? prev.filter(v => v !== value) 
+            : [...prev, value]
+    );
+  };
 
   const handleMarketplaceFilterChange = (value: string) => {
     setSelectedMarketplaces(prev => 
@@ -97,14 +96,14 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
   };
 
 
-  const { buyboxData, chartData, kpis } = useMemo(() => {
+  const { buyboxData, charts, kpis } = useMemo(() => {
     const initialResult = {
         buyboxData: { winning: [], losing: [] },
-        chartData: [],
+        charts: { winsByMarketplace: [], lossesToCompetitor: [] },
         kpis: { totalOffered: 0, winningCount: 0, losingCount: 0 }
     };
 
-    if (!selectedSeller) return initialResult;
+    if (selectedSellers.length === 0) return initialResult;
     
     const filteredByMarketplace = selectedMarketplaces.length > 0 
         ? allProducts.filter(p => selectedMarketplaces.includes(p.marketplace))
@@ -125,25 +124,28 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
 
         const sortedByPrice = [...products].sort((a, b) => a.price - b.price);
         const winner = sortedByPrice[0];
-        const myOffer = products.find(p => p.key_loja === selectedSeller);
+        
+        const myOffers = products.filter(p => selectedSellers.includes(p.key_loja!));
+        const myBestOfferProduct = myOffers.sort((a, b) => a.price - b.price)[0];
+
         const imageProduct = products.find(p => isValidImageUrl(p.image)) || products[0];
 
         let status: 'winning' | 'losing' | 'no_offer';
         let priceDifference = 0;
         let nextCompetitor: BuyboxAnalysis['nextCompetitor'] = undefined;
 
-        if (!myOffer) {
+        if (!myBestOfferProduct) {
             status = 'no_offer';
-        } else if (myOffer.key_loja === winner.key_loja && myOffer.marketplace === winner.marketplace) {
+        } else if (myBestOfferProduct.key_loja === winner.key_loja && myBestOfferProduct.marketplace === winner.marketplace) {
             status = 'winning';
             if (sortedByPrice.length > 1) {
                 const next = sortedByPrice[1];
-                priceDifference = next.price - myOffer.price;
+                priceDifference = next.price - myBestOfferProduct.price;
                 nextCompetitor = { seller: next.seller, marketplace: next.marketplace, price: next.price, url: next.url };
             }
         } else {
             status = 'losing';
-            priceDifference = myOffer.price - winner.price;
+            priceDifference = myBestOfferProduct.price - winner.price;
         }
 
         result.push({
@@ -151,12 +153,12 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
             name: products[0].name,
             brand: products[0].brand,
             image: imageProduct.image || 'https://placehold.co/100x100.png',
-            myOffer: myOffer ? {
-                seller: myOffer.seller,
-                marketplace: myOffer.marketplace,
-                price: myOffer.price,
-                url: myOffer.url,
-                updated_at: myOffer.updated_at
+            myBestOffer: myBestOfferProduct ? {
+                seller: myBestOfferProduct.seller,
+                marketplace: myBestOfferProduct.marketplace,
+                price: myBestOfferProduct.price,
+                url: myBestOfferProduct.url,
+                updated_at: myBestOfferProduct.updated_at
             } : undefined,
             winner: {
                 seller: winner.seller,
@@ -174,29 +176,41 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     const winningData = result.filter(p => p.status === 'winning');
     const losingData = result.filter(p => p.status === 'losing');
     
+    // Chart 1: Wins by Marketplace
     const winsByMarketplace = winningData.reduce((acc, item) => {
-        const marketplace = item.myOffer!.marketplace;
+        const marketplace = item.myBestOffer!.marketplace;
         acc[marketplace] = (acc[marketplace] || 0) + 1;
         return acc;
     }, {} as Record<string, number>);
 
-    const newChartData = Object.entries(winsByMarketplace).map(([name, value]) => ({ name, value }));
+    // Chart 2: Losses to Competitor
+    const lossesToCompetitor = losingData.reduce((acc, item) => {
+        const winnerSeller = item.winner.seller;
+        acc[winnerSeller] = (acc[winnerSeller] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+
+    const winsChartData = Object.entries(winsByMarketplace).map(([name, value]) => ({ name, value }));
+    const lossesChartData = Object.entries(lossesToCompetitor).map(([name, value]) => ({ name, value }));
     
-    const totalOffered = new Set(filteredByMarketplace.filter(p => p.key_loja === selectedSeller).map(p => p.ean)).size;
+    const totalOffered = new Set(filteredByMarketplace.filter(p => p.key_loja && selectedSellers.includes(p.key_loja)).map(p => p.ean)).size;
 
     return {
         buyboxData: {
             winning: winningData.sort((a,b) => a.name.localeCompare(b.name)),
             losing: losingData.sort((a,b) => b.priceDifference - a.priceDifference),
         },
-        chartData: newChartData,
+        charts: {
+            winsByMarketplace: winsChartData,
+            lossesToCompetitor: lossesChartData,
+        },
         kpis: {
             totalOffered: totalOffered,
             winningCount: winningData.length,
             losingCount: losingData.length,
         }
     };
-  }, [allProducts, selectedSeller, selectedMarketplaces]);
+  }, [allProducts, selectedSellers, selectedMarketplaces]);
 
   const handleExport = (data: BuyboxAnalysis[], fileName: string) => {
     const worksheetData = data.map(item => {
@@ -204,23 +218,25 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
             return {
                 'Produto': item.name,
                 'EAN': item.ean,
-                'Seu Marketplace': item.myOffer?.marketplace,
-                'Seu Preço': item.myOffer?.price,
-                'URL da sua oferta': item.myOffer?.url,
+                'Vendedor Ofertante': item.myBestOffer?.seller,
+                'Marketplace Ofertante': item.myBestOffer?.marketplace,
+                'Preço Ofertante': item.myBestOffer?.price,
+                'URL da oferta': item.myBestOffer?.url,
                 'Diferença': item.priceDifference > 0 ? `Ganhando por ${formatCurrency(item.priceDifference)}` : 'Ganhando',
                 'Próximo Concorrente': item.nextCompetitor?.seller,
                 'Marketplace Concorrente': item.nextCompetitor?.marketplace,
                 'Preço Concorrente': item.nextCompetitor?.price,
                 'URL Concorrente': item.nextCompetitor?.url,
-                'Última Verificação': item.myOffer?.updated_at ? new Date(item.myOffer.updated_at).toLocaleString('pt-BR') : '',
+                'Última Verificação': item.myBestOffer?.updated_at ? new Date(item.myBestOffer.updated_at).toLocaleString('pt-BR') : '',
             };
         } else { // losing
              return {
                 'Produto': item.name,
                 'EAN': item.ean,
-                'Seu Marketplace': item.myOffer?.marketplace,
-                'Seu Preço': item.myOffer?.price,
-                'URL da sua oferta': item.myOffer?.url,
+                'Vendedor Ofertante': item.myBestOffer?.seller,
+                'Marketplace Ofertante': item.myBestOffer?.marketplace,
+                'Preço Ofertante': item.myBestOffer?.price,
+                'URL da oferta': item.myBestOffer?.url,
                 'Diferença': `Perdendo por ${formatCurrency(item.priceDifference)}`,
                 'Vencedor': item.winner.seller,
                 'Marketplace Vencedor': item.winner.marketplace,
@@ -274,7 +290,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     )
   }
 
-  const selectedSellerName = uniqueSellers.find(s => s.key_loja === selectedSeller)?.sellerName || '';
+  const selectedSellersNames = uniqueSellers.filter(s => selectedSellers.includes(s.value)).map(s => s.label).join(', ') || 'Nenhum';
 
   return (
     <div className="space-y-6">
@@ -283,22 +299,18 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                 <CardHeader>
                     <CardTitle>Configuração da Análise</CardTitle>
                     <CardDescription>
-                    Selecione um vendedor e marketplaces para analisar a competição.
+                    Selecione um ou mais vendedores e marketplaces para analisar.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div>
-                        <Label>Vendedor de Referência</Label>
-                        <Select value={selectedSeller} onValueChange={setSelectedSeller} disabled={loading}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione um Vendedor" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {uniqueSellers.map(seller => (
-                                    <SelectItem key={seller.key_loja} value={seller.key_loja}>{seller.sellerName}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <Label>Vendedor(es) de Referência</Label>
+                         <SearchableSelect
+                            placeholder="Selecione Vendedor(es)"
+                            options={uniqueSellers}
+                            selectedValues={selectedSellers}
+                            onChange={handleSellerFilterChange}
+                        />
                     </div>
                     <div>
                         <Label>Filtrar por Marketplace</Label>
@@ -314,8 +326,8 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
 
             <Card className="lg:col-span-2">
                  <CardHeader>
-                    <CardTitle>Análise Consolidada: <span className="text-primary">{selectedSellerName}</span></CardTitle>
-                    <CardDescription>Métricas combinadas para o vendedor selecionado, considerando os filtros.</CardDescription>
+                    <CardTitle>Análise Consolidada: <span className="text-primary">{selectedSellersNames}</span></CardTitle>
+                    <CardDescription>Métricas combinadas para o(s) vendedor(es) selecionado(s), considerando os filtros.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -354,46 +366,89 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
             </Card>
         </div>
 
-        <Card>
-            <CardHeader>
-                <CardTitle>Buybox Ganhos por Marketplace</CardTitle>
-                <CardDescription>Distribuição de vitórias para <span className="font-bold">{selectedSellerName}</span>, considerando os filtros.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                {loading ? (
-                        <div className="h-64 flex items-center justify-center">
-                        <Skeleton className="h-48 w-48 rounded-full" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Buybox Ganhos por Marketplace</CardTitle>
+                    <CardDescription>Distribuição de vitórias para <span className="font-bold">{selectedSellersNames}</span>.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {loading ? (
+                            <div className="h-64 flex items-center justify-center">
+                            <Skeleton className="h-48 w-48 rounded-full" />
+                            </div>
+                    ) : charts.winsByMarketplace.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={250}>
+                            <PieChart>
+                                <Pie
+                                    data={charts.winsByMarketplace}
+                                    cx="50%"
+                                    cy="50%"
+                                    labelLine={false}
+                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                    outerRadius={80}
+                                    fill="#8884d8"
+                                    dataKey="value"
+                                >
+                                    {charts.winsByMarketplace.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip formatter={(value) => [`${value} produto(s)`, "Vitórias"]}/>
+                                <Legend />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="h-64 flex flex-col items-center justify-center text-center text-muted-foreground">
+                            <BarChart className="h-10 w-10 mb-2"/>
+                            <p className="font-semibold">Nenhum Buybox ganho.</p>
+                            <p className="text-sm">Tente selecionar outro vendedor ou limpar filtros.</p>
                         </div>
-                ) : chartData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={250}>
-                        <PieChart>
-                            <Pie
-                                data={chartData}
-                                cx="50%"
-                                cy="50%"
-                                labelLine={false}
-                                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                                outerRadius={80}
-                                fill="#8884d8"
-                                dataKey="value"
-                            >
-                                {chartData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                ))}
-                            </Pie>
-                            <Tooltip formatter={(value) => [`${value} produto(s)`, "Vitórias"]}/>
-                            <Legend />
-                        </PieChart>
-                    </ResponsiveContainer>
-                ) : (
-                    <div className="h-64 flex flex-col items-center justify-center text-center text-muted-foreground">
-                        <BarChart className="h-10 w-10 mb-2"/>
-                        <p className="font-semibold">Nenhum Buybox ganho para os filtros selecionados.</p>
-                        <p className="text-sm">Tente selecionar outro vendedor ou limpar o filtro de marketplace.</p>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
+                    )}
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Buybox Perdidos para Concorrentes</CardTitle>
+                    <CardDescription>Principais concorrentes quando <span className="font-bold">{selectedSellersNames}</span> perde.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {loading ? (
+                            <div className="h-64 flex items-center justify-center">
+                            <Skeleton className="h-48 w-48 rounded-full" />
+                            </div>
+                    ) : charts.lossesToCompetitor.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={250}>
+                            <PieChart>
+                                <Pie
+                                    data={charts.lossesToCompetitor}
+                                    cx="50%"
+                                    cy="50%"
+                                    labelLine={false}
+                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                    outerRadius={80}
+                                    fill="#8884d8"
+                                    dataKey="value"
+                                >
+                                    {charts.lossesToCompetitor.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS_COMPETITORS[index % COLORS_COMPETITORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip formatter={(value) => [`${value} produto(s)`, "Derrotas para"]}/>
+                                <Legend />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="h-64 flex flex-col items-center justify-center text-center text-muted-foreground">
+                            <Trophy className="h-10 w-10 mb-2"/>
+                            <p className="font-semibold">Nenhum Buybox perdido.</p>
+                             <p className="text-sm">Parece que você está ganhando todos!</p>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+
 
         {/* Ganhando Buybox */}
         <Card>
@@ -403,7 +458,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                         <CheckCircle className="h-8 w-8 text-green-500" />
                         <div>
                             <CardTitle>Produtos Ganhando o Buybox ({buyboxData.winning.length})</CardTitle>
-                            <CardDescription>Produtos onde <span className="font-bold">{selectedSellerName}</span> tem o menor preço.</CardDescription>
+                            <CardDescription>Produtos onde <span className="font-bold">{selectedSellersNames}</span> tem o menor preço.</CardDescription>
                         </div>
                     </div>
                     <Button onClick={() => handleExport(buyboxData.winning, 'ganhando_buybox')} size="sm" variant="outline" disabled={buyboxData.winning.length === 0}>
@@ -418,7 +473,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                         <TableHeader>
                             <TableRow>
                                 <TableHead className="min-w-[300px]">Produto</TableHead>
-                                <TableHead>Sua Oferta</TableHead>
+                                <TableHead>Sua Melhor Oferta</TableHead>
                                 <TableHead>Próximo Concorrente</TableHead>
                                 <TableHead>Diferença</TableHead>
                                 <TableHead className="text-right">Última Verificação</TableHead>
@@ -426,7 +481,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                         </TableHeader>
                         <TableBody>
                             {buyboxData.winning.map((item) => (
-                                <TableRow key={item.ean}>
+                                <TableRow key={`${item.ean}-winning`}>
                                     <TableCell>
                                         <div className="flex items-center gap-4">
                                             <Image src={isValidImageUrl(item.image) ? item.image : 'https://placehold.co/100x100.png'} alt={item.name} width={64} height={64} className="rounded-md object-cover border" />
@@ -438,14 +493,15 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                            <p className="font-bold text-lg text-primary">{formatCurrency(item.myOffer!.price)}</p>
-                                             <Button asChild variant="ghost" size="icon" className="h-5 w-5" disabled={!isValidHttpUrl(item.myOffer!.url)}>
-                                                <a href={item.myOffer!.url!} target="_blank" rel="noopener noreferrer" aria-label="Ver sua oferta">
+                                            <p className="font-bold text-lg text-primary">{formatCurrency(item.myBestOffer!.price)}</p>
+                                             <Button asChild variant="ghost" size="icon" className="h-5 w-5" disabled={!isValidHttpUrl(item.myBestOffer!.url)}>
+                                                <a href={item.myBestOffer!.url!} target="_blank" rel="noopener noreferrer" aria-label="Ver sua oferta">
                                                     <ExternalLink className="h-4 w-4"/>
                                                 </a>
                                             </Button>
                                         </div>
-                                        <Badge variant="secondary">{item.myOffer!.marketplace}</Badge>
+                                         <p className="text-sm font-semibold">{item.myBestOffer!.seller}</p>
+                                        <Badge variant="secondary">{item.myBestOffer!.marketplace}</Badge>
                                     </TableCell>
                                     <TableCell>
                                         {item.nextCompetitor ? (
@@ -469,12 +525,12 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                                         </p>
                                     </TableCell>
                                     <TableCell className="text-right text-sm text-muted-foreground">
-                                        {item.myOffer?.updated_at ? formatDistanceToNow(new Date(item.myOffer.updated_at), { addSuffix: true, locale: ptBR }) : '-'}
+                                        {item.myBestOffer?.updated_at ? formatDistanceToNow(new Date(item.myBestOffer.updated_at), { addSuffix: true, locale: ptBR }) : '-'}
                                     </TableCell>
                                 </TableRow>
                             ))}
                             {buyboxData.winning.length === 0 && (
-                                <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">Nenhum produto ganhando o Buybox.</TableCell></TableRow>
+                                <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">Nenhum produto ganhando o Buybox com os filtros atuais.</TableCell></TableRow>
                             )}
                         </TableBody>
                     </Table>
@@ -490,7 +546,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                         <XCircle className="h-8 w-8 text-red-500" />
                         <div>
                             <CardTitle>Produtos Perdendo o Buybox ({buyboxData.losing.length})</CardTitle>
-                            <CardDescription>Produtos onde <span className="font-bold">{selectedSellerName}</span> tem um preço maior que o vencedor.</CardDescription>
+                            <CardDescription>Produtos onde <span className="font-bold">{selectedSellersNames}</span> tem um preço maior que o vencedor.</CardDescription>
                         </div>
                     </div>
                      <Button onClick={() => handleExport(buyboxData.losing, 'perdendo_buybox')} size="sm" variant="outline" disabled={buyboxData.losing.length === 0}>
@@ -505,7 +561,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                         <TableHeader>
                              <TableRow>
                                 <TableHead className="min-w-[300px]">Produto</TableHead>
-                                <TableHead>Sua Oferta</TableHead>
+                                <TableHead>Sua Melhor Oferta</TableHead>
                                 <TableHead>Vencedor do Buybox</TableHead>
                                 <TableHead>Diferença</TableHead>
                                 <TableHead className="text-right">Última Verificação</TableHead>
@@ -513,7 +569,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                         </TableHeader>
                         <TableBody>
                              {buyboxData.losing.map((item) => (
-                                <TableRow key={item.ean}>
+                                <TableRow key={`${item.ean}-losing`}>
                                     <TableCell>
                                         <div className="flex items-center gap-4">
                                             <Image src={isValidImageUrl(item.image) ? item.image : 'https://placehold.co/100x100.png'} alt={item.name} width={64} height={64} className="rounded-md object-cover border" />
@@ -525,14 +581,15 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                            <p className="font-semibold">{formatCurrency(item.myOffer!.price)}</p>
-                                            <Button asChild variant="ghost" size="icon" className="h-5 w-5" disabled={!isValidHttpUrl(item.myOffer!.url)}>
-                                                <a href={item.myOffer!.url!} target="_blank" rel="noopener noreferrer" aria-label="Ver sua oferta">
+                                            <p className="font-semibold">{formatCurrency(item.myBestOffer!.price)}</p>
+                                            <Button asChild variant="ghost" size="icon" className="h-5 w-5" disabled={!isValidHttpUrl(item.myBestOffer!.url)}>
+                                                <a href={item.myBestOffer!.url!} target="_blank" rel="noopener noreferrer" aria-label="Ver sua oferta">
                                                     <ExternalLink className="h-4 w-4"/>
                                                 </a>
                                             </Button>
                                         </div>
-                                        <Badge variant="outline">{item.myOffer!.marketplace}</Badge>
+                                        <p className="text-sm text-muted-foreground">{item.myBestOffer!.seller}</p>
+                                        <Badge variant="outline">{item.myBestOffer!.marketplace}</Badge>
                                     </TableCell>
                                     <TableCell>
                                         <div className='flex items-center gap-2'>
@@ -562,7 +619,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                                 </TableRow>
                             ))}
                              {buyboxData.losing.length === 0 && (
-                                <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">Nenhum produto perdendo o Buybox.</TableCell></TableRow>
+                                <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">Nenhum produto perdendo o Buybox com os filtros atuais.</TableCell></TableRow>
                             )}
                         </TableBody>
                     </Table>
@@ -572,3 +629,5 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     </div>
   );
 }
+
+    
