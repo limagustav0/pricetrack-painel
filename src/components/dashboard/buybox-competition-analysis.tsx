@@ -99,7 +99,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
   const { buyboxData, charts, kpis } = useMemo(() => {
     const initialResult = {
         buyboxData: { winning: [], losing: [] },
-        charts: { winsByMarketplace: [], lossesToCompetitor: [] },
+        charts: { winsByMarketplace: [], lossesByMarketplace: [] },
         kpis: { totalOffered: 0, winningCount: 0, losingCount: 0 }
     };
 
@@ -183,15 +183,15 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
         return acc;
     }, {} as Record<string, number>);
 
-    // Chart 2: Losses to Competitor
-    const lossesToCompetitor = losingData.reduce((acc, item) => {
-        const winnerSeller = item.winner.seller;
-        acc[winnerSeller] = (acc[winnerSeller] || 0) + 1;
+    // Chart 2: Losses by Marketplace
+    const lossesByMarketplace = losingData.reduce((acc, item) => {
+        const winnerMarketplace = item.winner.marketplace;
+        acc[winnerMarketplace] = (acc[winnerMarketplace] || 0) + 1;
         return acc;
     }, {} as Record<string, number>);
 
     const winsChartData = Object.entries(winsByMarketplace).map(([name, value]) => ({ name, value }));
-    const lossesChartData = Object.entries(lossesToCompetitor).map(([name, value]) => ({ name, value }));
+    const lossesChartData = Object.entries(lossesByMarketplace).map(([name, value]) => ({ name, value }));
     
     const totalOffered = new Set(filteredByMarketplace.filter(p => p.key_loja && selectedSellers.includes(p.key_loja)).map(p => p.ean)).size;
 
@@ -202,7 +202,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
         },
         charts: {
             winsByMarketplace: winsChartData,
-            lossesToCompetitor: lossesChartData,
+            lossesByMarketplace: lossesChartData,
         },
         kpis: {
             totalOffered: totalOffered,
@@ -409,19 +409,19 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
             </Card>
             <Card>
                 <CardHeader>
-                    <CardTitle>Buybox Perdidos para Concorrentes</CardTitle>
-                    <CardDescription>Principais concorrentes quando <span className="font-bold">{selectedSellersNames}</span> perde.</CardDescription>
+                    <CardTitle>Buybox Perdidos por Marketplace</CardTitle>
+                    <CardDescription>Marketplaces onde <span className="font-bold">{selectedSellersNames}</span> mais perde.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {loading ? (
                             <div className="h-64 flex items-center justify-center">
                             <Skeleton className="h-48 w-48 rounded-full" />
                             </div>
-                    ) : charts.lossesToCompetitor.length > 0 ? (
+                    ) : charts.lossesByMarketplace.length > 0 ? (
                         <ResponsiveContainer width="100%" height={250}>
                             <PieChart>
                                 <Pie
-                                    data={charts.lossesToCompetitor}
+                                    data={charts.lossesByMarketplace}
                                     cx="50%"
                                     cy="50%"
                                     labelLine={false}
@@ -430,11 +430,11 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                                     fill="#8884d8"
                                     dataKey="value"
                                 >
-                                    {charts.lossesToCompetitor.map((entry, index) => (
+                                    {charts.lossesByMarketplace.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS_COMPETITORS[index % COLORS_COMPETITORS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip formatter={(value) => [`${value} produto(s)`, "Derrotas para"]}/>
+                                <Tooltip formatter={(value) => [`${value} produto(s)`, "Derrotas em"]}/>
                                 <Legend />
                             </PieChart>
                         </ResponsiveContainer>
