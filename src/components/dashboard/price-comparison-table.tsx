@@ -7,7 +7,7 @@ import { useMemo, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatCurrency, isValidImageUrl, isValidHttpUrl, cn } from '@/lib/utils';
+import { formatCurrency, isValidImageUrl, isValidHttpUrl } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { SearchableSelect } from './searchable-select';
 import { TrendingUp, ChevronsUpDown, ExternalLink } from 'lucide-react';
@@ -16,7 +16,6 @@ import { Button } from '../ui/button';
 interface PriceComparisonTableProps {
   allProducts: Product[];
   loading: boolean;
-  onStatusChange: (eanKey: string, newStatus: boolean) => void;
 }
 
 interface GroupedProduct {
@@ -29,8 +28,6 @@ interface GroupedProduct {
         seller: string;
         url: string | null;
         change_price: number | null;
-        is_active: boolean;
-        ean_key: string;
     }>;
 }
 
@@ -69,8 +66,6 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
               seller: product.seller,
               url: product.url,
               change_price: product.change_price,
-              is_active: product.is_active,
-              ean_key: product.ean_key,
           };
       }
 

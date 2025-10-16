@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useMemo, useState } from 'react';
@@ -21,10 +22,9 @@ import { buttonVariants } from '@/components/ui/button';
 interface ProductAccordionProps {
   products: Product[];
   loading: boolean;
-  onStatusChange: (eanKey: string, newStatus: boolean) => void;
 }
 
-export function ProductAccordion({ products, loading, onStatusChange }: ProductAccordionProps) {
+export function ProductAccordion({ products, loading }: ProductAccordionProps) {
   const groupedProducts = useMemo(() => {
     return products.reduce((acc, product) => {
       const key = product.ean || product.id;
@@ -76,14 +76,13 @@ export function ProductAccordion({ products, loading, onStatusChange }: ProductA
           key={`${ean}-${index}`} 
           ean={ean} 
           productGroup={productGroup} 
-          onStatusChange={onStatusChange}
         />
       ))}
     </Accordion>
   );
 }
 
-function ProductAccordionItem({ ean, productGroup, onStatusChange }: { ean: string, productGroup: Product[], onStatusChange: (eanKey: string, newStatus: boolean) => void}) {
+function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup: Product[]}) {
     const { toast } = useToast();
     const [isCopied, setIsCopied] = useState(false);
     
