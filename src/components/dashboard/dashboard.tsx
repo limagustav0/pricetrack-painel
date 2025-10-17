@@ -120,7 +120,7 @@ function DashboardContent() {
             }
         }
 
-        const adaptedProducts = results.map(adaptApiData);
+        const adaptedProducts = results.map(adaptApiData).filter(p => p.status === 'ativo');
         
         const mergedProducts = adaptedProducts.map(product => {
             const sameEanProducts = adaptedProducts.filter(p => p.ean === product.ean && isValidImageUrl(p.image));
@@ -379,3 +379,5 @@ export function Dashboard() {
         </SidebarProvider>
     )
 }
+
+    
