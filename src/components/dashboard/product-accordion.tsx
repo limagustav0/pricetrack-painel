@@ -165,7 +165,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                             alt={firstProduct.name}
                             width={100}
                             height={100}
-                            className="rounded-md object-cover border"
+                            className="rounded-md object-cover border self-center md:self-auto"
                             data-ai-hint="cosmetics bottle"
                             onError={(e) => {
                                 const target = e.target as HTMLImageElement;
@@ -173,9 +173,9 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                                 target.src = `https://placehold.co/100x100.png`;
                             }}
                         />
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                             <p className="text-sm text-muted-foreground font-medium">{firstProduct.brand}</p>
-                            <h3 className="font-semibold text-lg text-foreground">{firstProduct.name}</h3>
+                            <h3 className="font-semibold text-lg text-foreground truncate">{firstProduct.name}</h3>
                              <div className="flex items-center gap-2 mt-1">
                                 <p className="text-xs text-muted-foreground">EAN: {ean}</p>
                                 <div
@@ -198,7 +198,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                                     Atualizado {formatDistanceToNow(mostRecentUpdate, { addSuffix: true, locale: ptBR })}
                                 </p>
                             )}
-                            <div className="flex items-center gap-2 flex-wrap justify-end mt-1">
+                            <div className="flex items-center gap-2 flex-wrap justify-start md:justify-end mt-1">
                                 {productGroup.length > 1 && (
                                     <Badge variant="secondary">Variação: {formatCurrency(minPrice)} - {formatCurrency(maxPrice)}</Badge>
                                 )}
@@ -214,7 +214,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                     </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                    <div className="px-6 pb-4">
+                    <div className="px-4 md:px-6 pb-4">
                         <h4 className="font-semibold mb-2 text-foreground">Ofertas disponíveis ({productGroup.length})</h4>
                          <Accordion type="multiple" className="w-full space-y-2">
                              {Object.entries(offersByMarketplace).map(([marketplace, offers]) => (
@@ -226,7 +226,7 @@ function ProductAccordionItem({ ean, productGroup }: { ean: string, productGroup
                                         </div>
                                      </AccordionTrigger>
                                      <AccordionContent className="p-0">
-                                        <div className="border-t">
+                                        <div className="border-t overflow-x-auto">
                                             <Table>
                                                 <TableHeader>
                                                     <TableRow>

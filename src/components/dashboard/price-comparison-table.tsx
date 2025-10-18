@@ -205,8 +205,8 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
                                             target.src = 'https://placehold.co/100x100.png';
                                         }}
                                     />
-                                    <div className="flex-1">
-                                        <div className="font-medium">{product.name}</div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-medium truncate">{product.name}</div>
                                         <div className="text-sm text-muted-foreground">EAN: {product.ean}</div>
                                         <div className="text-xs text-muted-foreground">{product.brand}</div>
                                     </div>
@@ -229,7 +229,7 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
                                                         </a>
                                                     </Button>
                                                 </div>
-                                                <p className="text-xs text-muted-foreground">{offer.seller}</p>
+                                                <p className="text-xs text-muted-foreground truncate">{offer.seller}</p>
                                                 {offer.change_price && offer.change_price > 0 && (
                                                     <p className="text-xs text-muted-foreground flex items-center justify-end gap-1 mt-1">
                                                         <TrendingUp className="h-3 w-3" />

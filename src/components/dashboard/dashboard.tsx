@@ -265,18 +265,18 @@ function DashboardContent() {
 
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
         <Toaster />
         <div className="flex-1 flex flex-col overflow-auto">
              <header className="px-4 pt-4 md:px-6 md:pt-6">
-                <div className="flex-1 min-w-[200px]">
+                <div className="flex-1 min-w-0">
                     <h1 className="text-2xl font-bold text-foreground font-headline tracking-tight">PriceTrack</h1>
                     <p className="text-sm text-muted-foreground">Compare preços de diferentes marketplaces de forma eficiente.</p>
                 </div>
             </header>
             <Tabs defaultValue="overview" className="w-full flex flex-col flex-1">
-                <div className="px-4 md:px-6 pt-4">
-                     <TabsList className="w-full flex-wrap h-auto justify-start max-w-none md:max-w-2xl gap-2">
+                <div className="px-4 md:px-6 pt-4 overflow-x-auto">
+                     <TabsList className="w-full flex-wrap h-auto justify-start max-w-full inline-flex">
                         <TabsTrigger value="overview">Visão Geral</TabsTrigger>
                         <TabsTrigger value="granular">Análise por Marketplace</TabsTrigger>
                         <TabsTrigger value="buybox">Análise de Buybox</TabsTrigger>
@@ -288,8 +288,8 @@ function DashboardContent() {
                 <TabsContent value="overview" className="mt-0 p-4 md:p-6 overflow-y-auto">
                     <div className="space-y-6">
                         <Card className="p-4">
-                             <div className="flex flex-col md:flex-row items-center gap-4">
-                                <h2 className="text-lg font-bold tracking-tight">Análise Comparativa</h2>
+                             <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                                <h2 className="text-lg font-bold tracking-tight whitespace-nowrap">Análise Comparativa</h2>
                                 <div className="w-full md:w-64">
                                 <Select value={comparisonMarketplace} onValueChange={setComparisonMarketplace} disabled={loading}>
                                     <SelectTrigger>
