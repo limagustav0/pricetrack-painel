@@ -45,15 +45,15 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/price-data',
-        destination: 'http://localhost:8000/api/products/',
+        destination: 'https://pricetrack-api.onrender.com/api/products/',
       },
       {
         source: '/api/url-data',
-        destination: 'http://localhost:8000/api/urls/',
+        destination: 'https://pricetrack-api.onrender.com/api/urls/',
       },
        {
         source: '/api/urls/update_is_active',
-        destination: 'http://localhost:8000/api/urls/update_is_active',
+        destination: 'https://pricetrack-api.onrender.com/api/update_is_active',
       },
     ];
   },
