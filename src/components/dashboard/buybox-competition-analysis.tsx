@@ -181,8 +181,9 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
             const offerKey = `${ean}-${marketplace}`;
             if (processedOffers.has(offerKey)) continue;
 
-            const competitorsInMarketplace = productsInEan.filter(p => p.marketplace === marketplace && !selectedSellers.includes(p.key_loja!));
-            const winnerInMarketplace = [...competitorsInMarketplace, myOffer].sort((a,b) => a.price - b.price)[0];
+            const allInMarketplace = productsInEan.filter(p => p.marketplace === marketplace);
+            const competitorsInMarketplace = allInMarketplace.filter(p => !selectedSellers.includes(p.key_loja!));
+            const winnerInMarketplace = allInMarketplace.sort((a,b) => a.price - b.price)[0];
             
             const image = getPrioritizedImage(productsInEan);
 
@@ -191,7 +192,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
             let nextCompetitor: BuyboxAnalysis['nextCompetitor'] = undefined;
             let winner: BuyboxAnalysis['winner'];
 
-            if (winnerInMarketplace.id === myOffer.id) {
+            if (selectedSellers.includes(winnerInMarketplace.key_loja!)) {
                  if (competitorsInMarketplace.length === 0) {
                     status = 'winning_alone';
                 } else {
@@ -723,6 +724,8 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     </div>
   );
 }
+
+    
 
     
 
