@@ -60,6 +60,17 @@ interface BuyboxAnalysis {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF19AF'];
 const COLORS_COMPETITORS = ['#FF8042', '#FFBB28', '#FF4281', '#19AFFF', '#8D19FF', '#FF1919'];
 
+const IMAGE_PRIORITY = ['Beleza na Web', 'Época Cosméticos', 'Magazine Luiza', 'Amazon'];
+
+function getPrioritizedImage(products: Product[]): string {
+    for (const marketplace of IMAGE_PRIORITY) {
+        const product = products.find(p => p.marketplace === marketplace && isValidImageUrl(p.image));
+        if (product) return product.image!;
+    }
+    const anyValidImageProduct = products.find(p => isValidImageUrl(p.image));
+    return anyValidImageProduct?.image || 'https://placehold.co/100x100.png';
+}
+
 
 export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompetitionAnalysisProps) {
   const [selectedSellers, setSelectedSellers] = useState<string[]>([]);
@@ -173,7 +184,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
             const competitorsInMarketplace = productsInEan.filter(p => p.marketplace === marketplace && !selectedSellers.includes(p.key_loja!));
             const winnerInMarketplace = [...competitorsInMarketplace, myOffer].sort((a,b) => a.price - b.price)[0];
             
-            const imageProduct = productsInEan.find(p => isValidImageUrl(p.image)) || productsInEan[0];
+            const image = getPrioritizedImage(productsInEan);
 
             let status: BuyboxAnalysis['status'];
             let priceDifference = 0;
@@ -181,7 +192,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
             let winner: BuyboxAnalysis['winner'];
 
             if (winnerInMarketplace.id === myOffer.id) {
-                if (competitorsInMarketplace.length === 0) {
+                 if (competitorsInMarketplace.length === 0) {
                     status = 'winning_alone';
                 } else {
                     status = 'winning';
@@ -200,7 +211,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                 ean: ean,
                 name: productsInEan[0].name,
                 brand: productsInEan[0].brand,
-                image: imageProduct.image || 'https://placehold.co/100x100.png',
+                image: image,
                 myBestOffer: {
                     seller: myOffer.seller,
                     marketplace: myOffer.marketplace,
@@ -712,5 +723,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     </div>
   );
 }
+
+    
 
     
