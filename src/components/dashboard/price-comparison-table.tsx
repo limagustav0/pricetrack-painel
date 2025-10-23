@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, isValidImageUrl, isValidHttpUrl } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { SearchableSelect } from './searchable-select';
-import { TrendingUp, ChevronsUpDown, ExternalLink } from 'lucide-react';
+import { TrendingUp, ChevronsUpDown, ExternalLink, Activity } from 'lucide-react';
 import { Button } from '../ui/button';
 
 interface PriceComparisonTableProps {
@@ -179,14 +179,19 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
             <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
                 <TableHead className="min-w-[300px] whitespace-nowrap">Produto (EAN/Marca)</TableHead>
+                <TableHead className="text-right min-w-[180px]">Preço Médio / Variação</TableHead>
                 {visibleMarketplaces.map(mp => <TableHead key={mp} className="text-right whitespace-nowrap">{mp}</TableHead>)}
                 </TableRow>
             </TableHeader>
             <TableBody>
                 {filteredAndSortedProducts.map((product) => {
                     const imageSrc = product.image; // Already validated
-                    const prices = Object.values(product.offers).map(o => o.price);
+                    const visibleOffers = visibleMarketplaces.map(mp => product.offers[mp]).filter(Boolean);
+                    const prices = visibleOffers.map(o => o.price);
                     const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+                    const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
+                    const avgPrice = prices.length > 0 ? prices.reduce((a,b) => a+b, 0) / prices.length : 0;
+
 
                     return (
                         <TableRow key={product.ean}>
@@ -212,6 +217,22 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
                                     </div>
                                 </div>
                             </TableCell>
+
+                            <TableCell className="text-right align-top">
+                                {prices.length > 1 ? (
+                                    <div>
+                                        <p className="font-bold text-lg">{formatCurrency(avgPrice)}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            ({formatCurrency(minPrice)} - {formatCurrency(maxPrice)})
+                                        </p>
+                                        <Badge variant="outline" className="mt-1 flex items-center justify-center gap-1">
+                                          <Activity className="h-3 w-3" />
+                                          {prices.length} preços
+                                        </Badge>
+                                    </div>
+                                ) : <span className="text-muted-foreground">-</span>}
+                            </TableCell>
+
                             {visibleMarketplaces.map(mp => {
                                 const offer = product.offers[mp];
                                 const isMinPrice = offer && offer.price === minPrice;
@@ -254,7 +275,7 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
 
                 {incompleteProductsCount > 0 && !showIncomplete && (
                     <TableRow>
-                        <TableCell colSpan={visibleMarketplaces.length + 1} className="text-center">
+                        <TableCell colSpan={visibleMarketplaces.length + 2} className="text-center">
                             <Button variant="ghost" onClick={() => setShowIncomplete(true)} className="w-full">
                                 <ChevronsUpDown className="mr-2 h-4 w-4" />
                                 {`Expandir para ver ${incompleteProductsCount} produto(s) incompletos`}
@@ -264,7 +285,7 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
                 )}
                  {showIncomplete && (
                     <TableRow>
-                        <TableCell colSpan={visibleMarketplaces.length + 1} className="text-center">
+                        <TableCell colSpan={visibleMarketplaces.length + 2} className="text-center">
                             <Button variant="ghost" onClick={() => setShowIncomplete(false)} className="w-full">
                                 <ChevronsUpDown className="mr-2 h-4 w-4" />
                                 Recolher produtos incompletos
@@ -276,7 +297,7 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
 
                  {filteredAndSortedProducts.length === 0 && !loading && (
                     <TableRow>
-                        <TableCell colSpan={visibleMarketplaces.length + 1}>
+                        <TableCell colSpan={visibleMarketplaces.length + 2}>
                              <div className="text-center py-16 text-muted-foreground">
                                 Nenhum produto encontrado para comparar com os filtros aplicados.
                             </div>
@@ -290,3 +311,5 @@ export function PriceComparisonTable({ allProducts, loading }: PriceComparisonTa
     </Card>
   );
 }
+
+    
