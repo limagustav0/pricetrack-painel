@@ -10,13 +10,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, isValidImageUrl, isValidHttpUrl, cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '../ui/button';
-import { ExternalLink, CheckCircle, XCircle, Download, ShoppingCart, BarChart, AlertTriangle, Crown } from 'lucide-react';
+import { ExternalLink, CheckCircle, XCircle, Download, ShoppingCart, BarChart, AlertTriangle, Crown, DollarSign } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 import { SearchableSelect } from './searchable-select';
 import { Label } from '../ui/label';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 interface BuyboxCompetitionAnalysisProps {
@@ -183,7 +184,10 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
 
             const allInMarketplace = productsInEan.filter(p => p.marketplace === marketplace);
             const competitorsInMarketplace = allInMarketplace.filter(p => !selectedSellers.includes(p.key_loja!));
-            const winnerInMarketplace = allInMarketplace.sort((a,b) => a.price - b.price)[0];
+            
+            if (allInMarketplace.length === 0) continue;
+
+            const winnerInMarketplace = [...allInMarketplace].sort((a,b) => a.price - b.price)[0];
             
             const image = getPrioritizedImage(productsInEan);
 
@@ -191,20 +195,20 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
             let priceDifference = 0;
             let nextCompetitor: BuyboxAnalysis['nextCompetitor'] = undefined;
             let winner: BuyboxAnalysis['winner'];
-
+            
             if (selectedSellers.includes(winnerInMarketplace.key_loja!)) {
                  if (competitorsInMarketplace.length === 0) {
                     status = 'winning_alone';
                 } else {
                     status = 'winning';
                     const nextInMarketplace = competitorsInMarketplace.sort((a,b) => a.price - b.price)[0];
-                    priceDifference = nextInMarketplace.price - myOffer.price;
+                    priceDifference = myOffer.price - nextInMarketplace.price; // This will be negative or zero
                     nextCompetitor = { seller: nextInMarketplace.seller, marketplace: nextInMarketplace.marketplace, price: nextInMarketplace.price, url: nextInMarketplace.url };
                 }
                 winner = { seller: myOffer.seller, marketplace: myOffer.marketplace, price: myOffer.price, url: myOffer.url, updated_at: myOffer.updated_at };
             } else {
                 status = 'losing';
-                priceDifference = myOffer.price - winnerInMarketplace.price;
+                priceDifference = myOffer.price - winnerInMarketplace.price; // This will be positive
                 winner = { seller: winnerInMarketplace.seller, marketplace: winnerInMarketplace.marketplace, price: winnerInMarketplace.price, url: winnerInMarketplace.url, updated_at: winnerInMarketplace.updated_at };
             }
 
@@ -279,7 +283,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                 'Marketplace Ofertante': item.myBestOffer?.marketplace,
                 'Preço Ofertante': item.myBestOffer?.price,
                 'URL da oferta': item.myBestOffer?.url,
-                'Diferença': item.priceDifference > 0 ? `Ganhando por ${formatCurrency(item.priceDifference)}` : (item.status === 'winning_alone' ? 'Ganhando (sozinho)' : 'Preço igual'),
+                'Diferença': item.priceDifference < 0 ? `Ganhando por ${formatCurrency(Math.abs(item.priceDifference))}` : (item.status === 'winning_alone' ? 'Ganhando (sozinho)' : 'Preço igual'),
                 'Próximo Concorrente': item.nextCompetitor?.seller,
                 'Marketplace Concorrente': item.nextCompetitor?.marketplace,
                 'Preço Concorrente': item.nextCompetitor?.price,
@@ -350,6 +354,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
   const selectedSellersNames = uniqueSellers.filter(s => selectedSellers.includes(s.value)).map(s => s.label).join(', ') || 'Nenhum';
 
   return (
+    <TooltipProvider>
     <div className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card className="lg:col-span-1">
@@ -451,7 +456,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip formatter={(value) => [`${value} produto(s)`, "Vitórias"]}/>
+                                <RechartsTooltip formatter={(value) => [`${value} produto(s)`, "Vitórias"]}/>
                                 <Legend />
                             </PieChart>
                         </ResponsiveContainer>
@@ -491,7 +496,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                                         <Cell key={`cell-${index}`} fill={COLORS_COMPETITORS[index % COLORS_COMPETITORS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip formatter={(value) => [`${value} produto(s)`, "Derrotas em"]}/>
+                                <RechartsTooltip formatter={(value) => [`${value} produto(s)`, "Derrotas em"]}/>
                                 <Legend />
                             </PieChart>
                         </ResponsiveContainer>
@@ -614,13 +619,36 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                                         ) : <p className="text-muted-foreground">-</p>}
                                     </TableCell>
                                     <TableCell>
-                                        <p className={cn("font-semibold", item.priceDifference > 0 ? "text-green-600" : (item.status === 'winning_alone' ? "text-green-600" : "text-muted-foreground"))}>
-                                            {item.status === 'winning_alone' 
-                                                ? 'Ganhando (sozinho)'
-                                                : item.priceDifference > 0 
-                                                    ? `Ganhando por ${formatCurrency(item.priceDifference)}` 
-                                                    : 'Preço igual'}
-                                        </p>
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <p className={cn("font-semibold", item.priceDifference < 0 ? "text-green-600" : "text-muted-foreground")}>
+                                                    {item.status === 'winning_alone' 
+                                                        ? 'Ganhando (sozinho)'
+                                                        : item.priceDifference < 0 
+                                                            ? `Ganhando por ${formatCurrency(Math.abs(item.priceDifference))}` 
+                                                            : 'Preço igual'}
+                                                </p>
+                                            </TooltipTrigger>
+                                            {item.priceDifference < 0 && (
+                                                <TooltipContent>
+                                                    <div className="p-2 space-y-2">
+                                                        <p className="font-bold text-center border-b pb-2">Potencial de Faturamento</p>
+                                                        <div className="flex items-center justify-between gap-4">
+                                                            <span className="text-muted-foreground">10 Vendas:</span>
+                                                            <span className="font-bold">{formatCurrency(Math.abs(item.priceDifference) * 10)}</span>
+                                                        </div>
+                                                        <div className="flex items-center justify-between gap-4">
+                                                            <span className="text-muted-foreground">50 Vendas:</span>
+                                                            <span className="font-bold">{formatCurrency(Math.abs(item.priceDifference) * 50)}</span>
+                                                        </div>
+                                                        <div className="flex items-center justify-between gap-4">
+                                                            <span className="text-muted-foreground">100 Vendas:</span>
+                                                            <span className="font-bold">{formatCurrency(Math.abs(item.priceDifference) * 100)}</span>
+                                                        </div>
+                                                    </div>
+                                                </TooltipContent>
+                                            )}
+                                        </Tooltip>
                                     </TableCell>
                                     <TableCell className="text-right text-sm text-muted-foreground">
                                         {item.myBestOffer?.updated_at ? formatDistanceToNow(new Date(item.myBestOffer.updated_at), { addSuffix: true, locale: ptBR }) : '-'}
@@ -722,6 +750,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
             </CardContent>
         </Card>
     </div>
+    </TooltipProvider>
   );
 }
 
