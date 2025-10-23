@@ -112,7 +112,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     const initialResult = {
         buyboxData: { winning: [], losing: [] },
         charts: { winsByMarketplace: [], lossesByMarketplace: [] },
-        kpis: { totalOffered: 0, winningCount: 0, losingCount: 0 },
+        kpis: { totalOffered: 0, winningCount: 0, losingCount: 0, potentialRevenue: 0 },
         topSellers: []
     };
 
@@ -254,6 +254,14 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     const lossesChartData = Object.entries(lossesByMarketplace).map(([name, value]) => ({ name, value }));
     
     const totalOffered = new Set(result.map(p => `${p.ean}-${p.myBestOffer?.marketplace}`)).size;
+    
+    const potentialRevenue = winningData.reduce((acc, item) => {
+        if (item.priceDifference < 0) {
+            return acc + Math.abs(item.priceDifference);
+        }
+        return acc;
+    }, 0);
+
 
     return {
         buyboxData: {
@@ -268,6 +276,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
             totalOffered: totalOffered,
             winningCount: winningData.length,
             losingCount: losingData.length,
+            potentialRevenue: potentialRevenue,
         },
         topSellers: calculatedTopSellers
     };
@@ -392,10 +401,10 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                     <CardDescription>Métricas combinadas para o(s) vendedor(es) selecionado(s), considerando os filtros.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <Card>
                              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Total Ofertas Analisadas</CardTitle>
+                                <CardTitle className="text-sm font-medium">Total Ofertas</CardTitle>
                                 <ShoppingCart className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
@@ -421,6 +430,16 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                             <CardContent>
                                 <div className="text-2xl font-bold">{kpis.losingCount}</div>
                                 <p className="text-xs text-muted-foreground">Ofertas com preço maior</p>
+                            </CardContent>
+                        </Card>
+                         <Card>
+                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Potencial de Faturamento</CardTitle>
+                                <DollarSign className="h-4 w-4 text-amber-500" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">{formatCurrency(kpis.potentialRevenue)}</div>
+                                <p className="text-xs text-muted-foreground">Valor a ser ganho por unid.</p>
                             </CardContent>
                         </Card>
                     </div>
@@ -759,3 +778,4 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     
 
     
+
