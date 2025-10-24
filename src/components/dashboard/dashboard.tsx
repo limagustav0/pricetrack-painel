@@ -124,12 +124,17 @@ function DashboardContent() {
         
         const mergedProducts = adaptedProducts.map(product => {
             const sameEanProducts = adaptedProducts.filter(p => p.ean === product.ean && isValidImageUrl(p.image));
-            const imageProduct = sameEanProducts.find(p => p.marketplace === "Época Cosméticos") || sameEanProducts[0];
+            const productForImage = 
+                sameEanProducts.find(p => p.marketplace === 'Beleza na Web') ||
+                sameEanProducts.find(p => p.marketplace === 'Época Cosméticos') ||
+                sameEanProducts.find(p => p.marketplace === 'Magazine Luiza') ||
+                sameEanProducts.find(p => p.marketplace === 'Amazon') ||
+                sameEanProducts[0];
             
             const finalProduct = { ...product };
 
-            if (!isValidImageUrl(finalProduct.image) && imageProduct) {
-                finalProduct.image = imageProduct.image;
+            if (!isValidImageUrl(finalProduct.image) && productForImage && isValidImageUrl(productForImage.image)) {
+                finalProduct.image = productForImage.image;
             }
 
             const urlInfo = urlMap.get(finalProduct.ean_key);
@@ -281,7 +286,6 @@ function DashboardContent() {
                         <TabsTrigger value="granular">Análise por Marketplace</TabsTrigger>
                         <TabsTrigger value="buybox">Análise de Buybox</TabsTrigger>
                         <TabsTrigger value="seller">Análise por Vendedor</TabsTrigger>
-                         <TabsTrigger value="geral">Análise Geral</TabsTrigger>
                          <TabsTrigger value="urls">Gerenciar URLs</TabsTrigger>
                     </TabsList>
                 </div>
@@ -359,9 +363,6 @@ function DashboardContent() {
                 </TabsContent>
                 <TabsContent value="seller" className="mt-0 p-4 md:p-6 flex flex-col">
                     <SellerComparisonTable allProducts={filteredProducts} loading={loading} />
-                </TabsContent>
-                <TabsContent value="geral" className="mt-0 p-4 md:p-6">
-                    <OverallPriceAnalysis allProducts={filteredProducts} loading={loading} />
                 </TabsContent>
                 <TabsContent value="urls" className="mt-0 p-4 md:p-6 flex flex-col">
                     <UrlManagementTable urls={urls} setUrls={setUrls} loading={loading} />
