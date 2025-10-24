@@ -157,8 +157,9 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
         let errorData;
         try {
             errorData = await response.json();
-        } catch(e) {
-            errorData = { detail: `A API retornou um erro não-JSON. Status: ${response.status} ${response.statusText}` };
+        } catch(e: any) {
+            console.error("Erro ao processar JSON da resposta:", e);
+            errorData = { detail: `A API retornou um erro não-JSON. Status: ${response.status} ${response.statusText}. Erro: ${e.message}` };
         }
         throw new Error(errorData.detail || `Falha ao atualizar preços. Status: ${response.status}`);
       }
