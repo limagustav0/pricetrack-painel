@@ -156,7 +156,7 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
     console.log('Payload enviado para a API:', JSON.stringify(payload, null, 2));
 
     try {
-      const response = await fetch('/api/products/update_precos', {
+      const response = await fetch('https://pricetrack-api.onrender.com/api/products/update_precos', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

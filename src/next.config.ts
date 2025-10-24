@@ -44,10 +44,6 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/products/update_precos',
-        destination: 'https://pricetrack-api.onrender.com/api/products/update_precos',
-      },
-      {
         source: '/api/price-data',
         destination: 'https://pricetrack-api.onrender.com/api/products/',
       },
@@ -64,3 +60,5 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+    
