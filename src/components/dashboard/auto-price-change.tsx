@@ -144,6 +144,8 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
         preco_buybox: buyboxData.price
     }];
 
+    console.log('Payload enviado para a API:', JSON.stringify(payload, null, 2));
+
     try {
       const response = await fetch('/api/products/update_precos', {
         method: 'PATCH',
