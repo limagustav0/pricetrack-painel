@@ -369,3 +369,5 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
     </div>
   )
 }
+
+    
