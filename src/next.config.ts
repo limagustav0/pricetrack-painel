@@ -36,7 +36,7 @@ const nextConfig: NextConfig = {
         hostname: 'm.media-amazon.com',
       },
       {
-        protocol: 'https',
+        protocol: 'https' ,
         hostname: 'res.cloudinary.com',
       }
     ],
@@ -56,11 +56,13 @@ const nextConfig: NextConfig = {
         destination: 'https://pricetrack-api.onrender.com/api/urls/update_is_active/',
       },
        {
-        source: '/api/products/update_pricing/',
-        destination: 'https://pricetrack-api.onrender.com/api/products/update_pricing/',
+        source: '/api/products/update_precos',
+        destination: 'https://pricetrack-api.onrender.com/api/products/update_precos',
       },
     ];
   },
 };
 
 export default nextConfig;
+
+    

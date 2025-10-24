@@ -4,6 +4,7 @@ export interface Product {
   // Keeping some of the old fields for compatibility, but adapting to the new structure
   id: string; // Using sku as id
   ean: string;
+  key_sku: string;
   name: string; // from 'descricao'
   brand: string | null; // Brand is not available in the new structure
   marketplace: string;
@@ -11,9 +12,12 @@ export interface Product {
   key_loja: string | null;
   price: number; // from 'preco_final'
   preco_pricing: number | null;
+  preco_buybox: number | null;
   url: string | null;
   image: string | null; // from 'imagem'
   updated_at: string; // from 'data_hora'
   status: string | null;
   change_price: number | null;
 }
+
+    

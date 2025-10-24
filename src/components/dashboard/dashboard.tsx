@@ -35,6 +35,7 @@ function adaptApiData(apiProduct: any): Product {
   return {
     id: apiProduct.sku,
     ean: apiProduct.ean,
+    key_sku: apiProduct.key_sku,
     name: apiProduct.descricao,
     brand: apiProduct.marca,
     marketplace: apiProduct.marketplace,
@@ -42,6 +43,7 @@ function adaptApiData(apiProduct: any): Product {
     key_loja: apiProduct.key_loja,
     price: parseFloat(apiProduct.preco_final),
     preco_pricing: apiProduct.preco_pricing ? parseFloat(apiProduct.preco_pricing) : null,
+    preco_buybox: apiProduct.preco_buybox ? parseFloat(apiProduct.preco_buybox) : null,
     url: isValidHttpUrl(apiProduct.url) ? apiProduct.url : null,
     image: imageUrl,
     updated_at: apiProduct.data_hora,
@@ -334,3 +336,5 @@ export function Dashboard() {
         </SidebarProvider>
     )
 }
+
+    

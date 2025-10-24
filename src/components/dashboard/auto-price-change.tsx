@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { SearchableSelect } from './searchable-select';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Bot, HelpCircle, SearchX, Save } from 'lucide-react';
 import { Button } from '../ui/button';
 
@@ -27,6 +27,7 @@ interface BuyboxPriceData {
 }
 
 export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) {
+  const { toast } = useToast();
   const [selectedSellers, setSelectedSellers] = useState<string[]>([]);
   const [pricingData, setPricingData] = useState<Record<string, number | null>>({});
   const [buyboxPriceData, setBuyboxPriceData] = useState<Record<string, BuyboxPriceData>>({});
@@ -123,51 +124,55 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
     setPricingData(prev => ({ ...prev, [key]: newMinPrice }));
   };
 
-  const handleUpdateBuyboxPrice = async (ean: string, key_loja: string, marketplace: string) => {
-    const key = `${ean}-${key_loja}-${marketplace}`;
+  const handleUpdatePrices = async (product: Product) => {
+    const key = `${product.ean}-${product.key_loja}-${product.marketplace}`;
     const buyboxData = buyboxPriceData[key];
+    const preco_pricing = pricingData[key];
 
-    if (!buyboxData || buyboxData.price === null) {
+    if (!buyboxData || buyboxData.price === null || preco_pricing === null) {
       toast({
         variant: "destructive",
-        title: "Preço para Buybox não calculado.",
-        description: "Defina um preço mínimo para calcular o preço de Buybox.",
+        title: "Dados incompletos.",
+        description: "Defina um preço mínimo para calcular e salvar os preços.",
       });
       return;
     }
-    const preco_buybox = buyboxData.price;
+    
+    const payload = [{
+        key_sku: product.key_sku,
+        preco_pricing: preco_pricing,
+        preco_buybox: buyboxData.price
+    }];
 
     try {
-      // Here we will PATCH the `preco_buybox` to the `preco_pricing` field in the API
-      const response = await fetch('/api/products/update_pricing/', {
+      const response = await fetch('/api/products/update_precos', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ean: ean,
-          key_loja: key_loja,
-          preco_pricing: preco_buybox, 
-          marketplace: marketplace,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        throw new Error(`Falha ao atualizar o preço. Status: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `Falha ao atualizar preços. Status: ${response.status}`);
       }
 
       toast({
-        title: "Preço de Buybox salvo com sucesso!",
-        description: `O preço do produto ${ean} foi atualizado para ${formatCurrency(preco_buybox!)}.`,
+        title: "Preços salvos com sucesso!",
+        description: `Os preços do produto ${product.ean} foram atualizados.`,
       });
       
-      // Also update the local state for min_price to reflect the change
-      setPricingData(prev => ({...prev, [key]: preco_buybox}));
+      const currentProductInState = allProducts.find(p => p.key_sku === product.key_sku);
+      if(currentProductInState) {
+          currentProductInState.preco_pricing = preco_pricing;
+          currentProductInState.preco_buybox = buyboxData.price;
+      }
 
     } catch (error) {
-      console.error("Erro ao atualizar preço:", error);
+      console.error("Erro ao atualizar preços:", error);
       toast({
         variant: "destructive",
-        title: "Erro ao atualizar o preço.",
-        description: "Não foi possível salvar o novo preço de buybox. Tente novamente.",
+        title: "Erro ao salvar preços.",
+        description: (error as Error).message || "Não foi possível salvar os novos preços. Tente novamente.",
       });
     }
   };
@@ -322,9 +327,9 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
                                                         size="icon"
                                                         variant="ghost"
                                                         className="h-8 w-8"
-                                                        onClick={() => handleUpdateBuyboxPrice(product.ean, product.key_loja!, product.marketplace)}
-                                                        disabled={buyboxInfo?.price === null || buyboxInfo?.price === undefined}
-                                                        aria-label="Salvar Preço para Buybox"
+                                                        onClick={() => handleUpdatePrices(product)}
+                                                        disabled={buyboxInfo?.price === null || buyboxInfo?.price === undefined || pricingData[key] === null || pricingData[key] === undefined}
+                                                        aria-label="Salvar Preços"
                                                     >
                                                         <Save className="h-4 w-4" />
                                                     </Button>
