@@ -7,7 +7,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatCurrency, isValidImageUrl } from '@/lib/utils';
+import { formatCurrency, isValidImageUrl, cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { SearchableSelect } from './searchable-select';
 import { Label } from '../ui/label';
@@ -37,12 +37,11 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
   const productsOfSelectedSellers = useMemo(() => {
     if (selectedSellers.length === 0) return [];
     
-    // Get all products for all selected sellers
     const products = allProducts.filter(p => selectedSellers.includes(p.key_loja!));
     
-    // Group by EAN and Seller to get the best (lowest) price offered by that seller for that EAN
+    // Use a unique key combining ean, seller, and marketplace
     const uniqueProducts = products.reduce((acc, product) => {
-        const key = `${product.ean}-${product.key_loja}`;
+        const key = `${product.ean}-${product.key_loja}-${product.marketplace}`;
         if (!acc[key] || product.price < acc[key].price) {
             acc[key] = product;
         }
@@ -59,9 +58,8 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
   }, [allProducts, selectedSellers]);
 
   useEffect(() => {
-    // Initialize pricing data when seller products change
     const initialData = productsOfSelectedSellers.reduce((acc, product) => {
-      const key = `${product.ean}-${product.key_loja}`;
+      const key = `${product.ean}-${product.key_loja}-${product.marketplace}`;
       acc[key] = product.preco_pricing;
       return acc;
     }, {} as Record<string, number | null>);
@@ -76,14 +74,14 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
     );
   };
   
-  const handlePriceChange = (ean: string, key_loja: string, value: string) => {
+  const handlePriceChange = (ean: string, key_loja: string, marketplace: string, value: string) => {
     const newPrice = value === '' ? null : parseFloat(value);
-    const key = `${ean}-${key_loja}`;
+    const key = `${ean}-${key_loja}-${marketplace}`;
     setPricingData(prev => ({ ...prev, [key]: newPrice }));
   };
 
-  const handleUpdatePrice = async (ean: string, key_loja: string) => {
-    const key = `${ean}-${key_loja}`;
+  const handleUpdatePrice = async (ean: string, key_loja: string, marketplace: string) => {
+    const key = `${ean}-${key_loja}-${marketplace}`;
     const newPrice = pricingData[key];
 
     if (newPrice === undefined) return;
@@ -96,6 +94,7 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
           ean: ean,
           key_loja: key_loja,
           preco_pricing: newPrice,
+          marketplace: marketplace, // Pass marketplace if your API supports it
         }),
       });
 
@@ -117,8 +116,7 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
         title: "Erro ao atualizar o preço.",
         description: "Não foi possível salvar o novo preço mínimo. Tente novamente.",
       });
-       // Revert optimistic update
-       const originalProduct = productsOfSelectedSellers.find(p => p.ean === ean && p.key_loja === key_loja);
+       const originalProduct = productsOfSelectedSellers.find(p => p.ean === ean && p.key_loja === key_loja && p.marketplace === marketplace);
        if (originalProduct) {
            setPricingData(prev => ({...prev, [key]: originalProduct.preco_pricing}));
        }
@@ -193,6 +191,8 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
                                 <TableRow>
                                     <TableHead className="min-w-[300px]">Produto</TableHead>
                                     <TableHead>Vendedor</TableHead>
+                                    <TableHead>Marketplace</TableHead>
+                                    <TableHead>Status Buybox</TableHead>
                                     <TableHead className="text-right">Preço Atual</TableHead>
                                     <TableHead className="text-right w-[200px]">Preço Mínimo (Pricing)</TableHead>
                                     <TableHead className="text-right w-[200px]">Preço para Buybox</TableHead>
@@ -200,8 +200,8 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
                             </TableHeader>
                             <TableBody>
                                 {productsOfSelectedSellers.map((product) => {
-                                    const key = `${product.ean}-${product.key_loja}`;
-                                    const competitors = allProducts.filter(p => p.ean === product.ean && p.key_loja !== product.key_loja);
+                                    const key = `${product.ean}-${product.key_loja}-${product.marketplace}`;
+                                    const competitors = allProducts.filter(p => p.ean === product.ean && p.marketplace === product.marketplace && p.key_loja !== product.key_loja);
                                     const bestCompetitorPrice = competitors.length > 0 ? Math.min(...competitors.map(p => p.price)) : Infinity;
                                     const pricingPrice = pricingData[key];
                                     
@@ -217,6 +217,8 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
                                             buyboxTooltip = `O preço mínimo (${formatCurrency(pricingPrice)}) é competitivo. O preço sugerido é o próprio preço mínimo.`;
                                         }
                                     }
+
+                                    const priceDifference = product.price - bestCompetitorPrice;
 
                                     return (
                                         <TableRow key={key}>
@@ -238,14 +240,29 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
                                             <TableCell>
                                                 <Badge variant="secondary">{product.seller}</Badge>
                                             </TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline">{product.marketplace}</Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                {competitors.length > 0 ? (
+                                                    <div className={cn(
+                                                        "font-semibold",
+                                                        priceDifference < 0 ? "text-green-600" : "text-red-600"
+                                                    )}>
+                                                        {priceDifference < 0 ? `Ganhando por ${formatCurrency(Math.abs(priceDifference))}` : `Perdendo por ${formatCurrency(priceDifference)}`}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-muted-foreground">Ganhando (sozinho)</span>
+                                                )}
+                                            </TableCell>
                                             <TableCell className="text-right font-semibold">{formatCurrency(product.price)}</TableCell>
                                             <TableCell className="text-right">
                                                 <Input
                                                     type="number"
                                                     placeholder="Não definido"
                                                     value={pricingData[key] ?? ''}
-                                                    onChange={(e) => handlePriceChange(product.ean, product.key_loja!, e.target.value)}
-                                                    onBlur={() => handleUpdatePrice(product.ean, product.key_loja!)}
+                                                    onChange={(e) => handlePriceChange(product.ean, product.key_loja!, product.marketplace, e.target.value)}
+                                                    onBlur={() => handleUpdatePrice(product.ean, product.key_loja!, product.marketplace)}
                                                     className="text-right"
                                                     min="0"
                                                     step="0.01"
@@ -270,7 +287,7 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
                                 })}
                                 {productsOfSelectedSellers.length === 0 && (
                                      <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                        <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                                             Nenhum produto encontrado para o(s) vendedor(es) selecionado(s).
                                         </TableCell>
                                     </TableRow>
