@@ -566,45 +566,6 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
             </Card>
         </div>
         
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Crown className="text-amber-500" />
-                    Top 5 Vendedores no Buybox
-                </CardTitle>
-                <CardDescription>Vendedores que mais ganham o Buybox no geral.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                {loading ? (
-                    <div className="space-y-2">
-                        {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
-                    </div>
-                ) : topSellers.length > 0 ? (
-                     <Table>
-                        <TableHeader>
-                            <TableRow>
-                            <TableHead>Loja (Vendedor)</TableHead>
-                            <TableHead className="text-right">Buyboxes Ganhos</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {topSellers.map((seller, index) => (
-                            <TableRow key={seller.name}>
-                                <TableCell className="font-medium">{seller.name}</TableCell>
-                                <TableCell className="text-right font-bold">{seller.count}</TableCell>
-                            </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                ) : (
-                    <div className="h-full flex items-center justify-center text-muted-foreground">
-                       <p>Nenhum dado de vendedor para exibir.</p>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-
-
         {/* Ganhando Buybox */}
         <Card>
             <CardHeader>
@@ -791,6 +752,44 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                         </TableBody>
                     </Table>
                 </div>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Crown className="text-amber-500" />
+                    Top 5 Vendedores no Buybox
+                </CardTitle>
+                <CardDescription>Vendedores que mais ganham o Buybox no geral.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {loading ? (
+                    <div className="space-y-2">
+                        {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
+                    </div>
+                ) : topSellers.length > 0 ? (
+                     <Table>
+                        <TableHeader>
+                            <TableRow>
+                            <TableHead>Loja (Vendedor)</TableHead>
+                            <TableHead className="text-right">Buyboxes Ganhos</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {topSellers.map((seller, index) => (
+                            <TableRow key={seller.name}>
+                                <TableCell className="font-medium">{seller.name}</TableCell>
+                                <TableCell className="text-right font-bold">{seller.count}</TableCell>
+                            </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                ) : (
+                    <div className="h-full flex items-center justify-center text-muted-foreground">
+                       <p>Nenhum dado de vendedor para exibir.</p>
+                    </div>
+                )}
             </CardContent>
         </Card>
     </div>
