@@ -157,6 +157,7 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
                         options={sellerOptions}
                         selectedValues={selectedSeller ? [selectedSeller] : []}
                         onChange={handleSellerChange}
+                        selectionMode="single"
                     />
                 </div>
             </CardContent>
