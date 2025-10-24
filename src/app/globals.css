@@ -86,3 +86,19 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .custom-tooltip {
+    @apply relative inline-block cursor-help;
+  }
+  .custom-tooltip .custom-tooltip-content {
+    @apply invisible absolute z-10 w-max min-w-[200px] rounded-md border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md;
+    @apply bottom-full left-1/2 -translate-x-1/2 mb-2;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .custom-tooltip:hover .custom-tooltip-content {
+    @apply visible;
+    opacity: 1;
+  }
+}

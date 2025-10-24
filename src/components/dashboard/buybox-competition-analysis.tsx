@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, isValidImageUrl, isValidHttpUrl, cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '../ui/button';
-import { ExternalLink, CheckCircle, XCircle, Download, ShoppingCart, BarChart as BarChartIcon, AlertTriangle, Crown, DollarSign } from 'lucide-react';
+import { ExternalLink, CheckCircle, XCircle, Download, ShoppingCart, BarChart as BarChartIcon, AlertTriangle, Crown, DollarSign, HelpCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
@@ -674,13 +674,24 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                                         ) : <p className="text-muted-foreground">-</p>}
                                     </TableCell>
                                     <TableCell>
-                                        <p className={cn("font-semibold", item.priceDifference < 0 ? "text-green-600" : "text-muted-foreground")}>
+                                        <div className={cn("font-semibold", item.priceDifference < 0 ? "text-green-600" : "text-muted-foreground")}>
                                             {item.status === 'winning_alone' 
                                                 ? 'Ganhando (sozinho)'
                                                 : item.priceDifference < 0 
-                                                    ? `Ganhando por ${formatCurrency(Math.abs(item.priceDifference))}` 
+                                                    ? (
+                                                        <div className="custom-tooltip flex items-center gap-1">
+                                                            <span>{`Ganhando por ${formatCurrency(Math.abs(item.priceDifference))}`}</span>
+                                                            <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                                                            <div className="custom-tooltip-content text-left font-normal">
+                                                                <p className="font-bold text-popover-foreground mb-2">Potencial de Faturamento</p>
+                                                                <p><span className="font-semibold text-popover-foreground">10 Vendas:</span> {formatCurrency(Math.abs(item.priceDifference) * 10)}</p>
+                                                                <p><span className="font-semibold text-popover-foreground">50 Vendas:</span> {formatCurrency(Math.abs(item.priceDifference) * 50)}</p>
+                                                                <p><span className="font-semibold text-popover-foreground">100 Vendas:</span> {formatCurrency(Math.abs(item.priceDifference) * 100)}</p>
+                                                            </div>
+                                                        </div>
+                                                    )
                                                     : 'Preço igual'}
-                                        </p>
+                                        </div>
                                     </TableCell>
                                     <TableCell className="text-right text-sm text-muted-foreground">
                                         {item.myBestOffer?.updated_at ? formatDistanceToNow(new Date(item.myBestOffer.updated_at), { addSuffix: true, locale: ptBR }) : '-'}
