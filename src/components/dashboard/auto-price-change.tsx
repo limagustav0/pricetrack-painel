@@ -13,16 +13,23 @@ import { SearchableSelect } from './searchable-select';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { toast } from '@/hooks/use-toast';
-import { Bot, HelpCircle, SearchX } from 'lucide-react';
+import { Bot, HelpCircle, SearchX, Save } from 'lucide-react';
+import { Button } from '../ui/button';
 
 interface AutoPriceChangeProps {
   allProducts: Product[];
   loading: boolean;
 }
 
+interface BuyboxPriceData {
+    price: number | null;
+    calculationLog: string;
+}
+
 export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) {
   const [selectedSellers, setSelectedSellers] = useState<string[]>([]);
   const [pricingData, setPricingData] = useState<Record<string, number | null>>({});
+  const [buyboxPriceData, setBuyboxPriceData] = useState<Record<string, BuyboxPriceData>>({});
 
   const sellerOptions = useMemo(() => {
     const sellers = new Map<string, string>();
@@ -39,7 +46,6 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
     
     const products = allProducts.filter(p => selectedSellers.includes(p.key_loja!));
     
-    // Use a unique key combining ean, seller, and marketplace
     const uniqueProducts = products.reduce((acc, product) => {
         const key = `${product.ean}-${product.key_loja}-${product.marketplace}`;
         if (!acc[key] || product.price < acc[key].price) {
@@ -58,13 +64,50 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
   }, [allProducts, selectedSellers]);
 
   useEffect(() => {
-    const initialData = productsOfSelectedSellers.reduce((acc, product) => {
+    const initialPricingData = productsOfSelectedSellers.reduce((acc, product) => {
       const key = `${product.ean}-${product.key_loja}-${product.marketplace}`;
       acc[key] = product.preco_pricing;
       return acc;
     }, {} as Record<string, number | null>);
-    setPricingData(initialData);
+    setPricingData(initialPricingData);
   }, [productsOfSelectedSellers]);
+
+  // Effect to calculate buybox prices whenever pricingData changes
+  useEffect(() => {
+      const newBuyboxData: Record<string, BuyboxPriceData> = {};
+      productsOfSelectedSellers.forEach(product => {
+          const key = `${product.ean}-${product.key_loja}-${product.marketplace}`;
+          const minPrice = pricingData[key];
+          
+          if (minPrice === null || minPrice === undefined) {
+              newBuyboxData[key] = { price: null, calculationLog: 'Defina o Preço Mínimo para calcular.' };
+              return;
+          }
+
+          const competitors = allProducts.filter(p => p.ean === product.ean && p.marketplace === product.marketplace && p.key_loja !== product.key_loja);
+          const bestCompetitorPrice = competitors.length > 0 ? Math.min(...competitors.map(p => p.price)) : Infinity;
+
+          let calculatedPrice: number;
+          let log: string;
+
+          if (bestCompetitorPrice === Infinity) {
+              calculatedPrice = minPrice;
+              log = `Não há concorrentes. O preço para Buybox é o seu Preço Mínimo definido: ${formatCurrency(minPrice)}.`;
+          } else {
+              const suggestedPrice = bestCompetitorPrice - 0.10;
+              if (suggestedPrice < minPrice) {
+                  calculatedPrice = minPrice;
+                  log = `O preço sugerido (${formatCurrency(suggestedPrice)}) é inferior ao seu Mínimo (${formatCurrency(minPrice)}). O Preço para Buybox será o seu Mínimo.`;
+              } else {
+                  calculatedPrice = suggestedPrice;
+                  log = `O Preço para Buybox foi calculado como 10 centavos abaixo do melhor concorrente (${formatCurrency(bestCompetitorPrice)}).`;
+              }
+          }
+          newBuyboxData[key] = { price: calculatedPrice, calculationLog: log };
+      });
+      setBuyboxPriceData(newBuyboxData);
+
+  }, [pricingData, productsOfSelectedSellers, allProducts]);
 
   const handleFilterChange = (value: string) => {
     setSelectedSellers(prev => 
@@ -74,27 +117,36 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
     );
   };
   
-  const handlePriceChange = (ean: string, key_loja: string, marketplace: string, value: string) => {
-    const newPrice = value === '' ? null : parseFloat(value);
+  const handleMinPriceChange = async (ean: string, key_loja: string, marketplace: string, value: string) => {
+    const newMinPrice = value === '' ? null : parseFloat(value);
     const key = `${ean}-${key_loja}-${marketplace}`;
-    setPricingData(prev => ({ ...prev, [key]: newPrice }));
+    setPricingData(prev => ({ ...prev, [key]: newMinPrice }));
   };
 
-  const handleUpdatePrice = async (ean: string, key_loja: string, marketplace: string) => {
+  const handleUpdateBuyboxPrice = async (ean: string, key_loja: string, marketplace: string) => {
     const key = `${ean}-${key_loja}-${marketplace}`;
-    const newPrice = pricingData[key];
+    const buyboxData = buyboxPriceData[key];
 
-    if (newPrice === undefined) return;
+    if (!buyboxData || buyboxData.price === null) {
+      toast({
+        variant: "destructive",
+        title: "Preço para Buybox não calculado.",
+        description: "Defina um preço mínimo para calcular o preço de Buybox.",
+      });
+      return;
+    }
+    const preco_buybox = buyboxData.price;
 
     try {
+      // Here we will PATCH the `preco_buybox` to the `preco_pricing` field in the API
       const response = await fetch('/api/products/update_pricing/', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ean: ean,
           key_loja: key_loja,
-          preco_pricing: newPrice,
-          marketplace: marketplace, // Pass marketplace if your API supports it
+          preco_pricing: preco_buybox, 
+          marketplace: marketplace,
         }),
       });
 
@@ -102,26 +154,24 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
         throw new Error(`Falha ao atualizar o preço. Status: ${response.status}`);
       }
 
-      const result = await response.json();
-
       toast({
-        title: "Preço atualizado com sucesso!",
-        description: `O preço mínimo para o EAN ${ean} foi definido como ${formatCurrency(newPrice!)}.`,
+        title: "Preço de Buybox salvo com sucesso!",
+        description: `O preço do produto ${ean} foi atualizado para ${formatCurrency(preco_buybox!)}.`,
       });
       
+      // Also update the local state for min_price to reflect the change
+      setPricingData(prev => ({...prev, [key]: preco_buybox}));
+
     } catch (error) {
       console.error("Erro ao atualizar preço:", error);
       toast({
         variant: "destructive",
         title: "Erro ao atualizar o preço.",
-        description: "Não foi possível salvar o novo preço mínimo. Tente novamente.",
+        description: "Não foi possível salvar o novo preço de buybox. Tente novamente.",
       });
-       const originalProduct = productsOfSelectedSellers.find(p => p.ean === ean && p.key_loja === key_loja && p.marketplace === marketplace);
-       if (originalProduct) {
-           setPricingData(prev => ({...prev, [key]: originalProduct.preco_pricing}));
-       }
     }
   };
+
 
   if (loading) {
       return (
@@ -179,9 +229,9 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
         {selectedSellers.length > 0 ? (
              <Card>
                 <CardHeader>
-                    <CardTitle>Configurar Preços Mínimos</CardTitle>
+                    <CardTitle>Configurar Preços</CardTitle>
                     <CardDescription>
-                        Defina o preço mínimo para cada produto. O sistema não permitirá que o preço do produto seja inferior a este valor.
+                        Defina o preço mínimo para cada produto. O sistema calculará o "Preço para Buybox" e não permitirá que ele seja inferior a este valor.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -194,8 +244,8 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
                                     <TableHead>Marketplace</TableHead>
                                     <TableHead>Status Buybox</TableHead>
                                     <TableHead className="text-right">Preço Atual</TableHead>
-                                    <TableHead className="text-right w-[200px]">Preço Mínimo (Pricing)</TableHead>
-                                    <TableHead className="text-right w-[200px]">Preço para Buybox</TableHead>
+                                    <TableHead className="text-right w-[200px]">Preço Mínimo</TableHead>
+                                    <TableHead className="text-right w-[250px]">Preço para Buybox</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -203,22 +253,9 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
                                     const key = `${product.ean}-${product.key_loja}-${product.marketplace}`;
                                     const competitors = allProducts.filter(p => p.ean === product.ean && p.marketplace === product.marketplace && p.key_loja !== product.key_loja);
                                     const bestCompetitorPrice = competitors.length > 0 ? Math.min(...competitors.map(p => p.price)) : Infinity;
-                                    const pricingPrice = pricingData[key];
-                                    
-                                    let buyboxPrice: number | null = null;
-                                    let buyboxTooltip = "";
-
-                                    if (pricingPrice !== null && pricingPrice !== undefined) {
-                                        if (bestCompetitorPrice !== Infinity && pricingPrice > bestCompetitorPrice) {
-                                            buyboxPrice = bestCompetitorPrice - 0.10;
-                                            buyboxTooltip = `O preço mínimo (${formatCurrency(pricingPrice)}) é maior que o melhor preço do concorrente (${formatCurrency(bestCompetitorPrice)}). O preço sugerido é o do concorrente - R$ 0,10.`;
-                                        } else {
-                                            buyboxPrice = pricingPrice;
-                                            buyboxTooltip = `O preço mínimo (${formatCurrency(pricingPrice)}) é competitivo. O preço sugerido é o próprio preço mínimo.`;
-                                        }
-                                    }
-
                                     const priceDifference = product.price - bestCompetitorPrice;
+                                    
+                                    const buyboxInfo = buyboxPriceData[key];
 
                                     return (
                                         <TableRow key={key}>
@@ -261,26 +298,37 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
                                                     type="number"
                                                     placeholder="Não definido"
                                                     value={pricingData[key] ?? ''}
-                                                    onChange={(e) => handlePriceChange(product.ean, product.key_loja!, product.marketplace, e.target.value)}
-                                                    onBlur={() => handleUpdatePrice(product.ean, product.key_loja!, product.marketplace)}
+                                                    onChange={(e) => handleMinPriceChange(product.ean, product.key_loja!, product.marketplace, e.target.value)}
                                                     className="text-right"
                                                     min="0"
                                                     step="0.01"
                                                 />
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                {buyboxPrice !== null ? (
-                                                    <div className="custom-tooltip flex items-center justify-end gap-1">
-                                                        <span className="font-bold text-primary">{formatCurrency(buyboxPrice)}</span>
-                                                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                                                        <div className="custom-tooltip-content text-left font-normal">
-                                                            <p className="font-bold text-popover-foreground mb-2">Lógica do Preço de Buybox</p>
-                                                            <p>{buyboxTooltip}</p>
+                                                <div className="flex items-center justify-end gap-2">
+                                                    {buyboxInfo?.price !== null && buyboxInfo?.price !== undefined ? (
+                                                        <div className="custom-tooltip flex items-center justify-end gap-1">
+                                                            <span className="font-bold text-primary text-lg">{formatCurrency(buyboxInfo.price)}</span>
+                                                            <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                                                            <div className="custom-tooltip-content text-left font-normal">
+                                                                <p className="font-bold text-popover-foreground mb-2">Lógica do Preço de Buybox</p>
+                                                                <p>{buyboxInfo.calculationLog}</p>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-muted-foreground">Defina o preço mínimo</span>
-                                                )}
+                                                    ) : (
+                                                        <span className="text-muted-foreground text-sm">Defina o preço mínimo</span>
+                                                    )}
+                                                     <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        className="h-8 w-8"
+                                                        onClick={() => handleUpdateBuyboxPrice(product.ean, product.key_loja!, product.marketplace)}
+                                                        disabled={buyboxInfo?.price === null || buyboxInfo?.price === undefined}
+                                                        aria-label="Salvar Preço para Buybox"
+                                                    >
+                                                        <Save className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     );
