@@ -22,6 +22,7 @@ interface AutoPriceChangeProps {
 }
 
 export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) {
+  const [selectedSellers, setSelectedSellers] = useState<string[]>([]);
   const [activeSeller, setActiveSeller] = useState<string | null>(null);
   const [pricingData, setPricingData] = useState<Record<string, number | null>>({});
 
@@ -62,8 +63,20 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
   }, [sellerProducts]);
 
   const handleFilterChange = (value: string) => {
-    // Single seller selection logic
-    setActiveSeller(prev => prev === value ? null : value);
+    const newSelection = selectedSellers.includes(value)
+      ? selectedSellers.filter(v => v !== value)
+      : [...selectedSellers, value];
+    
+    setSelectedSellers(newSelection);
+
+    // If the active seller is removed from the selection, deactivate it
+    if (activeSeller && !newSelection.includes(activeSeller)) {
+        setActiveSeller(null);
+    }
+    // If there's only one selected seller, make it active automatically
+    if (newSelection.length === 1) {
+        setActiveSeller(newSelection[0]);
+    }
   };
   
   const handlePriceChange = (ean: string, value: string) => {
@@ -121,8 +134,11 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
                   <Skeleton className="h-4 w-3/4 mt-2" />
               </CardHeader>
               <CardContent>
-                  <Skeleton className="h-10 w-full md:w-1/3 mb-4" />
-                  <div className="border rounded-lg p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                  <div className="border rounded-lg p-4 mt-6">
                       {[...Array(5)].map((_, i) => (
                           <div key={i} className="flex items-center gap-4 py-2 border-b">
                               <Skeleton className="h-12 w-12" />
@@ -139,6 +155,8 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
       )
   }
 
+  const selectedSellerOptions = sellerOptions.filter(s => selectedSellers.includes(s.value));
+
   return (
     <div className="space-y-6">
         <Card>
@@ -148,19 +166,32 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
                     Configuração de Preço Automático (Beta)
                 </CardTitle>
                 <CardDescription>
-                    Selecione um vendedor para configurar seus produtos. O primeiro selecionado se torna o vendedor ativo.
+                   Filtre um ou mais vendedores e depois selecione um "Vendedor Ativo" para configurar seus produtos.
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                 <div className="max-w-md">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <Label>Selecionar Vendedor</Label>
+                        <Label>Filtrar Vendedores</Label>
                         <SearchableSelect
-                            placeholder="Selecione um Vendedor..."
+                            placeholder="Selecione Vendedor(es)..."
                             options={sellerOptions}
-                            selectedValues={activeSeller ? [activeSeller] : []}
+                            selectedValues={selectedSellers}
                             onChange={handleFilterChange}
                         />
+                    </div>
+                     <div>
+                        <Label>Vendedor Ativo</Label>
+                         <Select onValueChange={setActiveSeller} value={activeSeller || ""} disabled={selectedSellers.length === 0}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecione um vendedor para editar" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {selectedSellerOptions.map(option => (
+                                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
             </CardContent>
