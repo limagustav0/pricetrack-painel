@@ -4,14 +4,13 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import type { Product } from '@/types';
-import { AlertCircle, Download } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { FiltersGroup } from './filters-group';
 import { ProductAccordion } from './product-accordion';
 import { ComparativeAnalysis } from './comparative-analysis';
-import { OverallPriceAnalysis } from './overall-price-analysis';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PriceComparisonTable } from './price-comparison-table';
@@ -23,6 +22,8 @@ import { Card, CardContent, CardHeader } from '../ui/card';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
 import { BuyboxCompetitionAnalysis } from './buybox-competition-analysis';
+import { AutoPriceChange } from './auto-price-change';
+import { Badge } from '../ui/badge';
 
 
 // Helper to adapt the new API response to the existing Product type
@@ -40,6 +41,7 @@ function adaptApiData(apiProduct: any): Product {
     seller: apiProduct.loja,
     key_loja: apiProduct.key_loja,
     price: parseFloat(apiProduct.preco_final),
+    preco_pricing: apiProduct.preco_pricing ? parseFloat(apiProduct.preco_pricing) : null,
     url: isValidHttpUrl(apiProduct.url) ? apiProduct.url : null,
     image: imageUrl,
     updated_at: apiProduct.data_hora,
@@ -236,6 +238,9 @@ function DashboardContent() {
                         <TabsTrigger value="granular">Análise por Marketplace</TabsTrigger>
                         <TabsTrigger value="buybox">Análise de Buybox</TabsTrigger>
                         <TabsTrigger value="seller">Análise por Vendedor</TabsTrigger>
+                        <TabsTrigger value="auto_pricing" className="flex items-center gap-2">
+                          Alteração Automática <Badge variant="secondary">Beta</Badge>
+                        </TabsTrigger>
                     </TabsList>
                 </div>
                 <TabsContent value="overview" className="mt-0 p-4 md:p-6 overflow-y-auto">
@@ -312,6 +317,9 @@ function DashboardContent() {
                 </TabsContent>
                 <TabsContent value="seller" className="mt-0 p-4 md:p-6 flex flex-col">
                     <SellerComparisonTable allProducts={filteredProducts} loading={loading} />
+                </TabsContent>
+                <TabsContent value="auto_pricing" className="mt-0 p-4 md:p-6 flex flex-col">
+                    <AutoPriceChange allProducts={products} loading={loading} />
                 </TabsContent>
             </Tabs>
         </div>

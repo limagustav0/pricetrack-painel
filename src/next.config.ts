@@ -47,6 +47,18 @@ const nextConfig: NextConfig = {
         source: '/api/price-data',
         destination: 'https://pricetrack-api.onrender.com/api/products/',
       },
+      {
+        source: '/api/url-data',
+        destination: 'https://pricetrack-api.onrender.com/api/urls/',
+      },
+       {
+        source: '/api/urls/update_is_active',
+        destination: 'https://pricetrack-api.onrender.com/api/urls/update_is_active/',
+      },
+       {
+        source: '/api/products/update_pricing/',
+        destination: 'https://pricetrack-api.onrender.com/api/products/update_pricing/',
+      },
     ];
   },
 };

@@ -10,6 +10,7 @@ export interface Product {
   seller: string; // from 'loja'
   key_loja: string | null;
   price: number; // from 'preco_final'
+  preco_pricing: number | null;
   url: string | null;
   image: string | null; // from 'imagem'
   updated_at: string; // from 'data_hora'
