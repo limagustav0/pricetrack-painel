@@ -36,7 +36,7 @@ const nextConfig: NextConfig = {
         hostname: 'm.media-amazon.com',
       },
       {
-        protocol: 'https' ,
+        protocol: 'https',
         hostname: 'res.cloudinary.com',
       }
     ],
@@ -64,5 +64,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-
-    
