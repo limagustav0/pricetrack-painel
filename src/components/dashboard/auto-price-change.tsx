@@ -285,6 +285,7 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
                                                     <div>
                                                         <p className="font-medium">{product.name}</p>
                                                         <p className="text-sm text-muted-foreground">EAN: {product.ean}</p>
+                                                        <p className="text-xs text-muted-foreground font-mono">SKU: {product.key_sku}</p>
                                                     </div>
                                                 </div>
                                             </TableCell>
