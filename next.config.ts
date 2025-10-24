@@ -53,7 +53,7 @@ const nextConfig: NextConfig = {
       },
        {
         source: '/api/urls/update_is_active',
-        destination: 'https://pricetrack-api.onrender.com/api/update_is_active',
+        destination: 'https://pricetrack-api.onrender.com/api/urls/update_is_active/',
       },
     ];
   },
