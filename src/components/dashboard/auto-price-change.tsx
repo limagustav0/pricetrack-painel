@@ -129,25 +129,34 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
     const buyboxData = buyboxPriceData[key];
     const preco_pricing = pricingData[key];
 
-    if (!buyboxData || buyboxData.price === null || preco_pricing === null || preco_pricing === undefined) {
-      toast({
-        variant: "destructive",
-        title: "Dados incompletos.",
-        description: "Defina um preço mínimo para calcular e salvar os preços.",
-      });
-      return;
+    const updatePayload: { key_sku: string; preco_pricing?: number; preco_buybox?: number } = {
+        key_sku: product.key_sku
+    };
+
+    if (preco_pricing !== null && preco_pricing !== undefined) {
+        updatePayload.preco_pricing = preco_pricing;
+    }
+
+    if (buyboxData?.price !== null && buyboxData?.price !== undefined) {
+        updatePayload.preco_buybox = buyboxData.price;
     }
     
-    const payload = [{
-        key_sku: product.key_sku,
-        preco_pricing: preco_pricing,
-        preco_buybox: buyboxData.price
-    }];
+    // Validate that at least one price is being sent
+    if (updatePayload.preco_pricing === undefined && updatePayload.preco_buybox === undefined) {
+         toast({
+            variant: "destructive",
+            title: "Nenhum preço para atualizar.",
+            description: "Defina um Preço Mínimo para poder salvar.",
+        });
+        return;
+    }
+
+    const payload = [updatePayload];
 
     console.log('Payload enviado para a API:', JSON.stringify(payload, null, 2));
 
     try {
-      const response = await fetch('/api/products/update_precos/', {
+      const response = await fetch('/api/products/update_precos', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -174,10 +183,13 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
       // Update local state to reflect changes without a full refetch
       const productIndex = allProducts.findIndex(p => p.key_sku === product.key_sku);
       if(productIndex > -1) {
-          allProducts[productIndex].preco_pricing = preco_pricing;
-          allProducts[productIndex].preco_buybox = buyboxData.price;
+          if (updatePayload.preco_pricing !== undefined) {
+            allProducts[productIndex].preco_pricing = updatePayload.preco_pricing;
+          }
+           if (updatePayload.preco_buybox !== undefined) {
+            allProducts[productIndex].preco_buybox = updatePayload.preco_buybox;
+           }
       }
-
 
     } catch (error) {
       console.error("Erro ao atualizar preços:", error);
@@ -341,7 +353,7 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
                                                         variant="ghost"
                                                         className="h-8 w-8"
                                                         onClick={() => handleUpdatePrices(product)}
-                                                        disabled={buyboxInfo?.price === null || buyboxInfo?.price === undefined || pricingData[key] === null || pricingData[key] === undefined}
+                                                        disabled={pricingData[key] === null || pricingData[key] === undefined}
                                                         aria-label="Salvar Preços"
                                                     >
                                                         <Save className="h-4 w-4" />
@@ -373,6 +385,3 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
     </div>
   )
 }
-
-    
-    
