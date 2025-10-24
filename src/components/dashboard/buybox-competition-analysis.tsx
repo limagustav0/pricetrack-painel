@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Product } from '@/types';
@@ -795,3 +796,5 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     </div>
   );
 }
+
+    

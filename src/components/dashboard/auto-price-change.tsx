@@ -13,7 +13,7 @@ import { SearchableSelect } from './searchable-select';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { toast } from '@/hooks/use-toast';
-import { AlertTriangle, Bot } from 'lucide-react';
+import { AlertTriangle, Bot, HelpCircle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 interface AutoPriceChangeProps {
@@ -226,47 +226,81 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
                                     <TableHead>Marketplace (Referência)</TableHead>
                                     <TableHead className="text-right">Preço Atual</TableHead>
                                     <TableHead className="text-right w-[200px]">Preço Mínimo (Pricing)</TableHead>
+                                    <TableHead className="text-right w-[200px]">Preço para Buybox</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {sellerProducts.map((product) => (
-                                    <TableRow key={product.ean}>
-                                        <TableCell>
-                                            <div className="flex items-center gap-4">
-                                                <Image 
-                                                    src={isValidImageUrl(product.image) ? product.image : 'https://placehold.co/100x100.png'} 
-                                                    alt={product.name} 
-                                                    width={64} 
-                                                    height={64} 
-                                                    className="rounded-md object-cover border"
-                                                />
-                                                <div>
-                                                    <p className="font-medium">{product.name}</p>
-                                                    <p className="text-sm text-muted-foreground">EAN: {product.ean}</p>
+                                {sellerProducts.map((product) => {
+                                    const competitors = allProducts.filter(p => p.ean === product.ean && p.key_loja !== activeSeller);
+                                    const bestCompetitorPrice = competitors.length > 0 ? Math.min(...competitors.map(p => p.price)) : Infinity;
+                                    const pricingPrice = pricingData[product.ean];
+                                    
+                                    let buyboxPrice: number | null = null;
+                                    let buyboxTooltip = "";
+
+                                    if (pricingPrice !== null && pricingPrice !== undefined) {
+                                        if (bestCompetitorPrice !== Infinity && pricingPrice > bestCompetitorPrice) {
+                                            buyboxPrice = bestCompetitorPrice - 0.10;
+                                            buyboxTooltip = `O preço mínimo (${formatCurrency(pricingPrice)}) é maior que o melhor preço do concorrente (${formatCurrency(bestCompetitorPrice)}). O preço sugerido é o do concorrente - R$ 0,10.`;
+                                        } else {
+                                            buyboxPrice = pricingPrice;
+                                            buyboxTooltip = `O preço mínimo (${formatCurrency(pricingPrice)}) é competitivo. O preço sugerido é o próprio preço mínimo.`;
+                                        }
+                                    }
+
+                                    return (
+                                        <TableRow key={product.ean}>
+                                            <TableCell>
+                                                <div className="flex items-center gap-4">
+                                                    <Image 
+                                                        src={isValidImageUrl(product.image) ? product.image : 'https://placehold.co/100x100.png'} 
+                                                        alt={product.name} 
+                                                        width={64} 
+                                                        height={64} 
+                                                        className="rounded-md object-cover border"
+                                                    />
+                                                    <div>
+                                                        <p className="font-medium">{product.name}</p>
+                                                        <p className="text-sm text-muted-foreground">EAN: {product.ean}</p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline">{product.marketplace}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right font-semibold">{formatCurrency(product.price)}</TableCell>
-                                        <TableCell className="text-right">
-                                            <Input
-                                                type="number"
-                                                placeholder="Não definido"
-                                                value={pricingData[product.ean] ?? ''}
-                                                onChange={(e) => handlePriceChange(product.ean, e.target.value)}
-                                                onBlur={() => handleUpdatePrice(product.ean, product.key_loja!)}
-                                                className="text-right"
-                                                min="0"
-                                                step="0.01"
-                                            />
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline">{product.marketplace}</Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right font-semibold">{formatCurrency(product.price)}</TableCell>
+                                            <TableCell className="text-right">
+                                                <Input
+                                                    type="number"
+                                                    placeholder="Não definido"
+                                                    value={pricingData[product.ean] ?? ''}
+                                                    onChange={(e) => handlePriceChange(product.ean, e.target.value)}
+                                                    onBlur={() => handleUpdatePrice(product.ean, product.key_loja!)}
+                                                    className="text-right"
+                                                    min="0"
+                                                    step="0.01"
+                                                />
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {buyboxPrice !== null ? (
+                                                    <div className="custom-tooltip flex items-center justify-end gap-1">
+                                                        <span className="font-bold text-primary">{formatCurrency(buyboxPrice)}</span>
+                                                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                                                        <div className="custom-tooltip-content text-left font-normal">
+                                                            <p className="font-bold text-popover-foreground mb-2">Lógica do Preço de Buybox</p>
+                                                            <p>{buyboxTooltip}</p>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-muted-foreground">Defina o preço mínimo</span>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
                                 {sellerProducts.length === 0 && (
                                      <TableRow>
-                                        <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                                        <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                                             Nenhum produto encontrado para este vendedor.
                                         </TableCell>
                                     </TableRow>

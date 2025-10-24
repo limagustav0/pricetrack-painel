@@ -36,33 +36,31 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
   const [selectedMarketplaces, setSelectedMarketplaces] = useState<string[]>([]);
   
   const { groupedSellers, uniqueMarketplaces, sellerOptions } = useMemo(() => {
-    // Note: uniqueMarketplaces here are derived from the *filtered* product list
     const marketplaces = [...new Set(allProducts.map(p => p.marketplace).filter(Boolean))].sort();
 
     const sellersData = allProducts.reduce((acc, product) => {
-        if (!product.key_loja || !product.ean) return acc;
+        if (!product.ean) return acc;
+        
+        const sellerKey = product.seller.toLowerCase();
 
-        if (!acc[product.key_loja]) {
-            acc[product.key_loja] = {
-                sellerName: product.seller,
-                key_loja: product.key_loja,
+        if (!acc[sellerKey]) {
+            acc[sellerKey] = {
+                sellerName: product.seller, // Use the first encountered casing as the display name
+                key_loja: sellerKey, // Use the normalized key
                 marketplaces: [],
                 products: {},
             };
         }
         
-        if (product.marketplace && !acc[product.key_loja].marketplaces.includes(product.marketplace)) {
-            acc[product.key_loja].marketplaces.push(product.marketplace);
+        if (product.marketplace && !acc[sellerKey].marketplaces.includes(product.marketplace)) {
+            acc[sellerKey].marketplaces.push(product.marketplace);
         }
 
-        if (!acc[product.key_loja].products[product.ean]) {
+        if (!acc[sellerKey].products[product.ean]) {
             let image = 'https://placehold.co/100x100.png';
             if (isValidImageUrl(product.image)) {
                 image = product.image!;
             } else {
-                 // It's tricky to get an image from the original full list here without passing it down.
-                 // We'll rely on the filtered list. If no valid image is present for this EAN in the filtered list,
-                 // it will fall back to the placeholder.
                  const sameEanProducts = allProducts.filter(p => p.ean === product.ean);
                  const validImageProduct = sameEanProducts.find(p => isValidImageUrl(p.image));
                  if (validImageProduct) {
@@ -70,7 +68,7 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
                  }
             }
 
-            acc[product.key_loja].products[product.ean] = {
+            acc[sellerKey].products[product.ean] = {
                 name: product.name,
                 brand: product.brand,
                 image: image,
@@ -78,9 +76,9 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
             };
         }
         
-        const existingOffer = acc[product.key_loja].products[product.ean].offers[product.marketplace];
+        const existingOffer = acc[sellerKey].products[product.ean].offers[product.marketplace];
         if (!existingOffer || product.price < existingOffer.price) {
-            acc[product.key_loja].products[product.ean].offers[product.marketplace] = {
+            acc[sellerKey].products[product.ean].offers[product.marketplace] = {
                 price: product.price,
                 change_price: product.change_price,
             };
@@ -273,3 +271,5 @@ export function SellerComparisonTable({ allProducts, loading }: SellerComparison
     </Card>
   );
 }
+
+    
