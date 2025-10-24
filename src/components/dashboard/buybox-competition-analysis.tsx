@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import type { Product } from '@/types';
@@ -14,7 +15,7 @@ import { ExternalLink, CheckCircle, XCircle, Download, ShoppingCart, BarChart, A
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
-import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { SearchableSelect } from './searchable-select';
 import { Label } from '../ui/label';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -111,8 +112,8 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
   const { buyboxData, charts, kpis, topSellers } = useMemo(() => {
     const initialResult = {
         buyboxData: { winning: [], losing: [] },
-        charts: { winsByMarketplace: [], lossesByMarketplace: [] },
-        kpis: { totalOffered: 0, winningCount: 0, losingCount: 0, potentialRevenue: 0 },
+        charts: { winsByMarketplace: [], lossesByMarketplace: [], potentialGain: [] },
+        kpis: { totalOffered: 0, winningCount: 0, losingCount: 0 },
         topSellers: []
     };
 
@@ -255,12 +256,18 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     
     const totalOffered = new Set(result.map(p => `${p.ean}-${p.myBestOffer?.marketplace}`)).size;
     
-    const potentialRevenue = winningData.reduce((acc, item) => {
+    const totalPotentialGain = winningData.reduce((acc, item) => {
         if (item.priceDifference < 0) {
             return acc + Math.abs(item.priceDifference);
         }
         return acc;
     }, 0);
+    
+    const potentialGainChartData = [
+        { name: '10 Vendas', 'Potencial de Ganho': totalPotentialGain * 10 },
+        { name: '50 Vendas', 'Potencial de Ganho': totalPotentialGain * 50 },
+        { name: '100 Vendas', 'Potencial de Ganho': totalPotentialGain * 100 },
+    ];
 
 
     return {
@@ -271,12 +278,12 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
         charts: {
             winsByMarketplace: winsChartData,
             lossesByMarketplace: lossesChartData,
+            potentialGain: potentialGainChartData,
         },
         kpis: {
             totalOffered: totalOffered,
             winningCount: winningData.length,
             losingCount: losingData.length,
-            potentialRevenue: potentialRevenue,
         },
         topSellers: calculatedTopSellers
     };
@@ -401,7 +408,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                     <CardDescription>Métricas combinadas para o(s) vendedor(es) selecionado(s), considerando os filtros.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <Card>
                              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">Total Ofertas</CardTitle>
@@ -432,22 +439,60 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                                 <p className="text-xs text-muted-foreground">Ofertas com preço maior</p>
                             </CardContent>
                         </Card>
-                         <Card>
-                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Potencial de Faturamento</CardTitle>
-                                <DollarSign className="h-4 w-4 text-amber-500" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{formatCurrency(kpis.potentialRevenue)}</div>
-                                <p className="text-xs text-muted-foreground">Valor a ser ganho por unid.</p>
-                            </CardContent>
-                        </Card>
                     </div>
                 </CardContent>
             </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+             <Card>
+                <CardHeader>
+                    <CardTitle>Potencial de Ganho Total</CardTitle>
+                    <CardDescription>Simulação de ganho ajustando os preços onde você já está ganhando.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     {loading ? (
+                            <div className="h-64 flex items-center justify-center">
+                               <Skeleton className="w-full h-full" />
+                            </div>
+                    ) : charts.potentialGain.some(d => d['Potencial de Ganho'] > 0) ? (
+                        <ResponsiveContainer width="100%" height={250}>
+                            <BarChart data={charts.potentialGain} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis tickFormatter={(value) => formatCurrency(value as number)} />
+                                <RechartsTooltip 
+                                    cursor={{fill: 'hsl(var(--muted))'}}
+                                    content={({ active, payload, label }) => {
+                                        if (active && payload && payload.length) {
+                                            return (
+                                                <div className="rounded-lg border bg-background p-2 shadow-sm">
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="flex flex-col space-y-1">
+                                                            <span className="text-[0.70rem] uppercase text-muted-foreground">{label}</span>
+                                                            <span className="font-bold text-muted-foreground">
+                                                                {payload[0].value ? formatCurrency(payload[0].value as number) : ''}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        }
+                                        return null;
+                                    }}
+                                />
+                                <Bar dataKey="Potencial de Ganho" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="h-64 flex flex-col items-center justify-center text-center text-muted-foreground">
+                            <DollarSign className="h-10 w-10 mb-2"/>
+                            <p className="font-semibold">Nenhum potencial de ganho.</p>
+                            <p className="text-sm">Os preços já estão otimizados ou não há concorrência.</p>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
             <Card>
                 <CardHeader>
                     <CardTitle>Buybox Ganhos por Marketplace</CardTitle>
@@ -528,44 +573,45 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                     )}
                 </CardContent>
             </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Crown className="text-amber-500" />
-                        Top 5 Vendedores no Buybox
-                    </CardTitle>
-                    <CardDescription>Vendedores que mais ganham o Buybox no geral.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {loading ? (
-                        <div className="space-y-2">
-                            {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
-                        </div>
-                    ) : topSellers.length > 0 ? (
-                         <Table>
-                            <TableHeader>
-                                <TableRow>
-                                <TableHead>Loja (Vendedor)</TableHead>
-                                <TableHead className="text-right">Buyboxes Ganhos</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {topSellers.map((seller, index) => (
-                                <TableRow key={seller.name}>
-                                    <TableCell className="font-medium">{seller.name}</TableCell>
-                                    <TableCell className="text-right font-bold">{seller.count}</TableCell>
-                                </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    ) : (
-                        <div className="h-full flex items-center justify-center text-muted-foreground">
-                           <p>Nenhum dado de vendedor para exibir.</p>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
         </div>
+        
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <Crown className="text-amber-500" />
+                    Top 5 Vendedores no Buybox
+                </CardTitle>
+                <CardDescription>Vendedores que mais ganham o Buybox no geral.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {loading ? (
+                    <div className="space-y-2">
+                        {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
+                    </div>
+                ) : topSellers.length > 0 ? (
+                     <Table>
+                        <TableHeader>
+                            <TableRow>
+                            <TableHead>Loja (Vendedor)</TableHead>
+                            <TableHead className="text-right">Buyboxes Ganhos</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {topSellers.map((seller, index) => (
+                            <TableRow key={seller.name}>
+                                <TableCell className="font-medium">{seller.name}</TableCell>
+                                <TableCell className="text-right font-bold">{seller.count}</TableCell>
+                            </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                ) : (
+                    <div className="h-full flex items-center justify-center text-muted-foreground">
+                       <p>Nenhum dado de vendedor para exibir.</p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
 
 
         {/* Ganhando Buybox */}
@@ -778,4 +824,5 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
     
 
     
+
 
