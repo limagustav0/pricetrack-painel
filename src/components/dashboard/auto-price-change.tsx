@@ -118,7 +118,7 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
     );
   };
   
-  const handleMinPriceChange = async (ean: string, key_loja: string, marketplace: string, value: string) => {
+  const handleMinPriceChange = (ean: string, key_loja: string, marketplace: string, value: string) => {
     const newMinPrice = value === '' ? null : parseFloat(value);
     const key = `${ean}-${key_loja}-${marketplace}`;
     setPricingData(prev => ({ ...prev, [key]: newMinPrice }));
@@ -129,7 +129,7 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
     const buyboxData = buyboxPriceData[key];
     const preco_pricing = pricingData[key];
 
-    if (!buyboxData || buyboxData.price === null || preco_pricing === null) {
+    if (!buyboxData || buyboxData.price === null || preco_pricing === null || preco_pricing === undefined) {
       toast({
         variant: "destructive",
         title: "Dados incompletos.",
@@ -152,20 +152,29 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        let errorData;
+        try {
+            errorData = await response.json();
+        } catch(e) {
+            errorData = { detail: `A API retornou um erro não-JSON. Status: ${response.status} ${response.statusText}` };
+        }
         throw new Error(errorData.detail || `Falha ao atualizar preços. Status: ${response.status}`);
       }
+      
+      const responseData = await response.json();
 
       toast({
         title: "Preços salvos com sucesso!",
-        description: `Os preços do produto ${product.ean} foram atualizados.`,
+        description: `Os preços do produto ${product.name} foram atualizados.`,
       });
       
-      const currentProductInState = allProducts.find(p => p.key_sku === product.key_sku);
-      if(currentProductInState) {
-          currentProductInState.preco_pricing = preco_pricing;
-          currentProductInState.preco_buybox = buyboxData.price;
+      // Update local state to reflect changes without a full refetch
+      const productIndex = allProducts.findIndex(p => p.key_sku === product.key_sku);
+      if(productIndex > -1) {
+          allProducts[productIndex].preco_pricing = preco_pricing;
+          allProducts[productIndex].preco_buybox = buyboxData.price;
       }
+
 
     } catch (error) {
       console.error("Erro ao atualizar preços:", error);
@@ -360,5 +369,3 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
     </div>
   )
 }
-
-    
