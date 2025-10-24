@@ -57,7 +57,7 @@ const nextConfig: NextConfig = {
       },
        {
         source: '/api/products/update_precos',
-        destination: 'https://pricetrack-api.onrender.com/api/products/update_precos/',
+        destination: 'https://pricetrack-api.onrender.com/api/products/update_precos',
       },
     ];
   },
