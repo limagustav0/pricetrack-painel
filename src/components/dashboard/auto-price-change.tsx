@@ -56,7 +56,7 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
     }, {} as Record<string, Product>);
 
     return Object.values(uniqueProducts).sort((a,b) => {
-        if (a.name < b.name) return -1;
+        if (a.name < a.name) return -1;
         if (a.name > b.name) return 1;
         if (a.seller < b.seller) return -1;
         if (a.seller > b.seller) return 1;
@@ -160,13 +160,12 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'A resposta do servidor não é um JSON válido.', details: response.statusText }));
-        throw new Error(errorData.error || 'Erro desconhecido ao salvar os preços.');
-      }
-      
       const responseData = await response.json();
 
+      if (!response.ok) {
+        throw new Error(responseData.error || 'Ocorreu um erro desconhecido na API externa.');
+      }
+      
       toast({
         title: "Preços salvos com sucesso!",
         description: `Os preços do produto ${product.name} foram atualizados.`,
@@ -188,7 +187,7 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
       toast({
         variant: "destructive",
         title: "Erro ao salvar preços.",
-        description: `Detalhes: ${(error as Error).message}. Payload enviado: ${JSON.stringify(payload)}`,
+        description: `Detalhes: ${(error as Error).message}`,
       });
     }
   };

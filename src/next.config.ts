@@ -50,11 +50,7 @@ const nextConfig: NextConfig = {
       {
         source: '/api/url-data',
         destination: 'https://pricetrack-api.onrender.com/api/urls/',
-      },
-       {
-        source: '/api/urls/update_is_active',
-        destination: 'https://pricetrack-api.onrender.com/api/urls/update_is_active/',
-      },
+      }
     ];
   },
 };
