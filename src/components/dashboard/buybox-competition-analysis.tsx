@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import type { Product } from '@/types';
@@ -679,38 +677,13 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                                         ) : <p className="text-muted-foreground">-</p>}
                                     </TableCell>
                                     <TableCell>
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger>
-                                                    <p className={cn("font-semibold", item.priceDifference < 0 ? "text-green-600" : "text-muted-foreground")}>
-                                                        {item.status === 'winning_alone' 
-                                                            ? 'Ganhando (sozinho)'
-                                                            : item.priceDifference < 0 
-                                                                ? `Ganhando por ${formatCurrency(Math.abs(item.priceDifference))}` 
-                                                                : 'Preço igual'}
-                                                    </p>
-                                                </TooltipTrigger>
-                                                {item.priceDifference < 0 && (
-                                                    <TooltipContent>
-                                                        <div className="p-2 space-y-2">
-                                                            <p className="font-bold text-center border-b pb-2">Potencial de Faturamento</p>
-                                                            <div className="flex items-center justify-between gap-4">
-                                                                <span className="text-muted-foreground">10 Vendas:</span>
-                                                                <span className="font-bold">{formatCurrency(Math.abs(item.priceDifference) * 10)}</span>
-                                                            </div>
-                                                            <div className="flex items-center justify-between gap-4">
-                                                                <span className="text-muted-foreground">50 Vendas:</span>
-                                                                <span className="font-bold">{formatCurrency(Math.abs(item.priceDifference) * 50)}</span>
-                                                            </div>
-                                                            <div className="flex items-center justify-between gap-4">
-                                                                <span className="text-muted-foreground">100 Vendas:</span>
-                                                                <span className="font-bold">{formatCurrency(Math.abs(item.priceDifference) * 100)}</span>
-                                                            </div>
-                                                        </div>
-                                                    </TooltipContent>
-                                                )}
-                                            </Tooltip>
-                                        </TooltipProvider>
+                                        <p className={cn("font-semibold", item.priceDifference < 0 ? "text-green-600" : "text-muted-foreground")}>
+                                            {item.status === 'winning_alone' 
+                                                ? 'Ganhando (sozinho)'
+                                                : item.priceDifference < 0 
+                                                    ? `Ganhando por ${formatCurrency(Math.abs(item.priceDifference))}` 
+                                                    : 'Preço igual'}
+                                        </p>
                                     </TableCell>
                                     <TableCell className="text-right text-sm text-muted-foreground">
                                         {item.myBestOffer?.updated_at ? formatDistanceToNow(new Date(item.myBestOffer.updated_at), { addSuffix: true, locale: ptBR }) : '-'}
