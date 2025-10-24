@@ -14,6 +14,7 @@ import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { toast } from '@/hooks/use-toast';
 import { AlertTriangle, Bot } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 interface AutoPriceChangeProps {
   allProducts: Product[];
@@ -21,7 +22,8 @@ interface AutoPriceChangeProps {
 }
 
 export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) {
-  const [selectedSeller, setSelectedSeller] = useState<string | null>(null);
+  const [filteredSellers, setFilteredSellers] = useState<string[]>([]);
+  const [activeSeller, setActiveSeller] = useState<string | null>(null);
   const [pricingData, setPricingData] = useState<Record<string, number | null>>({});
 
   const sellerOptions = useMemo(() => {
@@ -33,12 +35,17 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
     });
     return Array.from(sellers.entries()).map(([key_loja, sellerName]) => ({ value: key_loja, label: sellerName })).sort((a,b) => a.label.localeCompare(b.label));
   }, [allProducts]);
+  
+  const selectedSellerOptions = useMemo(() => {
+      return sellerOptions.filter(option => filteredSellers.includes(option.value));
+  }, [sellerOptions, filteredSellers]);
+
 
   const sellerProducts = useMemo(() => {
-    if (!selectedSeller) return [];
+    if (!activeSeller) return [];
     
     // Get all products for the selected seller
-    const productsOfSeller = allProducts.filter(p => p.key_loja === selectedSeller);
+    const productsOfSeller = allProducts.filter(p => p.key_loja === activeSeller);
     
     // Group by EAN and get the best (lowest) price offered by the seller for that EAN
     const uniqueProductsByEan = productsOfSeller.reduce((acc, product) => {
@@ -49,7 +56,7 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
     }, {} as Record<string, Product>);
 
     return Object.values(uniqueProductsByEan).sort((a,b) => a.name.localeCompare(b.name));
-  }, [allProducts, selectedSeller]);
+  }, [allProducts, activeSeller]);
 
   useEffect(() => {
     // Initialize pricing data when seller products change
@@ -59,9 +66,25 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
     }, {} as Record<string, number | null>);
     setPricingData(initialData);
   }, [sellerProducts]);
+  
+  useEffect(() => {
+    // If the active seller is no longer in the filtered list, reset it
+    if(activeSeller && !filteredSellers.includes(activeSeller)) {
+        setActiveSeller(null);
+    }
+    // If only one seller is filtered, make it active
+    if(filteredSellers.length === 1 && !activeSeller) {
+        setActiveSeller(filteredSellers[0]);
+    }
+  }, [filteredSellers, activeSeller]);
 
-  const handleSellerChange = (value: string) => {
-    setSelectedSeller(value);
+
+  const handleFilterChange = (value: string) => {
+    setFilteredSellers(prev => 
+        prev.includes(value) 
+            ? prev.filter(v => v !== value) 
+            : [...prev, value]
+    );
   };
   
   const handlePriceChange = (ean: string, value: string) => {
@@ -146,27 +169,50 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
                     Configuração de Preço Automático (Beta)
                 </CardTitle>
                 <CardDescription>
-                    Selecione um vendedor para visualizar seus produtos e definir o preço mínimo para a estratégia de pricing automático.
+                    Selecione um ou mais vendedores para filtrar e, em seguida, escolha um vendedor ativo para configurar seus produtos.
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                 <div className="max-w-md">
-                    <Label>Selecione um Vendedor</Label>
-                    <SearchableSelect
-                        placeholder="Selecione um Vendedor..."
-                        options={sellerOptions}
-                        selectedValues={selectedSeller ? [selectedSeller] : []}
-                        onChange={handleSellerChange}
-                        selectionMode="single"
-                    />
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
+                    <div>
+                        <Label>Filtrar Vendedores</Label>
+                        <SearchableSelect
+                            placeholder="Filtrar Vendedor(es)..."
+                            options={sellerOptions}
+                            selectedValues={filteredSellers}
+                            onChange={handleFilterChange}
+                        />
+                    </div>
+                     <div>
+                        <Label>Vendedor Ativo</Label>
+                        <Select
+                            value={activeSeller ?? ""}
+                            onValueChange={setActiveSeller}
+                            disabled={selectedSellerOptions.length === 0}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecione um vendedor para editar" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {selectedSellerOptions.map(option => (
+                                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                ))}
+                                {selectedSellerOptions.length === 0 && (
+                                    <div className="p-4 text-center text-sm text-muted-foreground">
+                                        Filtre um vendedor primeiro.
+                                    </div>
+                                )}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
             </CardContent>
         </Card>
 
-        {selectedSeller ? (
+        {activeSeller ? (
              <Card>
                 <CardHeader>
-                    <CardTitle>Produtos de {sellerOptions.find(s => s.value === selectedSeller)?.label}</CardTitle>
+                    <CardTitle>Produtos de {sellerOptions.find(s => s.value === activeSeller)?.label}</CardTitle>
                     <CardDescription>
                         Defina o preço mínimo para cada produto. O sistema não permitirá que o preço do produto seja inferior a este valor.
                     </CardDescription>
@@ -233,10 +279,12 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
         ) : (
              <div className="text-center py-16 text-muted-foreground border border-dashed rounded-lg flex flex-col items-center justify-center">
                 <AlertTriangle className="h-10 w-10 mx-auto mb-4" />
-                <p className="font-semibold">Nenhum Vendedor Selecionado</p>
-                <p className="text-sm">Por favor, selecione um vendedor acima para começar.</p>
+                <p className="font-semibold">Nenhum Vendedor Ativo</p>
+                <p className="text-sm">Por favor, selecione um vendedor para começar a edição.</p>
             </div>
         )}
     </div>
   )
 }
+
+    

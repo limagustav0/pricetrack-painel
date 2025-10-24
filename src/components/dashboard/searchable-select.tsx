@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "../ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 
 interface SearchableSelectProps {
   options: { value: string; label: string }[];
@@ -29,7 +28,6 @@ interface SearchableSelectProps {
   onChange: (value: string) => void;
   placeholder?: string;
   disabled?: boolean;
-  selectionMode?: 'multiple' | 'single';
 }
 
 export function SearchableSelect({
@@ -38,16 +36,8 @@ export function SearchableSelect({
   onChange,
   placeholder = "Selecione uma opção...",
   disabled = false,
-  selectionMode = 'multiple',
 }: SearchableSelectProps) {
   const [open, setOpen] = React.useState(false);
-
-  const handleSelect = (value: string) => {
-    onChange(value);
-    if (selectionMode === 'single') {
-        setOpen(false);
-    }
-  };
   
   const selectedLabels = selectedValues.map(value => options.find(o => o.value === value)?.label).filter(Boolean);
 
@@ -66,36 +56,34 @@ export function SearchableSelect({
                 selectedLabels.map((label, index) => (
                     <Badge variant="secondary" key={index} className="mr-1">
                         {label}
-                        {selectionMode === 'multiple' && (
-                            <span
-                                role="button"
-                                tabIndex={0}
-                                aria-label={`Remover ${label}`}
-                                className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
-                                onMouseDown={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                }}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    const valueToRemove = options.find(o => o.label === label)?.value;
-                                    if (valueToRemove) {
-                                        onChange(valueToRemove)
-                                    }
-                                }}
-                                onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                    e.stopPropagation();
-                                    const valueToRemove = options.find(o => o.label === label)?.value;
-                                    if (valueToRemove) {
-                                        onChange(valueToRemove)
-                                    }
+                        <span
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`Remover ${label}`}
+                            className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
+                            onMouseDown={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                            }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                const valueToRemove = options.find(o => o.label === label)?.value;
+                                if (valueToRemove) {
+                                    onChange(valueToRemove)
                                 }
-                                }}
-                            >
-                                <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                            </span>
-                        )}
+                            }}
+                            onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.stopPropagation();
+                                const valueToRemove = options.find(o => o.label === label)?.value;
+                                if (valueToRemove) {
+                                    onChange(valueToRemove)
+                                }
+                            }
+                            }}
+                        >
+                            <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                        </span>
                     </Badge>
                 ))
             ) : (
@@ -111,33 +99,24 @@ export function SearchableSelect({
           <CommandList>
             <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
             <CommandGroup>
-                <RadioGroup 
-                    value={selectionMode === 'single' ? selectedValues[0] : ''}
-                    onValueChange={selectionMode === 'single' ? handleSelect : undefined}
-                >
               {options.map((option) => {
                 const isSelected = selectedValues.includes(option.value);
                 return (
                   <CommandItem
                     key={option.value}
                     value={option.label}
-                    onSelect={() => handleSelect(option.value)}
+                    onSelect={() => onChange(option.value)}
                     className="flex items-center gap-2"
                   >
-                    {selectionMode === 'multiple' ? (
-                        <Checkbox
-                            id={`select-${option.value}`}
-                            checked={isSelected}
-                            aria-labelledby={`select-label-${option.value}`}
-                        />
-                    ) : (
-                        <RadioGroupItem value={option.value} id={`select-${option.value}`} />
-                    )}
+                    <Checkbox
+                        id={`select-${option.value}`}
+                        checked={isSelected}
+                        aria-labelledby={`select-label-${option.value}`}
+                    />
                     <span id={`select-label-${option.value}`}>{option.label}</span>
                   </CommandItem>
                 );
               })}
-              </RadioGroup>
             </CommandGroup>
           </CommandList>
         </Command>
@@ -145,3 +124,5 @@ export function SearchableSelect({
     </Popover>
   );
 }
+
+    
