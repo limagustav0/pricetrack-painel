@@ -153,8 +153,6 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
 
     const payload = [updatePayload];
 
-    console.log('Payload enviado para a API:', JSON.stringify(payload, null, 2));
-
     try {
       const response = await fetch('/api/alterar-precos', {
         method: 'PATCH',
@@ -162,18 +160,12 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
         body: JSON.stringify(payload),
       });
 
-      // Step 1: Get the raw response text to see what the server is actually sending.
-      const responseText = await response.text();
-      console.log("Resposta bruta da API:", responseText);
-
-
       if (!response.ok) {
-        // If the response is not OK, we throw an error with the text we received.
-        throw new Error(`A API retornou um erro. Status: ${response.status}. Resposta: ${responseText}`);
+        const errorData = await response.json().catch(() => ({ error: 'A resposta do servidor não é um JSON válido.', details: response.statusText }));
+        throw new Error(errorData.error || 'Erro desconhecido ao salvar os preços.');
       }
       
-      // Step 2: If the response was OK, now we can safely try to parse it as JSON.
-      const responseData = JSON.parse(responseText);
+      const responseData = await response.json();
 
       toast({
         title: "Preços salvos com sucesso!",
