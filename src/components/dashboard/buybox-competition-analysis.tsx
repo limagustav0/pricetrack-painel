@@ -9,15 +9,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, isValidImageUrl, isValidHttpUrl, cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '../ui/button';
-import { ExternalLink, CheckCircle, XCircle, Download, ShoppingCart, BarChart, AlertTriangle, Crown, DollarSign } from 'lucide-react';
+import { ExternalLink, CheckCircle, XCircle, Download, ShoppingCart, BarChart as BarChartIcon, AlertTriangle, Crown, DollarSign } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
-import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, Bar, XAxis, YAxis, CartesianGrid, BarChart } from 'recharts';
 import { SearchableSelect } from './searchable-select';
 import { Label } from '../ui/label';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-
 
 interface BuyboxCompetitionAnalysisProps {
   allProducts: Product[];
@@ -70,7 +68,6 @@ function getPrioritizedImage(products: Product[]): string {
     const anyValidImageProduct = products.find(p => isValidImageUrl(p.image));
     return anyValidImageProduct?.image || 'https://placehold.co/100x100.png';
 }
-
 
 export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompetitionAnalysisProps) {
   const [selectedSellers, setSelectedSellers] = useState<string[]>([]);
@@ -349,7 +346,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                                     <Skeleton className="h-4 w-1/2" />
                                     <Skeleton className="h-3 w-1/3" />
                                 </div>
-                                <div className="flex-1 space-y-2">
+                               <div className="flex-1 space-y-2">
                                     <Skeleton className="h-4 w-1/2" />
                                 </div>
                             </div>
@@ -519,7 +516,7 @@ export function BuyboxCompetitionAnalysis({ allProducts, loading }: BuyboxCompet
                         </ResponsiveContainer>
                     ) : (
                         <div className="h-64 flex flex-col items-center justify-center text-center text-muted-foreground">
-                            <BarChart className="h-10 w-10 mb-2"/>
+                            <BarChartIcon className="h-10 w-10 mb-2"/>
                             <p className="font-semibold">Nenhum Buybox ganho.</p>
                             <p className="text-sm">Tente selecionar outro vendedor ou limpar filtros.</p>
                         </div>
