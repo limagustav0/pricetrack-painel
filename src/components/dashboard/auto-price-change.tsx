@@ -22,7 +22,6 @@ interface AutoPriceChangeProps {
 }
 
 export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) {
-  const [filteredSellers, setFilteredSellers] = useState<string[]>([]);
   const [activeSeller, setActiveSeller] = useState<string | null>(null);
   const [pricingData, setPricingData] = useState<Record<string, number | null>>({});
 
@@ -36,11 +35,6 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
     return Array.from(sellers.entries()).map(([key_loja, sellerName]) => ({ value: key_loja, label: sellerName })).sort((a,b) => a.label.localeCompare(b.label));
   }, [allProducts]);
   
-  const selectedSellerOptions = useMemo(() => {
-      return sellerOptions.filter(option => filteredSellers.includes(option.value));
-  }, [sellerOptions, filteredSellers]);
-
-
   const sellerProducts = useMemo(() => {
     if (!activeSeller) return [];
     
@@ -66,25 +60,10 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
     }, {} as Record<string, number | null>);
     setPricingData(initialData);
   }, [sellerProducts]);
-  
-  useEffect(() => {
-    // If the active seller is no longer in the filtered list, reset it
-    if(activeSeller && !filteredSellers.includes(activeSeller)) {
-        setActiveSeller(null);
-    }
-    // If only one seller is filtered, make it active
-    if(filteredSellers.length === 1 && !activeSeller) {
-        setActiveSeller(filteredSellers[0]);
-    }
-  }, [filteredSellers, activeSeller]);
-
 
   const handleFilterChange = (value: string) => {
-    setFilteredSellers(prev => 
-        prev.includes(value) 
-            ? prev.filter(v => v !== value) 
-            : [...prev, value]
-    );
+    // Single seller selection logic
+    setActiveSeller(prev => prev === value ? null : value);
   };
   
   const handlePriceChange = (ean: string, value: string) => {
@@ -169,41 +148,19 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
                     Configuração de Preço Automático (Beta)
                 </CardTitle>
                 <CardDescription>
-                    Selecione um ou mais vendedores para filtrar e, em seguida, escolha um vendedor ativo para configurar seus produtos.
+                    Selecione um vendedor para configurar seus produtos. O primeiro selecionado se torna o vendedor ativo.
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
+                 <div className="max-w-md">
                     <div>
-                        <Label>Filtrar Vendedores</Label>
+                        <Label>Selecionar Vendedor</Label>
                         <SearchableSelect
-                            placeholder="Filtrar Vendedor(es)..."
+                            placeholder="Selecione um Vendedor..."
                             options={sellerOptions}
-                            selectedValues={filteredSellers}
+                            selectedValues={activeSeller ? [activeSeller] : []}
                             onChange={handleFilterChange}
                         />
-                    </div>
-                     <div>
-                        <Label>Vendedor Ativo</Label>
-                        <Select
-                            value={activeSeller ?? ""}
-                            onValueChange={setActiveSeller}
-                            disabled={selectedSellerOptions.length === 0}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione um vendedor para editar" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {selectedSellerOptions.map(option => (
-                                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                                ))}
-                                {selectedSellerOptions.length === 0 && (
-                                    <div className="p-4 text-center text-sm text-muted-foreground">
-                                        Filtre um vendedor primeiro.
-                                    </div>
-                                )}
-                            </SelectContent>
-                        </Select>
                     </div>
                 </div>
             </CardContent>
