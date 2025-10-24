@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
-import type { Product, UrlInfo } from '@/types';
+import type { Product } from '@/types';
 import { AlertCircle, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -20,7 +20,6 @@ import { Toaster } from '@/components/ui/toaster';
 import { isValidHttpUrl, isValidImageUrl } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Card, CardContent, CardHeader } from '../ui/card';
-import { UrlManagementTable } from './url-management-table';
 import { Label } from '../ui/label';
 import { Switch } from '../ui/switch';
 import { BuyboxCompetitionAnalysis } from './buybox-competition-analysis';
@@ -46,8 +45,6 @@ function adaptApiData(apiProduct: any): Product {
     updated_at: apiProduct.data_hora,
     status: apiProduct.status,
     change_price: apiProduct.change_price,
-    is_active: true, // Default value, will be updated
-    ean_key: `${apiProduct.ean}-${apiProduct.marketplace}`, // Default value, will be updated
   };
 }
 
@@ -63,7 +60,6 @@ export type Filters = {
 
 function DashboardContent() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [urls, setUrls] = useState<UrlInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [comparisonMarketplace, setComparisonMarketplace] = useState<string>("");
@@ -82,42 +78,17 @@ function DashboardContent() {
       setLoading(true);
       setError(null);
       try {
-        const [productsResponse, urlsResponse] = await Promise.all([
-            fetch('/api/price-data'),
-            fetch('/api/url-data'),
-        ]);
+        const productsResponse = await fetch('/api/price-data');
 
         if (!productsResponse.ok) {
           throw new Error(`Erro ao conectar com a API de produtos. Status: ${productsResponse.status} ${productsResponse.statusText}`);
         }
-        if (!urlsResponse.ok) {
-            throw new Error(`Erro ao conectar com a API de URLs. Status: ${urlsResponse.status} ${urlsResponse.statusText}`);
-        }
-
-        const productsData = await productsResponse.json();
-        const urlsData = await urlsResponse.json();
         
+        const productsData = await productsResponse.json();
         const results = productsData.results || productsData;
         
         if (!Array.isArray(results)) {
             throw new Error("O formato dos dados de produtos recebidos da API não é o esperado.");
-        }
-        
-        const urlMap = new Map<string, UrlInfo>();
-        if (Array.isArray(urlsData)) {
-            const processedUrls = urlsData.map(item => ({
-                ...item,
-                is_active: item.is_active !== undefined ? item.is_active : true,
-                ean_key: item.ean_key || `${item.ean}-${item.marketplace}`
-            }));
-            setUrls(processedUrls);
-
-            for (const item of processedUrls) {
-                if(item.ean && item.marketplace) {
-                    const key = `${item.ean}-${item.marketplace}`;
-                    urlMap.set(key, item);
-                }
-            }
         }
 
         const adaptedProducts = results.map(adaptApiData).filter(p => p.status === 'ativo');
@@ -135,13 +106,6 @@ function DashboardContent() {
 
             if (!isValidImageUrl(finalProduct.image) && productForImage && isValidImageUrl(productForImage.image)) {
                 finalProduct.image = productForImage.image;
-            }
-
-            const urlInfo = urlMap.get(finalProduct.ean_key);
-            if (urlInfo) {
-                finalProduct.url = isValidHttpUrl(urlInfo.url) ? urlInfo.url : finalProduct.url;
-                finalProduct.is_active = urlInfo.is_active;
-                finalProduct.ean_key = urlInfo.ean_key;
             }
 
             return finalProduct;
@@ -233,19 +197,6 @@ function DashboardContent() {
     });
     setShowOnlyWithCompetitors(false);
   };
-
-  const updateProductStatus = (eanKey: string, newStatus: boolean) => {
-      setProducts(prevProducts => 
-          prevProducts.map(p => 
-              p.ean_key === eanKey ? { ...p, is_active: newStatus } : p
-          )
-      );
-      setUrls(prevUrls =>
-        prevUrls.map(u =>
-            u.ean_key === eanKey ? { ...u, is_active: newStatus } : u
-        )
-      );
-  };
     
   const handleExport = () => {
     const dataToExport = filteredProducts.map(p => ({
@@ -257,7 +208,6 @@ function DashboardContent() {
         Preço: p.price,
         URL: p.url || '',
         Status: p.status || '',
-        Ativo: p.is_active ? 'Sim' : 'Não'
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -286,7 +236,6 @@ function DashboardContent() {
                         <TabsTrigger value="granular">Análise por Marketplace</TabsTrigger>
                         <TabsTrigger value="buybox">Análise de Buybox</TabsTrigger>
                         <TabsTrigger value="seller">Análise por Vendedor</TabsTrigger>
-                         <TabsTrigger value="urls">Gerenciar URLs</TabsTrigger>
                     </TabsList>
                 </div>
                 <TabsContent value="overview" className="mt-0 p-4 md:p-6 overflow-y-auto">
@@ -364,9 +313,6 @@ function DashboardContent() {
                 <TabsContent value="seller" className="mt-0 p-4 md:p-6 flex flex-col">
                     <SellerComparisonTable allProducts={filteredProducts} loading={loading} />
                 </TabsContent>
-                <TabsContent value="urls" className="mt-0 p-4 md:p-6 flex flex-col">
-                    <UrlManagementTable urls={urls} setUrls={setUrls} loading={loading} />
-                </TabsContent>
             </Tabs>
         </div>
     </div>
@@ -380,5 +326,3 @@ export function Dashboard() {
         </SidebarProvider>
     )
 }
-
-    

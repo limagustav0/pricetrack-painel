@@ -15,19 +15,4 @@ export interface Product {
   updated_at: string; // from 'data_hora'
   status: string | null;
   change_price: number | null;
-  is_active: boolean;
-  ean_key: string;
 }
-
-export interface UrlInfo {
-  ean_key: string;
-  ean: string;
-  marketplace: string;
-  url: string;
-  is_active: boolean;
-  id?: number;
-  created_at?: string;
-  updated_at?: string;
-}
-
-    
