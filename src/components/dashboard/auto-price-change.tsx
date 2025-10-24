@@ -168,7 +168,7 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
             errorData = await response.json();
         } catch(e: any) {
             console.error("Erro ao processar JSON da resposta:", e);
-            errorData = { detail: `A API retornou um erro não-JSON. Status: ${response.status} ${response.statusText}. Erro: ${e.message}` };
+            errorData = { detail: `A API retornou um erro não-JSON. Status: ${response.status} ${response.statusText}` };
         }
         throw new Error(errorData.detail || `Falha ao atualizar preços. Status: ${response.status}`);
       }
@@ -196,7 +196,7 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
       toast({
         variant: "destructive",
         title: "Erro ao salvar preços.",
-        description: (error as Error).message || "Não foi possível salvar os novos preços. Tente novamente.",
+        description: `Detalhes: ${(error as Error).message}. Payload enviado: ${JSON.stringify(payload)}`,
       });
     }
   };
@@ -385,3 +385,5 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
     </div>
   )
 }
+
+    
