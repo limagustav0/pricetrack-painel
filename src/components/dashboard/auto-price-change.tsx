@@ -162,18 +162,18 @@ export function AutoPriceChange({ allProducts, loading }: AutoPriceChangeProps) 
         body: JSON.stringify(payload),
       });
 
+      // Step 1: Get the raw response text to see what the server is actually sending.
+      const responseText = await response.text();
+      console.log("Resposta bruta da API:", responseText);
+
+
       if (!response.ok) {
-        let errorData;
-        try {
-            errorData = await response.json();
-        } catch(e: any) {
-            console.error("Erro ao processar JSON da resposta:", e);
-            errorData = { detail: `A API retornou um erro não-JSON. Status: ${response.status} ${response.statusText}` };
-        }
-        throw new Error(errorData.detail || `Falha ao atualizar preços. Status: ${response.status}`);
+        // If the response is not OK, we throw an error with the text we received.
+        throw new Error(`A API retornou um erro. Status: ${response.status}. Resposta: ${responseText}`);
       }
       
-      const responseData = await response.json();
+      // Step 2: If the response was OK, now we can safely try to parse it as JSON.
+      const responseData = JSON.parse(responseText);
 
       toast({
         title: "Preços salvos com sucesso!",
